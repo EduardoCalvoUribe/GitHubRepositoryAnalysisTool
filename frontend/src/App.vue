@@ -1,5 +1,5 @@
 <script setup>
-import TextBox from './components/TextBox.vue'
+import RowBox from './components/RowBox.vue'
 </script>
 
 <template>
@@ -13,7 +13,9 @@ import TextBox from './components/TextBox.vue'
   </header>
 
   <main>
-    <TextBox msg="This is a test"/>
+    <RowBox n_blocks=5 />
+    <RowBox n_blocks=1 />
+    <RowBox n_blocks=3 />
   </main>
 </template>
 

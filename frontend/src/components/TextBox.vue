@@ -15,14 +15,14 @@ defineProps({
 
 <style scoped>
 #rcorners {
+    display: inline-block;
+    vertical-align: middle;
     border-radius: 25px;
     background: #3B3B3B;
     padding: 20px;
     width: 200px;
     height: 150px;
-    margin-top: 25px;
-    margin-bottom: 25px;
-    margin-left: 20px;
-    margin-right: 20px;
+    margin-left: 11px;
+    margin-right: 11px;
 }
 </style>
