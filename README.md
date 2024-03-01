@@ -1,5 +1,10 @@
 # group 7
 
+## Running the Vue app
+
+  cd frontend
+  npm install
+  npm run dev
 
 
 ## Getting started
