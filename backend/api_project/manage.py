@@ -4,6 +4,8 @@ import os
 import sys
 
 
+#Test commit from Daniel
+
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api_project.settings')
