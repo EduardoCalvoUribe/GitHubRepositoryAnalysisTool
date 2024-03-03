@@ -18,6 +18,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Adding personal access token
 GITHUB_PERSONAL_ACCESS_TOKEN = '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' 
 
+#List of relevant GitHub API Endpoints
+GITHUB_API_ENDPOINTS = ['https://api.github.com/user']
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
