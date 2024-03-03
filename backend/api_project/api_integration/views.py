@@ -1,35 +1,20 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-
-
 import requests
+# import json
 from django.conf import settings
 from django.http import JsonResponse
-# import json
-from rest_framework.views import APIView
 
-#note: 
-# pip install jsonlib
-# pip install djangorestframework
-# pip install markdown       # Markdown support for the browsable API.
-# pip install django-filter  # Filtering support
-from rest_framework import parsers
+# TO ADD: list of relevant API endpoints as a Python list/enum.
 
-
-class github_requests(APIView):
-    parser_classes = (parsers.JSONParser,)
-
-    def post(self, request, format=None):
-        number = request.data['number']
-        requests = request.data['data']
-
-
+# API call to https://api.github.com/user endpoint
 def github_user_info(request):
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
     headers = {'Authorization': f'token {personal_access_token}'}
     api_response = requests.get('https://api.github.com/user', headers=headers)
     return JsonResponse(api_response.json())
 
+# API call to endpoint with variables in endpoint URL. ATTENTION: Does not work properly yet. 
 def github_repo_pull_comments(request, owner, repo, pull_number):
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
     headers = {'Authorization': f'token {personal_access_token}'}
@@ -45,10 +30,10 @@ def github_repo_pull_comments(request, owner, repo, pull_number):
         return JsonResponse({}, status=api_response.status_code)
     
 
-#WORKING FUNCTION! GitHub Repo pull requests API. 
-#TO ADD: variable repo name.
+# API call to https://api.github.com/repos/django/django/pulls endpoint. 
+# TO ADD: Repos as variable
 def github_repo_pull_requests(request):
-    # Construct the URL for the GitHub API endpoint
+    # API call authorisation
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
     headers = {'Authorization': f'token {personal_access_token}'}
 
@@ -59,73 +44,46 @@ def github_repo_pull_requests(request):
 
     # Check if the request was successful
     if api_response.status_code == 200:
-        # Return the JSON data
+        # Return the JSON data as Django JsonResponse.         
         return JsonResponse(api_response.json(),safe=False)
     else:
         # If the request was unsuccessful, print the error message
         print(f"Failed to fetch data from GitHub API: {api_response.status_code} - {api_response.text}")
-        # Return None or raise an exception based on your requirements
         return None
     
-def dumpUser(request):   
-
+# This function accepts an API response for a given API endpoint "URL", 
+# and creates a Django HttpResponse (displays key/value pairs)
+def handle_API_request(request,URL):
+    # API call
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
     headers = {'Authorization': f'token {personal_access_token}'}
-    api_response = requests.get('https://api.github.com/user', headers=headers)
+    api_response = requests.get(URL, headers=headers)
 
+    # Convert API response to JSON format
     json_response = api_response.json()
 
+    # Variable which collects dictionary into string.
     text_to_display = ""
-    # text_to_display = "The original dictionary is : " + str(api_response.json())
 
+    # json_response.items() is the API response in JSON format converted to a dictionary.
+    # For conversion from dictionary to dataframe, see URL 
+    # https://stackoverflow.com/questions/13575090/construct-pandas-dataframe-from-items-in-nested-dictionary 
     for key,value in json_response.items():
-        text_to_display += "<p>"+str(key) + ":" + str(value) + "</p>"
+        # For every key/value pair in dictionary, creates HTTP formatted string.
+        text_to_display += "<p><b>"+str(key) + "</b>: " + str(value) + "</p>"
 
+    # Return text_to_display in Django HttpResponse format (in order to display on URL)
     return HttpResponse(text_to_display)
 
-    # WORKING TEXT
-    # text_to_display = "Hello, this is the text I want to display!"
-    # return HttpResponse(text_to_display)
-
-
-
-
-
-
-#Function for extracting key-value pairs from JSON data
-def extract_outer_keys(data):
-    keys = set()
-    # If JSON data is formatted as a dictionary
-    if isinstance(data, dict):
-        for key in data:
-            keys.add(key)
-
-    # If JSON data is formatted as a list
-    elif isinstance(data, list):
-        for item in data:
-            if isinstance(item, dict):
-                keys.add(item.keys())    
-    return keys
-
-def formatted_JSON(request):
-    # JSON response from the GitHub repo pull comments API request
-    data = github_repo_pull_requests(request)
-    data0 = data[0]['id']
-    print(data0)
-
-    return data0
-    
+# This function is an example call of handle_API_request for API endpoint https://api.github.com/user.
+def testUser(request):   
+    return handle_API_request(request,'https://api.github.com/user')
     
 
-    #print all keys in data
-    # keys = extract_outer_keys(data)
-    # print(str(keys))
 
-    # # Convert the set of keys to a list (or perform any other necessary operations)
-    # key_list = list(keys)
-    # print(key_list)
 
-    # return JsonResponse(urls)     
+
+
 
 
 
