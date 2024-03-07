@@ -4,8 +4,17 @@ import requests
 # import json
 from django.conf import settings
 from django.http import JsonResponse
+from rest_framework import generics
+from .models import Item
+from .serializers import ItemSerializer
 
 # TO ADD: list of relevant API endpoints as a Python list/enum.
+
+
+class ItemListCreateView(generics.ListCreateAPIView):
+    queryset = Item.objects.all()
+    serializer_class = ItemSerializer
+
 
 # API call to https://api.github.com/user endpoint
 def github_user_info(request):
@@ -74,6 +83,16 @@ def handle_API_request(request,URL):
 
     # Return text_to_display in Django HttpResponse format (in order to display on URL)
     return HttpResponse(text_to_display)
+
+
+# def save_github_repositories_to_db():
+#     for repo in github_repositories:
+#         GitHubRepository.objects.create(
+#             name=repo["name"],
+#             description=repo["description"],
+#             url=repo["html_url"],
+#         )
+
 
 # This function is an example call of handle_API_request for API endpoint https://api.github.com/user.
 def testUser(request):   
