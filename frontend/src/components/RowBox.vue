@@ -11,10 +11,10 @@ defineProps({
 
 <template>
   <div class="row">
-    <TextBox msg="This is a test"/>
-    <TextBox msg="This is a test"/>
-    <TextBox msg="This is a test"/>
-    <TextBox msg="This is a test"/>
+    <TextBox msg="Empty"/>
+    <TextBox msg="Empty"/>
+    <TextBox msg="Empty"/>
+    <TextBox msg="Empty"/>
   </div>
 </template>
 

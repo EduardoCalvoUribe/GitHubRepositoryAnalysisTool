@@ -7,9 +7,6 @@ import RowBox from './components/RowBox.vue'
     <div>
       GitHub Analysis Tool (GAT)
     </div>
-    <div>
-      Name is work in progress. GAT DAMN!
-    </div>
   </header>
 
   <main>
