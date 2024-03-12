@@ -84,7 +84,33 @@ def handle_API_request(request,URL):
     # Return text_to_display in Django HttpResponse format (in order to display on URL)
     return HttpResponse(text_to_display)
 
+# This function is an example call of handle_API_request for API endpoint https://api.github.com/user.
+def testUser(request):   
+    return handle_API_request(request,'x    ')
+    
+# This function accepts an incoming HTTP request, which is assumed to be a POST request. 
+# The function returns a user-requested Github API URL in String form which is extracted from the HTTP request
+def process_vue_POST_request(request):
+    # If the user request is an HTTP POST request
+    if request.method == "POST":
+        # Use built-in json Python package to parse JSON string and convert into a Python dictionary
+        data = json.loads(request.body)
+        
+        # Assuming that POST request contains 'url' key and associated value
+        url = data.get('url')
 
+    return url
+
+# Simple rapper function which can display POST request Github API URL on Django website
+def display_POST_request(request):
+    url = process_vue_POST_request(request)
+    return HttpResponse(url)
+
+
+# This function is an example call of handle_API_request for API endpoint https://api.github.com/user.
+def testUser(request):   
+    return handle_API_request(request,'https://api.github.com/user')
+    
 # def save_github_repositories_to_db():
 #     for repo in github_repositories:
 #         GitHubRepository.objects.create(
@@ -92,15 +118,6 @@ def handle_API_request(request,URL):
 #             description=repo["description"],
 #             url=repo["html_url"],
 #         )
-
-
-# This function is an example call of handle_API_request for API endpoint https://api.github.com/user.
-def testUser(request):   
-    return handle_API_request(request,'https://api.github.com/user')
-    
-
-
-
 
 
 
