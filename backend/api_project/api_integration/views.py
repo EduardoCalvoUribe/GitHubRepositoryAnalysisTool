@@ -83,10 +83,6 @@ def handle_API_request(request,URL):
 
     # Return text_to_display in Django HttpResponse format (in order to display on URL)
     return HttpResponse(text_to_display)
-
-# This function is an example call of handle_API_request for API endpoint https://api.github.com/user.
-def testUser(request):   
-    return handle_API_request(request,'x    ')
     
 # This function accepts an incoming HTTP request, which is assumed to be a POST request. 
 # The function returns a user-requested Github API URL in String form which is extracted from the HTTP request
