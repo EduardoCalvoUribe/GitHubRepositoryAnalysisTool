@@ -10,33 +10,17 @@ from .serializers import ItemSerializer
 
 # TO ADD: list of relevant API endpoints as a Python list/enum.
 
-
-# class ItemListView(generics.ListAPIView):
-#     queryset = Item.objects.all()
-#     serializer_class = ItemSerializer
-
 # API call to https://api.github.com/user endpoint
-def github_user_info(request):
-    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
-    headers = {'Authorization': f'token {personal_access_token}'}
-    api_response = requests.get('https://api.github.com/user', headers=headers)
-    return JsonResponse(api_response.json())
+def github_user_info(request):    
+    return JsonResponse(get_api_reponse('https://api.github.com/user').json())
 
 # API call to https://api.github.com/user endpoint
 def github_repo_info(request):
-    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
-    repo_owner = "plausible"
-    repo_name = "analytics"
-    api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/pulls"
+    api_url = f"https://api.github.com/repos/plausible/analytics/pulls"
 
     try:
-        headers = {'Authorization': f'token {personal_access_token}'}
-        api_response = requests.get(api_url, headers=headers)
+        api_response = get_api_reponse(api_url)
         pull_requests = api_response.json()
-
-        # Process the pull_requests data as needed
-        # For example, extract titles, authors, etc.
-
         return JsonResponse({'pull_requests': pull_requests})
 
     except requests.RequestException as e:
@@ -44,10 +28,8 @@ def github_repo_info(request):
 
 # API call to endpoint with variables in endpoint URL. ATTENTION: Does not work properly yet. 
 def github_repo_pull_comments(request, owner, repo, pull_number):
-    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
-    headers = {'Authorization': f'token {personal_access_token}'}
     url = f'https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}/comments'
-    api_response = requests.get(url, headers=headers)
+    api_response = get_api_reponse(url)
 
     # Check if the request was successful
     if api_response.status_code == 200:
@@ -58,26 +40,21 @@ def github_repo_pull_comments(request, owner, repo, pull_number):
         return JsonResponse({}, status=api_response.status_code)
     
 
-def get_json_data(URL):
+def get_api_reponse(URL):
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
     headers = {'Authorization': f'token {personal_access_token}'}
     api_response = requests.get(URL, headers=headers)
 
-    # Convert API response to JSON format
-    json_response = api_response.json()
-    return json_response
+    return api_response
+     
 
 # API call to https://api.github.com/repos/django/django/pulls endpoint. 
 # TO ADD: Repos as variable
 def github_repo_pull_requests(request):
     # API call authorisation
-    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
-    headers = {'Authorization': f'token {personal_access_token}'}
-
     url = 'https://api.github.com/repos/django/django/pulls'
-
     # Make the GET request to the GitHub API
-    api_response = requests.get(url, headers=headers)
+    api_response = get_api_reponse(url)
 
     # Check if the request was successful
     if api_response.status_code == 200:
@@ -92,11 +69,9 @@ def github_repo_pull_requests(request):
 # and creates a Django HttpResponse (displays key/value pairs)
 def handle_API_request(request,URL):
     # API call
-    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
-    headers = {'Authorization': f'token {personal_access_token}'}
-    api_response = requests.get(URL, headers=headers)
+    api_response = get_api_reponse(URL)
 
-   
+
     json_response = api_response.json()
 
     # Variable which collects dictionary into string.
@@ -119,48 +94,13 @@ def handle_API_request(request,URL):
 def testUser(request):   
     return handle_API_request(request,'https://api.github.com/user')
     
-
-def save_user_to_db(request, json_response):
-    try:
-        # Convert API response to JSON format
-        user = Users()
-
-        for key,value in json_response.items():
-            if key is not None:
-                if value is not None:
-                    setattr(user, key, value)
-                else:
-                   setattr(user, key, "")
-
-        user.save()
-        data = list(Users.objects.values())
-        return JsonResponse({'data': data})
-    except Exception as e:
-        return JsonResponse({"error": str(e)})
-
-def save_repo_to_db(request, json_response):
-    try:
-        # Convert API response to JSON format
-        user = Repos()
-
-        for key,value in json_response.items():
-            if key is not None:
-                if value is not None:
-                    setattr(user, key, value)
-                else:
-                   setattr(user, key, "")
-
-        user.save()
-    except Exception as e:
-        return JsonResponse({"error": str(e)})
-
-
-
+# list all save users
 def load_users(request):
         data = list(Users.objects.values())
-        return JsonResponse({'data': data})
+        return JsonResponse({'users': data})
 
+# list all saved repositories
 def load_repos(request):
         data = list(Repos.objects.values())
-        return JsonResponse({'data': data})
+        return JsonResponse({'repositories': data})
     
