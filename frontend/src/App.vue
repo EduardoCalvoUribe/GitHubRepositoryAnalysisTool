@@ -25,6 +25,37 @@ async function getFakeRequest() {
   }   
 }
 
+async function sendGithubUrl(url) {
+
+  //should be link of where the input should go(test with daniels function)
+  const urlDestination = "http://example.com/api"; 
+
+  //key-value pair convention
+  const data = {url: 'api.github/users'};
+
+  try {
+      //make the post request that sends the data to its destination
+      const response = await fetch(urlDestination, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      //see if operation was succesful by checking response status
+      if (response.ok) { 
+          console.log("GitHub URL sent successfully!");
+      } else {
+          console.error("Failed to send GitHub URL. Status code:", response.status);
+      }
+  } catch (error) {
+      console.error("Error:", error);
+  }
+}
+
+//const githubUrl = 'https://github.com/user/repo.git';
+//sendGithubUrl(githubUrl);
+
 </script>
 
 <template>
