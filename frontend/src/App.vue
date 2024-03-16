@@ -4,12 +4,14 @@ import { fetchData } from './fetchData.js'
 
 import Badge from './components/Badge.vue';
 import BaseSlider from './components/BaseSlider.vue';
+import CustomControls from './views/components/CustomControls.vue';
 
 
 export default {
   components: {
     Badge,
-    BaseSlider
+    BaseSlider,
+    CustomControls,
   },
   setup() {
     onMounted(async () => {
@@ -22,9 +24,11 @@ export default {
         const githubDiv = document.getElementById('github_request');
         const fakeDiv = document.getElementById('fake_request');
 
+        console.log(json_response);
+
         // Inserts content of json into that div in whatever specified format
-        githubDiv.innerHTML = '<p><h5>GitHub Request Data:</h5><br>' + json_response.url + '</p>';
-        fakeDiv.innerHTML = '<pre>' + JSON.stringify(fake_response, null, 2) + '</pre>'
+        githubDiv.innerHTML = '<p><h5>Data from Backend:</h5><br>' + json_response.url + '</p>';
+        fakeDiv.innerHTML = '<pre>' + JSON.stringify(fake_response, null, 2) + '</pre>';
 
       } catch (error) {
         console.error('Error:', error)
@@ -32,28 +36,6 @@ export default {
     });
   }
 };
-
-// async function getFakeRequest() {
-//   try {
-
-//     // Fake API fetch
-//     const response = await fetch('http://127.0.0.1:8000/github/user')  //'https://jsonplaceholder.typicode.com/posts/1'  //'127.0.0.1:8000/github/user'
-
-//     // takes response, converts to JavaScript Promise object
-//     const json = await response.json() 
-
-//     // Selects first div with 'fake_request' id attribute
-//     const fakeDiv = document.getElementById('fake_request');
-    
-//     // Inserts content into that div in the specified format
-//     // For full JSON string, use: '<pre>' + JSON.stringify(json, null, 2) + '</pre>'
-//     // fakeDiv.innerHTML = '<pre>' + JSON.stringify(json, null, 2) + '</pre>'
-//     fakeDiv.innerHTML = '<p><h4>Fake Request Data:</h4><br>' + json.url + '</p>';
-
-//   } catch (error) {
-//     console.error('Error:', error)
-//   }   
-// }
 </script>
 
 
@@ -71,7 +53,7 @@ export default {
     <h5>Fake Request:</h5>
     <div id="fake_request"></div>
     <br><br>
-    
+
     <Badge type="primary" rounded>Primary</Badge>
     <Badge type="info" rounded>Info</Badge>
     <Badge type="danger" rounded>Danger</Badge>
@@ -79,7 +61,7 @@ export default {
     <Badge type="warning" rounded>Warning</Badge>
     <Badge type="success" rounded>Success</Badge>
     
-    <BaseSlider value=10 type="primary" ></BaseSlider>
+    <BaseSlider value=10 disabled="" type="primary" ></BaseSlider>
 
   </main>
 </template>

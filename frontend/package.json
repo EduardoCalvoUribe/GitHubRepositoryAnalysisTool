@@ -9,8 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "bootstrap": "^5.3.3",
+    "flatpickr": "^4.6.13",
     "nouislider": "^15.7.1",
     "vue": "^3.4.15",
+    "vue-router": "^4.3.0",
     "vue2-transitions": "^0.3.0"
   },
   "devDependencies": {

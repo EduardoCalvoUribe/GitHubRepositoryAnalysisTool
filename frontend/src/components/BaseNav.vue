@@ -32,7 +32,7 @@
 </template>
 <script>
 import { FadeTransition } from "vue2-transitions";
-import NavbarToggleButton from "./NavbarToggleButton";
+import NavbarToggleButton from "./NavbarToggleButton.vue";
 
 export default {
   name: "base-nav",
