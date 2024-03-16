@@ -1,31 +1,61 @@
-<script setup>
-import RowBox from './components/RowBox.vue'
+<script>
+import { onMounted } from 'vue';
+import { fetchData } from './fetchData.js'
 
-getFakeRequest();
+import Badge from './components/Badge.vue';
+import BaseSlider from './components/BaseSlider.vue';
 
-async function getFakeRequest() {
-  try {
 
-    // Fake API fetch
-    const response = await fetch('http://127.0.0.1:8000/github/user')  //'https://jsonplaceholder.typicode.com/posts/1'  //'127.0.0.1:8000/github/user'
+export default {
+  components: {
+    Badge,
+    BaseSlider
+  },
+  setup() {
+    onMounted(async () => {
+      try {
+        // Fetches json data from specified URL using our fetchData function (will be our backend endpoints)
+        const json_response = await fetchData('http://127.0.0.1:8000/github/user');
+        const fake_response = await fetchData('http://jsonplaceholder.typicode.com/posts/1');
 
-    // takes response, converts to JavaScript Promise object
-    const json = await response.json() 
+        // Selects first div with specified id (such as 'github_request')
+        const githubDiv = document.getElementById('github_request');
+        const fakeDiv = document.getElementById('fake_request');
 
-    // Selects first div with 'fake_request' id attribute
-    const fakeDiv = document.getElementById('fake_request');
+        // Inserts content of json into that div in whatever specified format
+        githubDiv.innerHTML = '<p><h5>GitHub Request Data:</h5><br>' + json_response.url + '</p>';
+        fakeDiv.innerHTML = '<pre>' + JSON.stringify(fake_response, null, 2) + '</pre>'
+
+      } catch (error) {
+        console.error('Error:', error)
+      }
+    });
+  }
+};
+
+// async function getFakeRequest() {
+//   try {
+
+//     // Fake API fetch
+//     const response = await fetch('http://127.0.0.1:8000/github/user')  //'https://jsonplaceholder.typicode.com/posts/1'  //'127.0.0.1:8000/github/user'
+
+//     // takes response, converts to JavaScript Promise object
+//     const json = await response.json() 
+
+//     // Selects first div with 'fake_request' id attribute
+//     const fakeDiv = document.getElementById('fake_request');
     
-    // Inserts content into that div in the specified format
-    // For full JSON string, use: '<pre>' + JSON.stringify(json, null, 2) + '</pre>'
-    fakeDiv.innerHTML = '<pre>' + JSON.stringify(json, null, 2) + '</pre>'
-    // fakeDiv.innerHTML = '<p><h4>Fake Request Data:</h4><br>' + json.url + '</p>';
+//     // Inserts content into that div in the specified format
+//     // For full JSON string, use: '<pre>' + JSON.stringify(json, null, 2) + '</pre>'
+//     // fakeDiv.innerHTML = '<pre>' + JSON.stringify(json, null, 2) + '</pre>'
+//     fakeDiv.innerHTML = '<p><h4>Fake Request Data:</h4><br>' + json.url + '</p>';
 
-  } catch (error) {
-    console.error('Error:', error)
-  }   
-}
-
+//   } catch (error) {
+//     console.error('Error:', error)
+//   }   
+// }
 </script>
+
 
 <template>
   <header>
@@ -36,11 +66,21 @@ async function getFakeRequest() {
 
   <main>
     <br><br>
+    <div id="github_request"></div>
+    <br><br>
+    <h5>Fake Request:</h5>
     <div id="fake_request"></div>
-    <br>
-    <RowBox n_blocks=5 />
-    <RowBox n_blocks=1 />
-    <RowBox n_blocks=3 />
+    <br><br>
+    
+    <Badge type="primary" rounded>Primary</Badge>
+    <Badge type="info" rounded>Info</Badge>
+    <Badge type="danger" rounded>Danger</Badge>
+    <Badge type="default" rounded>Default</Badge>
+    <Badge type="warning" rounded>Warning</Badge>
+    <Badge type="success" rounded>Success</Badge>
+    
+    <BaseSlider value=10 type="primary" ></BaseSlider>
+
   </main>
 </template>
 
