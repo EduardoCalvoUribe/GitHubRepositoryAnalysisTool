@@ -8,13 +8,14 @@ from django.http import JsonResponse
 from rest_framework import generics
 from .models import Users
 from .models import Repos
+from . import functions
 # from .serializers import ItemSerializer
 
 # TO ADD: list of relevant API endpoints as a Python list/enum.
 
 # API call to https://api.github.com/user endpoint
 def github_user_info(request):
-    json_response = get_api_reponse('https://api.github.com/user').json()
+    json_response = functions.get_api_reponse('https://api.github.com/user').json()
     Users.save_user_to_db(json_response)
     return JsonResponse(json_response)
 
@@ -23,7 +24,7 @@ def github_repo_info(request):
     api_url = f"https://api.github.com/repos/plausible/analytics"
 
     try:
-        api_response = get_api_reponse(api_url)
+        api_response = functions.get_api_reponse(api_url)
         pull_requests = api_response.json()
         Repos.save_repo_to_db(pull_requests)
         return JsonResponse({'pull_requests': pull_requests})
@@ -34,7 +35,7 @@ def github_repo_info(request):
 # API call to endpoint with variables in endpoint URL. ATTENTION: Does not work properly yet. 
 def github_repo_pull_comments(request, owner, repo, pull_number):
     url = f'https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}/comments'
-    api_response = get_api_reponse(url)
+    api_response = functions.get_api_reponse(url)
 
     # Check if the request was successful
     if api_response.status_code == 200:
@@ -45,12 +46,7 @@ def github_repo_pull_comments(request, owner, repo, pull_number):
         return JsonResponse({}, status=api_response.status_code)
     
 
-def get_api_reponse(URL):
-    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
-    headers = {'Authorization': f'token {personal_access_token}'}
-    api_response = requests.get(URL, headers=headers)
 
-    return api_response
      
 
 # API call to https://api.github.com/repos/django/django/pulls endpoint. 
@@ -59,7 +55,7 @@ def github_repo_pull_requests(request):
     # API call authorisation
     url = 'https://api.github.com/repos/django/django/pulls'
     # Make the GET request to the GitHub API
-    api_response = get_api_reponse(url)
+    api_response = functions.get_api_reponse(url)
 
     # Check if the request was successful
     if api_response.status_code == 200:
@@ -74,7 +70,7 @@ def github_repo_pull_requests(request):
 # and creates a Django HttpResponse (displays key/value pairs)
 def handle_API_request(request,URL):
     # API call
-    api_response = get_api_reponse(URL)
+    api_response = functions.get_api_reponse(URL)
 
 
     json_response = api_response.json()
@@ -110,21 +106,3 @@ def load_repos(request):
         return JsonResponse({'repositories': data})
     
 
-def pull_request_per_user(request):
-    url = 'https://api.github.com/repos/django/django/pulls'
-    # Make the GET request to the GitHub API
-    api_response = get_api_reponse(url).json()
-    id_counts = {}  # Dictionary to store the counts for each 'id'
-
-    # Iterate over each item in the API response
-    for item in api_response:
-        user_id = item.get('user', {}).get('id')  # Get the 'id' value from the dictionary
-        user_login = item.get('user', {}).get('login')  # Get the 'login' value from the dictionary
-        key = "{}({})".format(user_id,user_login)
-        if user_id:
-            id_counts[key] = id_counts.get(key, 0) + 1  # Increment the count for the 'id'
-
-    sorted_user_count_dict = dict(sorted(id_counts.items(), key=lambda x: x[1], reverse=True)) # create a sorted by value dictionary of the user_id's
-    print(sorted_user_count_dict)
-
-    return JsonResponse({'repositories': sorted_user_count_dict})
