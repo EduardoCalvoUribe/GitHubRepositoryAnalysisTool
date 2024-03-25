@@ -119,9 +119,12 @@ def pull_request_per_user(request):
     # Iterate over each item in the API response
     for item in api_response:
         user_id = item.get('user', {}).get('id')  # Get the 'id' value from the dictionary
+        user_login = item.get('user', {}).get('login')  # Get the 'login' value from the dictionary
+        key = "{}({})".format(user_id,user_login)
         if user_id:
-            id_counts[user_id] = id_counts.get(user_id, 0) + 1  # Increment the count for the 'id'
+            id_counts[key] = id_counts.get(key, 0) + 1  # Increment the count for the 'id'
 
     sorted_user_count_dict = dict(sorted(id_counts.items(), key=lambda x: x[1], reverse=True)) # create a sorted by value dictionary of the user_id's
+    print(sorted_user_count_dict)
 
-    return JsonResponse({'repositories2': sorted_user_count_dict})
+    return JsonResponse({'repositories': sorted_user_count_dict})
