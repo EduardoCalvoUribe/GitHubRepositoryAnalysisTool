@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.utils import timezone
 from django.db import models
+#from .functions import *
 
 class Users(models.Model):
     name = models.CharField(max_length=100)
@@ -41,6 +42,7 @@ class Repos(models.Model):
     updated_at = timezone.now()
     login = models.CharField(max_length=100, blank=True)
     avatar_url = models.URLField(blank=True)
+    #users = pull_request_per_user
 
     def __str__(self):
         return self.name
@@ -61,5 +63,6 @@ class Repos(models.Model):
             repo.save()
         except Exception as e:
             return JsonResponse({"error": str(e)})
+
     class Meta:
         app_label = 'api_integration'

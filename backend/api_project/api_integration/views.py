@@ -1,26 +1,31 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+import numpy as np
 import requests
 # import json
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
-from .models import *
-from .serializers import ItemSerializer
+from .models import Users
+from .models import Repos
+# from .serializers import ItemSerializer
 
 # TO ADD: list of relevant API endpoints as a Python list/enum.
 
 # API call to https://api.github.com/user endpoint
-def github_user_info(request):    
-    return JsonResponse(get_api_reponse('https://api.github.com/user').json())
+def github_user_info(request):
+    json_response = get_api_reponse('https://api.github.com/user').json()
+    Users.save_user_to_db(json_response)
+    return JsonResponse(json_response)
 
 # API call to https://api.github.com/user endpoint
 def github_repo_info(request):
-    api_url = f"https://api.github.com/repos/plausible/analytics/pulls"
+    api_url = f"https://api.github.com/repos/plausible/analytics"
 
     try:
         api_response = get_api_reponse(api_url)
         pull_requests = api_response.json()
+        Repos.save_repo_to_db(pull_requests)
         return JsonResponse({'pull_requests': pull_requests})
 
     except requests.RequestException as e:
@@ -104,3 +109,19 @@ def load_repos(request):
         data = list(Repos.objects.values())
         return JsonResponse({'repositories': data})
     
+
+def pull_request_per_user(request):
+    url = 'https://api.github.com/repos/django/django/pulls'
+    # Make the GET request to the GitHub API
+    api_response = get_api_reponse(url).json()
+    id_counts = {}  # Dictionary to store the counts for each 'id'
+
+    # Iterate over each item in the API response
+    for item in api_response:
+        user_id = item.get('user', {}).get('id')  # Get the 'id' value from the dictionary
+        if user_id:
+            id_counts[user_id] = id_counts.get(user_id, 0) + 1  # Increment the count for the 'id'
+
+    sorted_user_count_dict = dict(sorted(id_counts.items(), key=lambda x: x[1], reverse=True)) # create a sorted by value dictionary of the user_id's
+
+    return JsonResponse({'repositories2': sorted_user_count_dict})

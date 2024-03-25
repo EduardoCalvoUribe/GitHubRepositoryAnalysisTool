@@ -9,4 +9,5 @@ urlpatterns = [
     path('repos/<str:owner>/<str:repo>/pulls/<str:pull_number>/comments', views.github_repo_pull_comments, name='github_repo_deployments'),
     path('github-pulls/', views.github_repo_pull_requests, name='github_repo_pull_requests'), #URL for displaying JSON dictionary for github repo PRs API endpoint
     path('testUser/', views.testUser, name='testUser'), #URL for displaying testUser function.
+    path('quantify',views.pull_request_per_user, name='poep')
 ]
