@@ -5,36 +5,62 @@ import { fetchData } from './fetchData.js'
 import Badge from './components/Badge.vue';
 import BaseSlider from './components/BaseSlider.vue';
 import CustomControls from './views/components/CustomControls.vue';
-
+import BaseButton from './components/BaseButton.vue';
+import BaseInput from './components/BaseInput.vue';
 
 export default {
   components: {
     Badge,
     BaseSlider,
     CustomControls,
+    BaseButton,
+    BaseInput
   },
   setup() {
     onMounted(async () => {
       try {
         // Fetches json data from specified URL using our fetchData function (will be our backend endpoints)
-        const json_response = await fetchData('http://127.0.0.1:8000/github/user');
+        // const json_response = await fetchData('http://127.0.0.1:8000/github/user');
         const fake_response = await fetchData('http://jsonplaceholder.typicode.com/posts/1');
 
         // Selects first div with specified id (such as 'github_request')
-        const githubDiv = document.getElementById('github_request');
         const fakeDiv = document.getElementById('fake_request');
 
-        console.log(json_response);
-
         // Inserts content of json into that div in whatever specified format
-        githubDiv.innerHTML = '<p><h5>Data from Backend:</h5><br>' + json_response.url + '</p>';
         fakeDiv.innerHTML = '<pre>' + JSON.stringify(fake_response, null, 2) + '</pre>';
 
       } catch (error) {
         console.error('Error:', error)
       }
     });
-  }
+  },
+  data() {
+    return {
+      // Input from the URL text field
+      githubURL: ''
+    }
+  },
+  methods: {
+    async handleGithubURLSubmit() {
+      const postOptions = {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url: this.githubUrl }),
+      };
+
+      try {
+          // Need actual endpoint to test!
+          const response = await fetchData('http://127.0.0.1:8000/your-endpoint', postOptions);
+          const githubDiv = document.getElementById('github_request');
+          githubDiv.innerHTML = '<p><h5>Data from Backend:</h5><br>' + response + '</p>';
+
+      } catch (error) {
+          console.error('Error:', error);
+      }
+    },
+  },  
 };
 </script>
 
@@ -54,14 +80,17 @@ export default {
     <div id="fake_request"></div>
     <br><br>
 
-    <Badge type="primary" rounded>Primary</Badge>
+    <BaseInput label="Enter GitHub URL" v-model="githubURL"></BaseInput>
+    <BaseButton type="primary" size="lg" @click="handleGithubURLSubmit">Submit</BaseButton>
+
+    <!-- <Badge type="primary" rounded>Primary</Badge>
     <Badge type="info" rounded>Info</Badge>
     <Badge type="danger" rounded>Danger</Badge>
     <Badge type="default" rounded>Default</Badge>
     <Badge type="warning" rounded>Warning</Badge>
     <Badge type="success" rounded>Success</Badge>
     
-    <BaseSlider value=10 disabled="" type="primary" ></BaseSlider>
+    <BaseSlider value=10 disabled="" type="primary" ></BaseSlider> -->
 
   </main>
 </template>

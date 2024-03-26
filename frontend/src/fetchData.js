@@ -1,12 +1,12 @@
-async function fetchData(url) {
-    try {
+async function fetchData(url, options = {}) {
+  try {
       // fetches response, converts to JavaScript Promise object
-      const response = await fetch(url)
-      const json = await response.json() 
-      return json
-    } catch (error) {
-      console.error('Error:', error)
-    }   
+      const response = await fetch(url, options);
+      const json = await response.json();
+      return json;
+  } catch (error) {
+      console.error('Error:', error);
   }
+}
 
-  export { fetchData };
+export { fetchData };
