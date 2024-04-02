@@ -1,34 +1,41 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+import numpy as np
 import requests
 # import json
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
-from .models import Item
-from .serializers import ItemSerializer
+from .models import Users
+from .models import Repos
+from . import functions
+# from .serializers import ItemSerializer
 
 # TO ADD: list of relevant API endpoints as a Python list/enum.
 
-
-class ItemListCreateView(generics.ListCreateAPIView):
-    queryset = Item.objects.all()
-    serializer_class = ItemSerializer
-
-
 # API call to https://api.github.com/user endpoint
 def github_user_info(request):
-    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
-    headers = {'Authorization': f'token {personal_access_token}'}
-    api_response = requests.get('https://api.github.com/user', headers=headers)
-    return JsonResponse(api_response.json())
+    json_response = functions.get_api_reponse('https://api.github.com/user').json()
+    Users.save_user_to_db(json_response)
+    return JsonResponse(json_response)
+
+# API call to https://api.github.com/user endpoint
+def github_repo_info(request):
+    api_url = f"https://api.github.com/repos/plausible/analytics"
+
+    try:
+        api_response = functions.get_api_reponse(api_url)
+        pull_requests = api_response.json()
+        Repos.save_repo_to_db(pull_requests)
+        return JsonResponse({'pull_requests': pull_requests})
+
+    except requests.RequestException as e:
+        return JsonResponse({'error': str(e)})
 
 # API call to endpoint with variables in endpoint URL. ATTENTION: Does not work properly yet. 
 def github_repo_pull_comments(request, owner, repo, pull_number):
-    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
-    headers = {'Authorization': f'token {personal_access_token}'}
     url = f'https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}/comments'
-    api_response = requests.get(url, headers=headers)
+    api_response = functions.get_api_reponse(url)
 
     # Check if the request was successful
     if api_response.status_code == 200:
@@ -39,17 +46,16 @@ def github_repo_pull_comments(request, owner, repo, pull_number):
         return JsonResponse({}, status=api_response.status_code)
     
 
+
+     
+
 # API call to https://api.github.com/repos/django/django/pulls endpoint. 
 # TO ADD: Repos as variable
 def github_repo_pull_requests(request):
     # API call authorisation
-    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
-    headers = {'Authorization': f'token {personal_access_token}'}
-
     url = 'https://api.github.com/repos/django/django/pulls'
-
     # Make the GET request to the GitHub API
-    api_response = requests.get(url, headers=headers)
+    api_response = functions.get_api_reponse(url)
 
     # Check if the request was successful
     if api_response.status_code == 200:
@@ -64,11 +70,9 @@ def github_repo_pull_requests(request):
 # and creates a Django HttpResponse (displays key/value pairs)
 def handle_API_request(request,URL):
     # API call
-    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
-    headers = {'Authorization': f'token {personal_access_token}'}
-    api_response = requests.get(URL, headers=headers)
+    api_response = functions.get_api_reponse(URL)
 
-    # Convert API response to JSON format
+
     json_response = api_response.json()
 
     # Variable which collects dictionary into string.
@@ -103,20 +107,20 @@ def display_POST_request(request):
     return HttpResponse(url)
 
 
+
+
 # This function is an example call of handle_API_request for API endpoint https://api.github.com/user.
 def testUser(request):   
     return handle_API_request(request,'https://api.github.com/user')
     
-# def save_github_repositories_to_db():
-#     for repo in github_repositories:
-#         GitHubRepository.objects.create(
-#             name=repo["name"],
-#             description=repo["description"],
-#             url=repo["html_url"],
-#         )
+# list all save users
+def load_users(request):
+        data = list(Users.objects.values())
+        return JsonResponse({'users': data})
 
-
-
-
-
+# list all saved repositories
+def load_repos(request):
+        data = list(Repos.objects.values())
+        return JsonResponse({'repositories': data})
     
+
