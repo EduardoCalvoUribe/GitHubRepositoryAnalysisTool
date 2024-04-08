@@ -3,12 +3,10 @@ from django.utils import timezone
 from django.db import models
 from . import functions
 
-class Users(models.Model):
+class Users(models.Model): # user
     name = models.CharField(max_length=100)
     url = models.URLField()
-    updated_at = timezone.now()
     login = models.CharField(max_length=100, blank=True)
-    avatar_url = models.URLField(blank=True)
 
     def __str__(self):
         return self.name
@@ -36,13 +34,12 @@ class Users(models.Model):
         app_label = 'api_integration'
 
 
-class Repos(models.Model):
-    name = models.CharField(max_length=100)
-    url = models.URLField()
-    updated_at = timezone.now()
-    login = models.CharField(max_length=100, blank=True)
-    avatar_url = models.URLField(blank=True)
-    users = models.JSONField(blank=True, default=dict) 
+class Repos(models.Model): # repository, might have to change this into comment
+    name = models.CharField(max_length=100) # name of repository
+    url = models.URLField() # api url of repository
+    updated_at = timezone.now() # time of last update
+    contributers = models.JSONField(blank=True, default=dict) # list of amount of pull request per users
+    pull_requests = models.JSONField(blank=True, default=dict) # list of pull request in repository
 
     def __str__(self):
         return self.name
@@ -55,11 +52,85 @@ class Repos(models.Model):
             for key,value in json_response.items():
                 if key is not None:
                     if value is not None:
-                        setattr(repo, key, value)
+                        if "_url" in key or "_url" in value:
+                            setattr(repo, key, {'a':1})
+                        else:
+                            setattr(repo, key, value)
                     else:
                         setattr(repo, key, "")
-            setattr(repo, "users", functions.pull_request_per_user()) # update users
+            setattr(repo, "contributers", functions.pull_request_per_user()) # update users
+            setattr(repo, "pull_requests", {"a":1})
             repo.save()
+        except Exception as e:
+            return JsonResponse({"error": str(e)})
+
+    class Meta:
+        app_label = 'api_integration'
+
+class PullRequest(models.Model): # pull request
+    name = models.CharField(max_length=100)
+    url = models.URLField()
+    updated_at = timezone.now()
+    title = models.CharField(max_length=100)
+    body = models.CharField(max_length=100)
+    user = models.CharField(max_length=100)
+    comments = models.JSONField(blank=True, default=dict)
+    #closed = model.
+
+    def __str__(self):
+        return self.name
+    
+    @classmethod
+    def save_user_to_db(request, json_response):
+        try:
+            # Convert API response to JSON format
+            pull_request = PullRequest()
+
+            for key,value in json_response.items():
+                if key is not None:
+                    if value is not None:
+                        setattr(pull_request, key, value)
+                    else:
+                        setattr(pull_request, key, "")
+
+            pull_request.save()
+            data = list(pull_request.objects.values())
+            return JsonResponse({'data': data})
+        except Exception as e:
+            return JsonResponse({"error": str(e)})
+
+    class Meta:
+        app_label = 'api_integration'
+
+
+class Commit(models.Model): # commit
+    name = models.CharField(max_length=100)
+    url = models.URLField()
+    updated_at = timezone.now()
+    title = models.CharField(max_length=100)
+    body = models.CharField(max_length=500)
+    user = models.CharField(max_length=100)
+    comments = models.JSONField(blank=True, default=dict)
+
+    def __str__(self):
+        return self.name
+    
+    @classmethod
+    def save_user_to_db(request, json_response):
+        try:
+            # Convert API response to JSON format
+            commit = Commit()
+
+            for key,value in json_response.items():
+                if key is not None:
+                    if value is not None:
+                        setattr(commit, key, value)
+                    else:
+                        setattr(commit, key, "")
+
+            commit.save()
+            data = list(commit.objects.values())
+            return JsonResponse({'data': data})
         except Exception as e:
             return JsonResponse({"error": str(e)})
 
