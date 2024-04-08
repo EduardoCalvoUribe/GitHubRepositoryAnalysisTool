@@ -60,6 +60,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 
+CORS_ALLOW_ALL_ORIGINS = True  # Do not use this in production!
+
 ROOT_URLCONF = 'api_project.urls'
 
 TEMPLATES = [

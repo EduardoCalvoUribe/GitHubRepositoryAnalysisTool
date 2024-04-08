@@ -34,25 +34,28 @@ export default {
       }
     });
   },
-  data() {
-    return {
-      // Input from the URL text field
-      githubURL: ''
-    }
-  },
+  // data() {
+  //   return {
+  //     // Input from the URL text field
+  //     githubURL: ''
+  //   }
+  // },
   methods: {
     async handleGithubURLSubmit() {
+      var githubURL = document.getElementById('githubURL').value;
+      const data = {url: githubURL};
+
       const postOptions = {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ url: this.githubUrl }),
+          body: JSON.stringify(data),
       };
 
       try {
           // Need actual endpoint to test!
-          const response = await fetchData('http://127.0.0.1:8000/your-endpoint', postOptions);
+          const response = await fetchData('http://127.0.0.1:8000/github/request/', postOptions);
           const githubDiv = document.getElementById('github_request');
           githubDiv.innerHTML = '<p><h5>Data from Backend:</h5><br>' + response + '</p>';
 
@@ -80,7 +83,8 @@ export default {
     <div id="fake_request"></div>
     <br><br>
 
-    <BaseInput label="Enter GitHub URL" v-model="githubURL"></BaseInput>
+
+    <BaseInput label="Enter GitHub URL" id="githubURL"></BaseInput>
     <BaseButton type="primary" size="lg" @click="handleGithubURLSubmit">Submit</BaseButton>
 
     <!-- <Badge type="primary" rounded>Primary</Badge>

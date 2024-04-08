@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 import requests
-# import json
+import json
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
 from .models import Item
 from .serializers import ItemSerializer
+from django.views.decorators.csrf import csrf_exempt
 
 # TO ADD: list of relevant API endpoints as a Python list/enum.
 
@@ -83,7 +84,8 @@ def handle_API_request(request,URL):
 
     # Return text_to_display in Django HttpResponse format (in order to display on URL)
     return HttpResponse(text_to_display)
-    
+   
+@csrf_exempt 
 # This function accepts an incoming HTTP request, which is assumed to be a POST request. 
 # The function returns a user-requested Github API URL in String form which is extracted from the HTTP request
 def process_vue_POST_request(request):
@@ -95,7 +97,7 @@ def process_vue_POST_request(request):
         # Assuming that POST request contains 'url' key and associated value
         url = data.get('url')
 
-    return url
+    return JsonResponse(url, safe=False)
 
 # Simple rapper function which can display POST request Github API URL on Django website
 def display_POST_request(request):
