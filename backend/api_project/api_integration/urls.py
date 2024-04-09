@@ -3,7 +3,7 @@ from . import views
 from .views import ItemListCreateView
 
 # importing nlp_functions to test function output on webpage. 
-from . import nlp_functions
+from .nlp_functions import FleschReadingEase
 
 urlpatterns = [
     path('user', views.github_user_info, name='github_user_info'),
@@ -12,5 +12,5 @@ urlpatterns = [
     path('testUser/', views.testUser, name='testUser'), #URL for displaying testUser function. 
     path('items/', ItemListCreateView.as_view(), name='item-list-create'), #for listing all items we can send to the frontend
     path('postRequest/',views.process_vue_POST_request,name='process-POST-request'), #URL handle for parsing POST request data 
-    path('nlp/',nlp_functions.calculate_flesch_reading_ease,name='nlp') #URL handle for parsing POST request data 
+    path('nlp/',FleschReadingEase.calculate_flesch_reading_ease,name='nlp') #URL handle for parsing POST request data 
 ]
