@@ -15,7 +15,6 @@ async def repo_total_commits(request, owner, repo, pull_number, start_date, end_
     # start/end_date = YYYY-MM-DD
     # status = open, closed or all
     # set = general, pull or all
-    # New line
 
     # Specify time frame in year month day format
     if start_date and end_date:
