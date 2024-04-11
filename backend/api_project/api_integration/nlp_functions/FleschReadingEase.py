@@ -1,3 +1,9 @@
+
+# This file contains the classes which are used for calculating NLP metrics on commit messages in our webapp.
+
+# For testing purposes, the classes are also available in the Google Drive project folder. (Remove this comment line for end product)
+
+
 # from django.http import HttpResponse
 
 import nltk
@@ -71,7 +77,7 @@ def otherSyllables(word):
         # Consider 'ly' as a single syllable in most cases
         count = max(count - 1, 1)
 
-     # Handling exceptions
+    # Handling exceptions
     if word.endswith('e'):
         # Drop silent 'e' at the end
         count -= 1
@@ -80,3 +86,4 @@ def otherSyllables(word):
     
     # Avoid counting 0 syllables
     return max(count, 1)
+
