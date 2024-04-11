@@ -32,18 +32,24 @@ export default {
       } catch (error) {
         console.error('Error:', error)
       }
+
+      // const githubURL = ref('');
+
+      // return { githubURL };
+
     });
   },
-  // data() {
-  //   return {
-  //     // Input from the URL text field
-  //     githubURL: ''
-  //   }
-  // },
+  // TODO: Fix githubURL, it's just empty. Input is not correctly retrieved from Input Box.
+  data() {
+    return {
+      githubURL: ''
+    }
+  },
   methods: {
     async handleGithubURLSubmit() {
-      var githubURL = document.getElementById('githubURL').value;
-      const data = {url: githubURL};
+      //var githubURL = document.getElementById('githubURL').value;
+      console.log(githubURL)
+      const data = {'url': this.githubURL};
 
       const postOptions = {
           method: 'POST',
@@ -54,10 +60,13 @@ export default {
       };
 
       try {
-          // Need actual endpoint to test!
-          const response = await fetchData('http://127.0.0.1:8000/github/request/', postOptions);
+          // https://github.com/IntersectMBO/plutus
+          // TODO: Instead of cocatenating, extract from POST options (postOptions.body?). Also modify urls.py for this
+          const response = await fetchData('http://127.0.0.1:8000/github/github-pulls/'.concat(githubURL), postOptions);
+          // const response = await fetch(url, postOptions);
+          // const json = await response.json();
           const githubDiv = document.getElementById('github_request');
-          githubDiv.innerHTML = '<p><h5>Data from Backend:</h5><br>' + response + '</p>';
+          githubDiv.innerHTML = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
 
       } catch (error) {
           console.error('Error:', error);
@@ -84,7 +93,7 @@ export default {
     <br><br>
 
 
-    <BaseInput label="Enter GitHub URL" id="githubURL"></BaseInput>
+    <BaseInput label="Enter GitHub URL" v-model="githubURL"></BaseInput>
     <BaseButton type="primary" size="lg" @click="handleGithubURLSubmit">Submit</BaseButton>
 
     <!-- <Badge type="primary" rounded>Primary</Badge>

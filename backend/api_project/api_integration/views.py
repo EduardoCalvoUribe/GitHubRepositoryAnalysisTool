@@ -39,15 +39,21 @@ def github_repo_pull_comments(request, owner, repo, pull_number):
         # If the request was not successful, return an empty dictionary
         return JsonResponse({}, status=api_response.status_code)
     
-
+@csrf_exempt
 # API call to https://api.github.com/repos/django/django/pulls endpoint. 
 # TO ADD: Repos as variable
-def github_repo_pull_requests(request):
+def github_repo_pull_requests(request, url):
     # API call authorisation
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
     headers = {'Authorization': f'token {personal_access_token}'}
 
-    url = 'https://api.github.com/repos/django/django/pulls'
+    # TODO: Extract owner and repo from URL
+    # Example Input = 'github.com/repos/IntersectMBO/plutus/pulls'
+    # Example Desired Output = 'https://api.github.com/repos/IntersectMBO/plutus'
+    # proof of concept:
+    # owner = url.split('/')[3]
+    # repo = url.split('/')[4]
+    # api_response = requests.get(f'https://api.github.com/repos/{owner}/{repo}/pulls', headers=headers)
 
     # Make the GET request to the GitHub API
     api_response = requests.get(url, headers=headers)
@@ -97,7 +103,7 @@ def process_vue_POST_request(request):
         # Assuming that POST request contains 'url' key and associated value
         url = data.get('url')
 
-    return JsonResponse(url, safe=False)
+    return JsonResponse(str(url), safe=False)
 
 # Simple rapper function which can display POST request Github API URL on Django website
 def display_POST_request(request):
