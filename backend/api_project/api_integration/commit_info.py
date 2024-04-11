@@ -5,8 +5,12 @@ from django.conf import settings
 from datetime import datetime
 from collections import Counter
 from . import functions
+import aiohttp
+import asyncio
+import time
+import re
 
-def repo_total_commits(request, owner, repo, pull_number, start_date, end_date, status, set):
+async def repo_total_commits(request, owner, repo, pull_number, start_date, end_date, status, set):
     # TODO: What should the final reponse be to be able to be used by frontend
     # start/end_date = YYYY-MM-DD
     # status = open, closed or all
@@ -36,7 +40,7 @@ def repo_total_commits(request, owner, repo, pull_number, start_date, end_date, 
         # Checks if the commits of the pull requests are required by the api call
         if set != 'general':
             # Call function to get the commits that do belong to a pull request
-            pull_text_to_display, pull_total_commit_amount, pull_user_commit_count = pull_commits(request, owner, repo, pull_number, start_date, end_date, status)
+            pull_text_to_display, pull_total_commit_amount, pull_user_commit_count = await pull_commits_async2(request, owner, repo, start_date, end_date, status)
             # Add data to the created variables
             total_commit_amount += pull_total_commit_amount
             text_to_display += pull_text_to_display
@@ -62,11 +66,11 @@ def repo_total_commits(request, owner, repo, pull_number, start_date, end_date, 
     # Return text_to_display in Django HttpResponse format (in order to display on URL)
     return HttpResponse(text_to_display_neat)
 
-
 def general_repo_commits(request, owner, repo, start_date, end_date):
     # API call for the commits not associated to a PR
     repo_commits_url = f'https://api.github.com/repos/{owner}/{repo}/commits?since={start_date}&until={end_date}'
 
+    # Creation of variables to be returned
     text_to_display = ""
     total_commit_amount = 0
     user_commit_count = {}
@@ -106,7 +110,8 @@ def general_repo_commits(request, owner, repo, start_date, end_date):
 
     return text_to_display, total_commit_amount, user_commit_count
 
-def pull_commits(request, owner, repo, pull_number, start_date, end_date, status):
+def pull_commits(request, owner, repo, start_date, end_date, status):
+    start_time = time.time()
     text_to_display = ""
     total_commit_amount = 0
     user_commit_count = {}
@@ -156,6 +161,9 @@ def pull_commits(request, owner, repo, pull_number, start_date, end_date, status
         else:
             pr_commits_url = None
 
+    end_time = time.time() 
+    duration = end_time - start_time
+    print(duration) 
     return text_to_display, total_commit_amount, user_commit_count
     
 def specific_pull_commits(request, owner, repo, pull_number):
@@ -194,3 +202,200 @@ def specific_pull_commits(request, owner, repo, pull_number):
             pr_commits_url = None
 
     return text_to_display, total_commit_amount, user_commit_count
+
+
+
+
+
+async def pull_commits_async(request, owner, repo, start_date, end_date, status):
+    start_time = time.time()
+    text_to_display = ""
+    total_commit_amount = 0
+    user_commit_count = {}
+
+    pr_commits_url = f'https://api.github.com/repos/{owner}/{repo}/pulls?state={status}'
+
+    headers = {'Authorization': f'token {settings.GITHUB_PERSONAL_ACCESS_TOKEN}'}
+    async with aiohttp.ClientSession(headers=headers) as session:
+        while pr_commits_url:
+            async with session.get(pr_commits_url) as response:
+                pull_requests = await response.json()
+                filtered_pull_requests = [pr for pr in pull_requests if start_date <= pr['updated_at'] <= end_date]
+                tasks = []
+                for pull_request in filtered_pull_requests:
+                    task = asyncio.create_task(process_pull_request(session, pull_request, start_date, end_date))
+                    tasks.append(task)
+
+                results = await asyncio.gather(*tasks)
+                # Process results
+                for result in results:
+                    sub_text_to_display, sub_total_commit_amount, sub_user_commit_count = result
+                    text_to_display += sub_text_to_display
+                    total_commit_amount += sub_total_commit_amount
+                    user_commit_count = Counter(user_commit_count) + Counter(sub_user_commit_count)
+
+                link_header = response.headers.get('Link')
+                if link_header:
+                    #print("header" + str(link_header))
+                    next_page_url = parse_link_header(link_header).get('next')
+                    print(next_page_url)
+                    if next_page_url:
+                        pr_commits_url = next_page_url
+                    else:
+                        pr_commits_url = None
+                else:
+                    pr_commits_url = None
+
+    end_time = time.time() 
+    duration = end_time - start_time
+    print(duration)  
+    return text_to_display, total_commit_amount, user_commit_count
+
+async def process_pull_request(session, pull_request, start_date, end_date):
+    commits = await fetch_commits_for_pull_requests(session, pull_request, start_date, end_date)
+    text_to_display = ""
+    total_commit_amount = 0
+    user_commit_count = {}
+
+    for commit in commits:
+        total_commit_amount += 1
+        commit_author = commit['author']
+        user_commit_count[commit_author] = user_commit_count.get(commit_author, 0) + 1
+
+        text_to_display += "-------------------</p>"
+        text_to_display += f"<p><b>Author</b>: {commit['author']}</p>"
+        text_to_display += f"<p><b>Date</b>: {commit['date']}</p>"
+        text_to_display += f"<p><b>Pull Request</b>: Pull Request #{commit['pull_request_number']}: {commit['pull_request_title']}</p>"
+        text_to_display += f"<p><b>Message</b>: {commit['message']}</p>"
+
+    #print(total_commit_amount)
+    return text_to_display, total_commit_amount, user_commit_count
+
+async def fetch_commits_for_pull_requests(session, pull_request, start_date, end_date):
+    pull_request_commits_url = pull_request['commits_url'].replace("{/sha}", "")
+    async with session.get(pull_request_commits_url) as response:
+        pr_commits = await response.json()
+        commits = []
+        for commit in pr_commits:
+            commit_date = datetime.strptime(commit['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ").isoformat()
+            if start_date <= commit_date <= end_date:
+                commit_author = commit['author']['login'] if commit['author'] else 'Unknown'
+                commit_date = commit['commit']['author']['date']
+                commit_message = commit['commit']['message']
+                commits.append({
+                    'author': commit_author,
+                    'date': commit_date,
+                    'message': commit_message,
+                    'pull_request_number': pull_request['number'],
+                    'pull_request_title': pull_request['title']
+                })
+        return commits
+
+def parse_link_header(link_header):
+    links = {}
+    parts = link_header.split(', ')
+    for part in parts:
+        section = part.split('; ')
+        url = re.findall('<(.+)>', section[0])[0]
+        rel = re.findall('"(.+)"', section[1])[0]
+        links[rel] = url
+    return links
+
+
+
+
+
+async def pull_commits_async2(request, owner, repo, start_date, end_date, status):
+    start_time = time.time()
+    text_to_display = ""
+    total_commit_amount = 0
+    user_commit_count = {}
+
+    pr_commits_url = f'https://api.github.com/repos/{owner}/{repo}/pulls?state={status}'
+    headers = {'Authorization': f'token {settings.GITHUB_PERSONAL_ACCESS_TOKEN}'}
+
+    async with aiohttp.ClientSession(headers=headers) as session:
+        all_pull_requests = await fetch_all_pull_requests(session, pr_commits_url)
+
+        # Process pull requests concurrently
+        tasks = []
+        for pull_request_page in all_pull_requests:
+            task = asyncio.create_task(process_pull_request_page(session, pull_request_page, start_date, end_date))
+            tasks.append(task)
+
+        # Wait for all tasks to complete
+        results = await asyncio.gather(*tasks)
+
+        # Process results
+        for result in results:
+            sub_text_to_display, sub_total_commit_amount, sub_user_commit_count = result
+            text_to_display += sub_text_to_display
+            total_commit_amount += sub_total_commit_amount
+            user_commit_count = Counter(user_commit_count) + Counter(sub_user_commit_count)
+
+    end_time = time.time() 
+    duration = end_time - start_time
+    print(duration)  
+    return text_to_display, total_commit_amount, user_commit_count
+
+async def fetch_all_pull_requests(session, url):
+    all_pull_requests = []
+    tasks = []
+
+    while url:
+        async with session.get(url) as response:
+            data = await response.json()
+            all_pull_requests.append(data)
+
+            # Check for pagination
+            link_header = response.headers.get('Link')
+            print(link_header)
+            if link_header:
+                next_page_url = parse_link_header(link_header).get('next')
+                if next_page_url:
+                    url = next_page_url
+                    task = asyncio.create_task(fetch_pull_request_page(session, next_page_url))
+                    tasks.append(task)
+                else:
+                    url = None
+            else:
+                url = None
+
+    # Wait for all tasks to complete
+    if tasks:
+        additional_results = await asyncio.gather(*tasks)
+        all_pull_requests.extend(additional_results)
+
+    return all_pull_requests
+
+async def fetch_pull_request_page(session, url):
+    async with session.get(url) as response:
+        return await response.json()
+    
+async def process_pull_request_page(session, pull_request_page, start_date, end_date):
+    # Process each pull request on the page concurrently
+    tasks = []
+    for pull_request in pull_request_page:
+        task = asyncio.create_task(process_pull_request(session, pull_request, start_date, end_date))
+        tasks.append(task)
+
+    # Wait for all tasks to complete
+    results = await asyncio.gather(*tasks)
+
+    # Combine and return results
+    combined_results = combine_results(results)
+    return combined_results
+
+def combine_results(results):
+    # Combine results from multiple tasks
+    combined_text_to_display = ""
+    combined_total_commit_amount = 0
+    combined_user_commit_count = {}
+
+    for result in results:
+        sub_text_to_display, sub_total_commit_amount, sub_user_commit_count = result
+        combined_text_to_display += sub_text_to_display
+        combined_total_commit_amount += sub_total_commit_amount
+        combined_user_commit_count = Counter(combined_user_commit_count) + Counter(sub_user_commit_count)
+
+    return combined_text_to_display, combined_total_commit_amount, combined_user_commit_count
