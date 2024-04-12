@@ -79,23 +79,26 @@ export default {
 
 <template>
   <header>
-    <div>
-      GitHub Analysis Tool (GAT)
+    <div style="font-size: 180%;">
+      Repository Analysis Tool
     </div>
   </header>
 
   <main>
-    <br><br>
-    <div id="github_request"></div>
-    <br><br>
+    <div style="margin-top: 4%; display: flex; justify-content: center;">
+      <div style="display: flex;">
+        <BaseInput style="width: 140%; margin: 0 auto;" label="Enter GitHub URL" v-model="githubURL"></BaseInput>
+        <BaseButton type="primary" size="sm" style="height: 50px; margin-left: 100px; margin-top: 27px;" @click="handleGithubURLSubmit">Submit</BaseButton>
+      </div>
+    </div>
+
+    <div style="margin-top: 10%;" id="github_request"></div>
+    <!-- <br><br>
     <h5>Fake Request:</h5>
     <div id="fake_request"></div>
-    <br><br>
+    <br><br> -->
 
-
-    <BaseInput label="Enter GitHub URL" v-model="githubURL"></BaseInput>
-    <BaseButton type="primary" size="lg" @click="handleGithubURLSubmit">Submit</BaseButton>
-
+    
     <!-- <Badge type="primary" rounded>Primary</Badge>
     <Badge type="info" rounded>Info</Badge>
     <Badge type="danger" rounded>Danger</Badge>
