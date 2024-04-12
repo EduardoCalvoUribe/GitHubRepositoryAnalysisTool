@@ -88,7 +88,7 @@ export default {
     <div style="margin-top: 4%; display: flex; justify-content: center;">
       <div style="display: flex;">
         <BaseInput style="width: 140%; margin: 0 auto;" label="Enter GitHub URL" v-model="githubURL"></BaseInput>
-        <BaseButton type="primary" size="sm" style="height: 50px; margin-left: 100px; margin-top: 27px;" @click="handleGithubURLSubmit">Submit</BaseButton>
+        <BaseButton type="primary" size="sm" style="height: 50px; margin-left: 100px; margin-top: 8%;" @click="handleGithubURLSubmit">Submit</BaseButton>
       </div>
     </div>
 
