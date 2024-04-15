@@ -33,7 +33,16 @@ def calculate_flesch_reading_ease(message):
     for word in message:
         syllableCount += syllable_count(word)
     
-    return str(206.835 - (1.015 * (wordCount/sentenceCount)) - (84.6 * (syllableCount/wordCount)))
+    # Calculate Flesch reading ease score with the associated formula
+    flesch_reading_ease_score = 206.835 - (1.015 * (wordCount/sentenceCount)) - (84.6 * (syllableCount/wordCount))
+
+    # Return Flesch reading ease score.
+    # If Flesch reading ease score is above 0, return this value.
+    if flesch_reading_ease_score > 0:
+        return str(flesch_reading_ease_score)
+    # Else if Flesch reading ease score is below 0 or 0, return 0.
+    else:
+        return str(0)
 
 #Helper function which checks if word is in cmudict dictionary.
 def lookup_word(word):
@@ -87,3 +96,18 @@ def otherSyllables(word):
     # Avoid counting 0 syllables
     return max(count, 1)
 
+# This function computes the average flesch reading ease for a list of message strings.
+# messageList must be a list of strings.
+
+# NOTE: The average flesch reading ease score can also be calculated with aggregate avg() function in sqlite database. 
+# However, this is only possible if we decide to stoe the flesch reading ease scores in the database. 
+def calculate_average_flesch_reading_ease(messageList):
+  # Initialise total flesch reading ease variable
+  total_flesch_reading_ease = 0
+  
+  # Sum all flesch reading eases for every message in messageList
+  for message in messageList:
+    total_flesch_reading_ease += calculate_flesch_reading_ease(message)
+
+  # Return average flesch reading ease by dividing total flesch reading ease by length of messageList
+  return total_flesch_reading_ease/len(messageList)
