@@ -44,7 +44,7 @@ def single_message_lexical_density(message):
 # This function computes the average lexical density for a list of message strings.
 # messageList must be a list of strings.
 def average_message_lexical_density(messageList):
-  # Initialise average lexical density variable
+  # Initialise total lexical density variable
   total_lexical_density = 0
   
   # Sum all lexical densities for every message in messageList
