@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 import numpy as np
 import requests
-# import json
+import json
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
