@@ -16,10 +16,10 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Adding personal access token
-GITHUB_PERSONAL_ACCESS_TOKEN = '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' 
+GITHUB_PERSONAL_ACCESS_TOKEN = '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' 
 
 #List of relevant GitHub API Endpoints
-GITHUB_API_ENDPOINTS = ['https://api.github.com/user']
+# GITHUB_API_ENDPOINTS = ['https://api.github.com/user']
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -43,16 +43,22 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
 ]
 
 ROOT_URLCONF = 'api_project.urls'

@@ -17,6 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+# Old urlpatterns
+# urlpatterns = [
+#     path('admin/', admin.site.urls),
+#     path('github/', include('api_integration.urls')),
+# ]
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('api_integration.urls')),
