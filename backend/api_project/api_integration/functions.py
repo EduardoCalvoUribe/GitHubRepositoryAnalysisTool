@@ -7,12 +7,10 @@ def get_api_reponse(URL):
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
     headers = {'Authorization': f'token {personal_access_token}'}
     api_response = requests.get(URL, headers=headers)
-    print(URL)
-
     return api_response
 
 
-def pull_request_per_user():
+def pull_request_per_user(self):
     url = 'https://api.github.com/repos/django/django/pulls'
     # Make the GET request to the GitHub API
     api_response = get_api_reponse(url).json()

@@ -124,7 +124,7 @@ def load_repos(request):
         return JsonResponse({'repositories': data})
     
 
-
-
-
-
+def load_quantify_users(request):
+     data = functions.pull_request_per_user(request) # get amount of pull request per user
+     return JsonResponse({'repositories': data})
+    
