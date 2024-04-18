@@ -17,45 +17,27 @@ export default {
     BaseInput
   },
   setup() {
-    const repoTable = ref('');
-
-    async function getTrackedRepositories() {
-      try {
-        console.log('getTrackedRepositories called') 
-        const data = [
-            {
-                "name": "repo1",
-                "last_accessed": "2022-01-01"
-            },
-            {
-                "name": "repo2",
-                "last_accessed": "2022-01-02"
-            },
-            {
-                "name": "repo3",
-                "last_accessed": "2022-01-03"
-            },
-            {
-                "name": "repo4",
-                "last_accessed": "2022-01-04"
-            }
-        ];
-
-        //const data = await response.json();
-        let table = '';
-        for (let i = 0; i < data.length; i++) {
-          table += '<p><h5>Repository ' + i.toString() + ':</h5><br>' + JSON.stringify(data[i]) + '</p><br>';
-        }
-        repoTable.value = table;
-      } catch (error) {
-        console.error('Error:', error);
-        repoTable.value = "Error: Could not fetch tracked repositories.";
-      } 
-    }
+    const repoInfo = ref([
+        {
+            "name": "repo hahahah",
+            "last_accessed": "2022-01-01"
+        },
+        {
+            "name": "repo2",
+            "last_accessed": "2022-01-02"
+        },
+        {
+            "name": "repo3",
+            "last_accessed": "2022-01-03"
+        },
+        {
+            "name": "repo4",
+            "last_accessed": "2022-01-04"
+        },
+    ]);
 
     onMounted(async () => {
       try {
-        await getTrackedRepositories();
         // Fetches json data from specified URL using our fetchData function (will be our backend endpoints)
         // const json_response = await fetchData('http://127.0.0.1:8000/github/user');
         // const fake_response = await fetchData('http://jsonplaceholder.typicode.com/posts/1');
@@ -80,7 +62,7 @@ export default {
 
     });
 
-    return { repoTable };
+    return { repoInfo };
   },
   // TODO: Fix githubURL, it's just empty. Input is not correctly retrieved from Input Box.
   data() {
@@ -137,10 +119,6 @@ export default {
       </div>
     </div>
 
-    <div v-html="repoTable"></div>
-
-    <div v-html="tableContent"></div>
-
     <!-- id="github_request" -->
     <div style="margin-top: 10%;" v-html="githubResponse" ></div> 
 
@@ -161,19 +139,19 @@ export default {
     <BaseSlider value=10 disabled="" type="primary" ></BaseSlider> -->
 
     
-    <div class="container ct-example-row">
-  <div class="row">
-    <div class="col-1">
-      <span><base-button style=" margin-left: 619px" size="lg" type="secondary" disabled>Button</base-button></span>
+  <div class="container ct-example-row" v-for="repo in repoInfo">
+    <div class="row">
+      <div class="col-1">
+        <span><base-button style=" margin-left: 619px" size="lg" type="secondary" disabled>{{ repo.last_accessed }}</base-button></span>
+      </div>
+      <div class="col-2">
+        <span><base-button style="width: 300%; margin-left: 100px" outline type="secondary" size = "lg">{{ repo.name }}</base-button></span>
+      </div>
+      <div class="col-3">
+        <span><base-button style="margin-left: 456px; height: 100%" type="primary" icon="ni ni-fat-remove"></base-button></span>
+      </div>
     </div>
-    <div class="col-2">
-      <span><base-button style="width: 300%; margin-left: 100px" outline type="secondary" size = "lg">RepositoryName</base-button></span>
-    </div>
-    <div class="col-3">
-      <span><base-button style="margin-left: 456px; height: 100%" type="primary" icon="ni ni-fat-remove"></base-button></span>
-    </div>
-  </div>
-</div>
+  </div> 
 
   </main>
 </template>
