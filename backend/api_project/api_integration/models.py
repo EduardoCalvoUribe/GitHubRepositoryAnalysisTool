@@ -81,7 +81,7 @@ class PullRequest(models.Model): # pull request
         return self.name
     
     @classmethod
-    def save_user_to_db(request, json_response):
+    def save_pull_to_db(request, json_response):
         try:
             # Convert API response to JSON format
             pull_request = PullRequest()
@@ -106,6 +106,7 @@ class PullRequest(models.Model): # pull request
 class Commit(models.Model): # commit
     name = models.CharField(max_length=100)
     url = models.URLField()
+    date = models.DateField()
     updated_at = timezone.now()
     title = models.CharField(max_length=100)
     body = models.CharField(max_length=500)
@@ -116,17 +117,25 @@ class Commit(models.Model): # commit
         return self.name
     
     @classmethod
-    def save_user_to_db(request, json_response):
+    def save_commit_to_db(request, commit_response):
         try:
             # Convert API response to JSON format
             commit = Commit()
 
-            for key,value in json_response.items():
+            for key,value in commit_response.items():
                 if key is not None:
                     if value is not None:
                         setattr(commit, key, value)
                     else:
                         setattr(commit, key, "")
+            
+            setattr(commit, "name", commit_response['commit']['message'])
+            setattr(commit, "url", commit_response['commit']['url'])
+            setattr(commit, "date", commit_response['commit']['author']['date'])
+            setattr(commit, "title", commit_response['commit']['message'])
+            setattr(commit, "body", '')
+            setattr(commit, "user", commit_response['author']['login'])
+            setattr(commit, "comments", '')
 
             commit.save()
             data = list(commit.objects.values())

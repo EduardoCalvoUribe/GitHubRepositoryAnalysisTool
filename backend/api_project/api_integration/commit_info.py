@@ -5,6 +5,7 @@ from django.conf import settings
 from datetime import datetime
 from collections import Counter
 from . import functions
+from models import Commit
 import aiohttp
 import asyncio
 import time
@@ -204,52 +205,6 @@ def specific_pull_commits(request, owner, repo, pull_number):
 
     return text_to_display, total_commit_amount, user_commit_count
 
-"""
-async def pull_commits_async(request, owner, repo, start_date, end_date, status):
-    start_time = time.time()
-    text_to_display = ""
-    total_commit_amount = 0
-    user_commit_count = {}
-
-    pr_commits_url = f'https://api.github.com/repos/{owner}/{repo}/pulls?state={status}'
-
-    headers = {'Authorization': f'token {settings.GITHUB_PERSONAL_ACCESS_TOKEN}'}
-    async with aiohttp.ClientSession(headers=headers) as session:
-        while pr_commits_url:
-            async with session.get(pr_commits_url) as response:
-                pull_requests = await response.json()
-                filtered_pull_requests = [pr for pr in pull_requests if start_date <= pr['updated_at'] <= end_date]
-                tasks = []
-                for pull_request in filtered_pull_requests:
-                    task = asyncio.create_task(process_pull_request(session, pull_request, start_date, end_date))
-                    tasks.append(task)
-
-                results = await asyncio.gather(*tasks)
-                # Process results
-                for result in results:
-                    sub_text_to_display, sub_total_commit_amount, sub_user_commit_count = result
-                    text_to_display += sub_text_to_display
-                    total_commit_amount += sub_total_commit_amount
-                    user_commit_count = Counter(user_commit_count) + Counter(sub_user_commit_count)
-
-                link_header = response.headers.get('Link')
-                if link_header:
-                    #print("header" + str(link_header))
-                    next_page_url = parse_link_header(link_header).get('next')
-                    print(next_page_url)
-                    if next_page_url:
-                        pr_commits_url = next_page_url
-                    else:
-                        pr_commits_url = None
-                else:
-                    pr_commits_url = None
-
-    end_time = time.time() 
-    duration = end_time - start_time
-    print(duration)  
-    return text_to_display, total_commit_amount, user_commit_count
-"""
-
 async def pull_commits_async(request, owner, repo, start_date, end_date, status):
     start_time = time.time() # Variable to check the runtime of the function
 
@@ -398,6 +353,9 @@ async def fetch_commits_for_pull_requests(session, pull_request, start_date, end
                     'pull_request_number': pull_request['number'],
                     'pull_request_title': pull_request['title']
                 })
+
+                # Create Commit object and save it to the database
+                Commit.save_commit_to_db(commit)
 
         # Return the list of commits  
         return commits
