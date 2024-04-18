@@ -19,7 +19,7 @@ export default {
   setup() {
     const repoInfo = ref([
         {
-            "name": "repo hahahah",
+            "name": "repo1",
             "last_accessed": "2022-01-01"
         },
         {
