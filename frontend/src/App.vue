@@ -160,6 +160,21 @@ export default {
     
     <BaseSlider value=10 disabled="" type="primary" ></BaseSlider> -->
 
+    
+    <div class="container ct-example-row">
+  <div class="row">
+    <div class="col-1">
+      <span><base-button style=" margin-left: 619px" size="lg" type="secondary" disabled>Button</base-button></span>
+    </div>
+    <div class="col-2">
+      <span><base-button style="width: 300%; margin-left: 100px" outline type="secondary" size = "lg">RepositoryName</base-button></span>
+    </div>
+    <div class="col-3">
+      <span><base-button style="margin-left: 456px; height: 100%" type="primary" icon="ni ni-fat-remove"></base-button></span>
+    </div>
+  </div>
+</div>
+
   </main>
 </template>
 
