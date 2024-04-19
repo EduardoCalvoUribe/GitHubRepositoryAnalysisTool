@@ -69,15 +69,29 @@ export default {
     return {
       githubURL: '',
       tableContent: '',
-      githubResponse: ''
+      githubResponse: '',
+      invalidInput: false
     }
   },
   methods: {
-    async handleGithubURLSubmit() {
+
+    async checkInput(str) {
+      const regex = /^(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+(?:\.git)?\/?$/;
+      return regex.test(str);
+    },
+
+    async handleGithubURLSubmit(inputUrl) {
       //var githubURL = document.getElementById('githubURL').value;
-      console.log('handleGithubURLSubmit called') 
-      console.log(this.githubURL)
-      const data = {'url': this.githubURL};
+      this.invalidInput = false;
+      if (!(await this.checkInput(inputUrl))) {
+        console.log('Not a github repository and githubURL value is: ', inputUrl)
+        this.invalidInput = true;
+        return;
+      }
+
+      console.log('handleGithubURLSubmit called and url given as valid', inputUrl) 
+
+      const data = {'url': inputUrl};
 
       const postOptions = {
           method: 'POST',
@@ -90,7 +104,7 @@ export default {
       try {
           // https://github.com/IntersectMBO/plutus
           // TODO: Instead of cocatenating, extract from POST options (postOptions.body?). Also modify urls.py for this
-          const response = await fetchData('http://127.0.0.1:8000/github/github-pulls/'.concat(githubURL), postOptions);
+          const response = await fetchData('http://127.0.0.1:8000/github/github-pulls/'.concat(inputUrl), postOptions);
           // const response = await fetch(url, postOptions);
           // const json = await response.json();
           this.githubResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
@@ -113,11 +127,26 @@ export default {
 
   <main>
     <div style="margin-top: 4%; display: flex; justify-content: center;">
-      <div style="display: flex;">
-        <BaseInput style="width: 140%; margin: 0 auto;" label="Enter GitHub URL" v-model="githubURL"></BaseInput>
-        <BaseButton type="primary" size="sm" style="height: 50px; margin-left: 100px; margin-top: 8%;" @click="handleGithubURLSubmit">Submit</BaseButton>
+      <div style="display: flex; flex-direction: column; align-items: flex-start;">
+        <label style="display: inline-block; width: 250px;" for="urlTextfield" >Enter GitHub URL:</label>
+        <div style="display: flex; align-items: center;">
+          <input id="urlTextfield" v-model="inputUrl" style="width: 500px; height: 50px;"></input>
+          <BaseButton type="primary" size="sm" style="height: 50px; margin-left: 20px;" @click="handleGithubURLSubmit(inputUrl)" >Submit</BaseButton>
+        </div>  
       </div>
-    </div>
+    </div> 
+
+    <!-- <div style="margin-top: 4%; display: flex; justify-content: center;">
+      <div style="display: flex; flex-direction: column; align-items: flex-start;">
+        <label for="urlTextfield" style="display: inline-block; width: 250px;">Enter GitHub URL:</label>
+        <div style="display: flex; align-items: center;">
+          <input id="urlTextfield" v-model="inputUrl" style="width: 500px; height: 50px;"></input>
+          <BaseButton type="primary" size="sm" style="height: 50px; margin-left: 20px;">Submit</BaseButton>
+        </div>
+      </div>
+    </div> -->
+
+    <div v-if="invalidInput" style="color: red; margin-top: 2%; display: flex; justify-content: center;">Invalid input! Please enter a valid GitHub URL.</div>
 
     <!-- id="github_request" -->
     <div style="margin-top: 10%;" v-html="githubResponse" ></div> 
