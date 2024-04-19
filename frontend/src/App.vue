@@ -136,16 +136,6 @@ export default {
       </div>
     </div> 
 
-    <!-- <div style="margin-top: 4%; display: flex; justify-content: center;">
-      <div style="display: flex; flex-direction: column; align-items: flex-start;">
-        <label for="urlTextfield" style="display: inline-block; width: 250px;">Enter GitHub URL:</label>
-        <div style="display: flex; align-items: center;">
-          <input id="urlTextfield" v-model="inputUrl" style="width: 500px; height: 50px;"></input>
-          <BaseButton type="primary" size="sm" style="height: 50px; margin-left: 20px;">Submit</BaseButton>
-        </div>
-      </div>
-    </div> -->
-
     <div v-if="invalidInput" style="color: red; margin-top: 2%; display: flex; justify-content: center;">Invalid input! Please enter a valid GitHub URL.</div>
 
     <!-- id="github_request" -->
