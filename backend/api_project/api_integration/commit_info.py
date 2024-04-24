@@ -5,7 +5,7 @@ from django.conf import settings
 from datetime import datetime
 from collections import Counter
 from . import functions
-from models import Commit
+from .models import Commit
 import aiohttp
 import asyncio
 import time
