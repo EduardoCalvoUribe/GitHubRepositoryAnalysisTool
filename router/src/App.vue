@@ -7,7 +7,7 @@ import HelloWorld from './components/HelloWorld.vue'
   <header>
     
     <div class="wrapper">
-      <HelloWorld msg="Repository Analysis Tool" />
+      <HelloWorld msg="no Analysis Tool" />
 
       <nav>
         <RouterLink to="/">Home</RouterLink>

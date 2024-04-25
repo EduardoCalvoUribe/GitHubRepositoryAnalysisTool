@@ -9,7 +9,7 @@ import TheWelcome from '../components/TheWelcome.vue'
   <header>
     
     <div class="wrapper">
-      <HelloWorld msg="Repository Analysis Tool" />
+      <HelloWorld msg="hello Analysis Tool" />
 
       <nav>
         <RouterLink to="/">Home</RouterLink>
