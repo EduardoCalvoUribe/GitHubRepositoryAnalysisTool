@@ -1,11 +1,12 @@
 <template>
-    <div class="about">
-      <h1>This is the repository view page</h1>
+  <header>
+    <div style="font-size: 180%;">
+      Repository Information
     </div>
-
-  </template>
+  </header>
+</template>
   
-  <style>
+<style>
   @media (min-width: 1024px) {
     .about {
       min-height: 100vh;
@@ -13,5 +14,5 @@
       align-items: center;
     }
   }
-  </style>
+</style>
   
