@@ -1,20 +1,18 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
+
 </script>
 
 <template>
   <header>
+    
+    <RouterLink to="/">Home</RouterLink>
+    <RouterLink to="/about">About</RouterLink>
+    <RouterLink to="/repoinfo">Repository Infomation</RouterLink>
+    <RouterLink to="/prpage">Pull Requests</RouterLink>
+    <RouterLink to="/commitpage">Commits</RouterLink>
+    <RouterLink to="/commentpage">Comments</RouterLink>
 
-    <div class="wrapper">
-      <div style="font-size: 180%;">
-        Repository Analysis Tool
-      </div>
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
   </header>
 
   <RouterView />
