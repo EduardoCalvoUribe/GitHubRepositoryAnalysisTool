@@ -34,5 +34,5 @@
     text-align: center; /* Centering text inside grid items */
     border: 1px solid #ccc; /* Border for grid items */
   }
-  </style>
+</style>
   

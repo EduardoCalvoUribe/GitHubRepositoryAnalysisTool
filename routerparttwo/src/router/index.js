@@ -21,6 +21,21 @@ const router = createRouter({
       path: '/repoinfo',
       name: 'repoinfo',
       component: () => import('../views/RepositoryInfo.vue')
+    },
+    {
+      path: '/prpage',
+      name: 'pullrequests',
+      component: () => import('../views/PullRequestPage.vue')
+    },
+    {
+      path: '/commitpage',
+      name: 'commits',
+      component: () => import('../views/CommitPage.vue')
+    },
+    {
+      path: '/commentpage',
+      name: 'comments',
+      component: () => import('../views/CommentPage.vue')
     }
   ]
 })

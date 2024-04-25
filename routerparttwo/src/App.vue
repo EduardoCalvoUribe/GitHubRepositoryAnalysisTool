@@ -1,33 +1,18 @@
 <script>
 import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
-import VueGridLayout from 'vue-grid-layout'
-
-export default {
-  components: {
-    RouterLink,
-    RouterView,
-    HelloWorld,
-    GridLayout: VueGridLayout.GridLayout,
-    GridItem: VueGridLayout.GridItem
-  }
-} 
 
 </script>
 
 <template>
   <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+    
+    <RouterLink to="/">Home</RouterLink>
+    <RouterLink to="/about">About</RouterLink>
+    <RouterLink to="/repoinfo">Repository Infomation</RouterLink>
+    <RouterLink to="/prpage">Pull Requests</RouterLink>
+    <RouterLink to="/commitpage">Commits</RouterLink>
+    <RouterLink to="/commentpage">Comments</RouterLink>
 
-    <div class="wrapper">
-      <HelloWorld msg="Repository Analysis Tool" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/repoinfo">Repository Infomation</RouterLink>
-      </nav>
-    </div>
   </header>
 
   <RouterView />
