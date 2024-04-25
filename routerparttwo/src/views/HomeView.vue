@@ -138,13 +138,13 @@ export default {
   <div class="container ct-example-row" v-for="repo in repoInfo">
     <div class="row">
       <div class="col-2">
-        <span><button class="button-6" outline type="secondary" size = "lg">{{ repo.name }}</button></span>
+        <span><router-link :to="{ path: '/repoinfo' }"><button class="button-6" outline type="secondary" size = "lg">{{ repo.name }}</button></router-link></span>
       </div>
       <div class="col-1">
-        <span><button class="button-6" size="lg" type="secondary" disabled>{{ repo.last_accessed }}</button></span>
+        <span><router-link :to="{ path: '/repoinfo' }"><button class="button-6" size="lg" type="secondary" disabled>{{ repo.last_accessed }}</button></router-link></span>
       </div>
       <div class="col-3">
-        <span><button class="button-6" type="primary" icon="ni ni-fat-remove"></button></span>
+        <span><router-link :to="{ path: '/repoinfo' }"><button class="button-6" type="primary" icon="ni ni-fat-remove"></button></router-link></span>
       </div>
     </div>
   </div> 
