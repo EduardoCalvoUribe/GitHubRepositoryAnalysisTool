@@ -1,9 +1,15 @@
 <template>
-    <div class="grid-container">
-      <div class="grid-item" v-for="item in items" :key="item.id">
-        {{ item.text }}
-      </div>
+  <header>
+    <div style="font-size: 180%;">
+      Repository Information
     </div>
+  </header>
+
+  <div class="grid-container">
+    <div class="grid-item" v-for="item in items" :key="item.id">
+      {{ item.text }}
+    </div>
+  </div>
   </template>
   
   <script>

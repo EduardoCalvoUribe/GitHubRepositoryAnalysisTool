@@ -109,9 +109,11 @@ export default {
 
 <template>
   <header>
-    
+    <div style="font-size: 180%;">
+      Repository Analysis Tool
+    </div>
   </header>
-
+  
   <main>
     <div style="margin-top: 4%; display: flex; justify-content: center;">
       <div style="display: flex; flex-direction: column; align-items: flex-start;">
