@@ -160,15 +160,9 @@ export default {
     
   <div class="container ct-example-row" v-for="repo in repoInfo">
     <div class="row">
-      <div class="col-2">
-        <span><base-button style="width: 300%; margin-left: 202px" outline type="secondary" size = "lg">{{ repo.name }}</base-button></span>
-      </div>
-      <div class="col-1">
-        <span><base-button style=" margin-left: 465px" size="lg" type="secondary" disabled>{{ repo.last_accessed }}</base-button></span>
-      </div>
-      <div class="col-3">
-        <span><base-button style="margin-left: 487px; height: 100%" type="primary" icon="ni ni-fat-remove"></base-button></span>
-      </div>
+      <span><base-button style="width: 300%; margin-left: 202px" outline type="secondary" size = "lg">{{ repo.name }}</base-button></span>
+      <span><base-button style=" margin-left: 465px" size="lg" type="secondary" disabled>{{ repo.last_accessed }}</base-button></span>
+      <span><base-button style="margin-left: 487px; height: 100%" type="primary" icon="ni ni-fat-remove"></base-button></span>
     </div>
   </div> 
 

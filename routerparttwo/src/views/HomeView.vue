@@ -136,20 +136,13 @@ export default {
     <div id="fake_request"></div>
     <br><br> -->
 
-    
-  <div class="container ct-example-row" v-for="repo in repoInfo">
-    <div class="row">
-      <div class="col-2">
-        <span><router-link :to="{ path: '/repoinfo' }"><button class="button-6" outline type="secondary" size="lg">{{ repo.name }}</button></router-link></span>
-      </div>
-      <div class="col-1">
-        <span><button class="button-6" size="lg" type="secondary" disabled>{{ repo.last_accessed }}</button></span>
-      </div>
-      <div class="col-3">
-        <span><button class="button-6" type="primary" icon="ni ni-fat-remove"></button></span>
-      </div>
-    </div>
-  </div> 
+    <div style="width: 100%; align-items: center; justify-content: center; vertical-align: center; margin-bottom: 4px" v-for="repo in repoInfo">
+      <router-link :to="{ path: '/repoinfo' }"><button class="button-6" style="width: 50%;">
+          <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
+          <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
+      </button></router-link>
+      <button class="button-6" style="margin-left: -3px; font-weight: 100; flex-grow: 0; padding-inline: 0.7rem">X</button>
+    </div> 
 
   </main>
 </template>
