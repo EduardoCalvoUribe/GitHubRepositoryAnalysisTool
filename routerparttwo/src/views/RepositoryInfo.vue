@@ -5,6 +5,23 @@
     </div>
   </header>
 
+  <header>
+    <div style="font-size: 180%; justify-content: left;" >
+      Repository Name
+    </div>
+  </header>
+
+
+  <div style="margin-top: 4%; display: flex; justify-content: center;">
+    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+      <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker" >Select date range:</label>
+      <div style="display: flex; align-items: center;"> 
+        <VueDatePicker  id="datePicker" v-model="selectedRange" range style="width: 500px; height: 50px;" ></VueDatePicker>
+        <button style="height: 50px; margin-left: 20px;" @click="handleDateSubmit(selectedRange)" >Reload</button>
+      </div>
+    </div>
+  </div> 
+
   <div class="grid-container">
     <div class="grid-item" v-for="item in items" :key="item.id">
       {{ item.text }}
@@ -13,9 +30,18 @@
   </template>
   
   <script>
+  import VueDatePicker from '@vuepic/vue-datepicker';
+  import '@vuepic/vue-datepicker/dist/main.css'
+  import { fetchData } from '../fetchData.js'
+
   export default {
+    components: {
+      VueDatePicker
+    },
+
     data() {
       return {
+        selectedRange: null,
         items: [
           { id: 1, text: 'Number of Pull Requests', },
           { id: 2, text: 'Number of Commits' },
@@ -23,7 +49,32 @@
           // Add more items as needed
         ]
       }
-    }
+    },
+
+    methods: {
+      async handleDateSubmit(range) {
+        // update selected date range when input is given
+        // this.selectedRange = range;
+        console.log('entered function')
+
+        const data = {'date': range};
+
+        const postOptions = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        };
+        // send date range to backend through correct path that still needs to be created
+        try {
+          console.log('entered try')
+          const response = await fetchData('', postOptions);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+      },
+    },
   }
   </script>
   
