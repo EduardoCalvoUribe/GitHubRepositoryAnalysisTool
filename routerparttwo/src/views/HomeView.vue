@@ -128,20 +128,15 @@ export default {
     <div v-if="invalidInput" style="color: red; margin-top: 2%; display: flex; justify-content: center;">Invalid input! Please enter a valid GitHub URL.</div>
 
     <!-- id="github_request" -->
-    <div style="margin-top: 10%;" v-html="githubResponse" ></div> 
+    <div style="margin-top: 8%;" v-html="githubResponse" ></div> 
 
 
-    <!-- <br><br>
-    <h5>Fake Request:</h5>
-    <div id="fake_request"></div>
-    <br><br> -->
-
-    <div style="width: 100%; align-items: center; justify-content: center; vertical-align: center; margin-bottom: 4px" v-for="repo in repoInfo">
-      <router-link :to="{ path: '/repoinfo' }"><button class="button-6" style="width: 50%;">
+    <div class="row" v-for="repo in repoInfo">
+      <router-link :to="{ path: '/repoinfo' }"><button class="button-6">
           <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
           <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
       </button></router-link>
-      <button class="button-6" style="margin-left: -3px; font-weight: 100; flex-grow: 0; padding-inline: 0.7rem">X</button>
+      <button class="button-6" style="font-weight: 100; padding-inline: 1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">X</button>
     </div> 
 
   </main>
