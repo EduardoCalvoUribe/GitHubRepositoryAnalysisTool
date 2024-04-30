@@ -22,10 +22,7 @@ a,
 }
 
 
-/* <!-- HTML !-->
-<button class="button-6" role="button">Button 6</button> */
-
-/* CSS */
+/* Home Page repo buttons */
 .button-6 {
   align-items: center;
   background-color: #FFFFFF;
@@ -42,7 +39,7 @@ a,
   justify-content: space-between;
   line-height: 1.25;
   margin: 0;
-  height: 3rem;
+  height: 3.3rem;
   /* padding: calc(.875rem - 1px) calc(1.5rem - 1px); */
   position: relative;
   text-decoration: none;
@@ -54,20 +51,11 @@ a,
   width: 800px
 }
 
-.button-6>.x {
-
-  width: 100px;
-}
-
 .button-6:hover,
 .button-6:focus {
   border-color: rgba(0, 0, 0, 0.15);
   box-shadow: rgba(0, 0, 0, 0.1) 0 4px 12px;
   color: rgba(0, 0, 0, 0.65);
-}
-
-.row:hover {
-  transform: translateY(-1px);
 }
 
 .button-6:active {
@@ -87,8 +75,12 @@ a,
   transition: all 250ms;
 }
 
+.row:hover {
+  transform: translateY(-1px);
+}
+
 .last-accessed {
   opacity: 0.7;
-  margin-right: 1rem;
+  margin-right: 1.2rem;
   font-size: 0.8rem;
 }

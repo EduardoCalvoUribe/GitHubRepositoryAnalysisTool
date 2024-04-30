@@ -112,6 +112,7 @@ export default {
     <div style="font-size: 180%;">
       Repository Analysis Tool
     </div>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </header>
 
   <main>
@@ -136,7 +137,9 @@ export default {
           <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
           <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
       </button></router-link>
-      <button class="button-6" style="font-weight: 100; padding-inline: 1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">X</button>
+      <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
+        <div style="margin-bottom: 3px; font-weight: 100">x</div><!-- <i class="fa fa-times" style="font-size: 30px; "></i> -->
+      </button>
     </div> 
 
   </main>
