@@ -24,7 +24,7 @@
 
   <div class="grid-container">
     <div class="grid-item" v-for="item in items" :key="item.id">
-      {{ item.text }}
+      <router-link :to="item.path">{{ item.text }}</router-link>
     </div>
   </div>
   </template>
@@ -43,8 +43,8 @@
       return {
         selectedRange: null,
         items: [
-          { id: 1, text: 'Number of Pull Requests', },
-          { id: 2, text: 'Number of Commits' },
+          { id: 1, text: 'Number of Pull Requests', path: '/prpage' },
+          { id: 2, text: 'Number of Commits', path: '/commitpage' },
           { id: 3, text: 'Extra Repository Information' },
           // Add more items as needed
         ]
