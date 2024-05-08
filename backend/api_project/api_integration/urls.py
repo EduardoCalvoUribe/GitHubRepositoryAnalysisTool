@@ -1,5 +1,5 @@
 from django.urls import path, include
-from . import views, comment_info
+from . import views, comment_info, API_call_information
 
 
 # importing nlp_functions to test function output on webpage. 
@@ -15,5 +15,6 @@ urlpatterns = [
     #path('items/', ItemListCreateView.as_view(), name='item-list-create'), #for listing all items we can send to the frontend
     path('postRequest/',views.process_vue_POST_request,name='process-POST-request'), #URL handle for parsing POST request data 
     path('nlp/',FleschReadingEase.calculate_flesch_reading_ease,name='nlp'), #URL handle for parsing POST request data
-    path('comments/', comment_info.comment_visual, name ='comments') 
+    path('comments/', comment_info.comment_visual, name ='comments'),
+    path('all/', API_call_information.get_github_information, name = 'all') 
 ]
