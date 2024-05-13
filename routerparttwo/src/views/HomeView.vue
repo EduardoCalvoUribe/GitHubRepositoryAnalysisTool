@@ -6,7 +6,7 @@ export default {
   components: {
   },
   setup() {
-    const repoInfo = ref([
+    const repoInfo = ref([ // Uses this by default, but is updated with fetched data from backend in onMounted.
         {
             "name": "repo1",
             "last_accessed": "2022-01-01"
@@ -27,28 +27,11 @@ export default {
 
     onMounted(async () => {
       try {
-        // Fetches json data from specified URL using our fetchData function (will be our backend endpoints)
-        // const json_response = await fetchData('http://127.0.0.1:8000/github/user');
-        // const fake_response = await fetchData('http://jsonplaceholder.typicode.com/posts/1');
-
-        // Selects first div with specified id (such as 'github_request')
-        // const fakeDiv = document.getElementById('fake_request');
-
-        // Inserts content of json into that div in whatever specified format
-        // fakeDiv.innerHTML = '<pre>' + JSON.stringify(fake_response, null, 2) + '</pre>';
-        
-
-        // this.tableContent = '<p>Test content for tableContent</p>';
-        // this.githubResponse = '<p>Test content for githubResponse</p>';
-        // getTrackedRepositories();
+        const info = await fetchData(''); // Insert correct endpoint here.
+        repoInfo.value = info; // Update repoInfo with the fetched backend db data.
       } catch (error) {
         console.error('Error:', error)
       }
-
-      // const githubURL = ref('');
-
-      // return { githubURL };
-
     });
 
     return { repoInfo };
