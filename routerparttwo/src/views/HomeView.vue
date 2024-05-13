@@ -36,7 +36,6 @@ export default {
 
     return { repoInfo };
   },
-  // TODO: Fix githubURL, it's just empty. Input is not correctly retrieved from Input Box.
   data() {
     return {
       githubURL: '',
@@ -134,17 +133,16 @@ export default {
 
     <div v-if="invalidInput" style="color: red; margin-top: 2%; display: flex; justify-content: center;">Invalid input! Please enter a valid GitHub URL.</div>
 
-    <!-- id="github_request" -->
     <div style="margin-top: 8%;" v-html="githubResponse" ></div> 
 
 
     <div class="row" v-for="repo in repoInfo">
-      <router-link :to="{ path: '/repoinfo' }"><button class="button-6">
+      <router-link :to="{ path: '/repoinfo' }"><button class="button-6"> 
           <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
           <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
       </button></router-link>
       <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
-        <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.name)">x</div><!-- <i class="fa fa-times" style="font-size: 30px; "></i> -->
+        <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.name)">x</div>
       </button>
     </div> 
 
