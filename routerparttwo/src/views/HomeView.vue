@@ -9,19 +9,23 @@ export default {
     const repoInfo = ref([ // Uses this by default, but is updated with fetched data from backend in onMounted.
         {
             "name": "repo1",
-            "last_accessed": "2022-01-01"
+            "last_accessed": "2022-01-01",
+            "url": ""
         },
         {
             "name": "repo2",
-            "last_accessed": "2022-01-02"
+            "last_accessed": "2022-01-02",
+            "url": ""
         },
         {
             "name": "repo3",
-            "last_accessed": "2022-01-03"
+            "last_accessed": "2022-01-03",
+            "url": ""
         },
         {
             "name": "repo4",
-            "last_accessed": "2022-01-04"
+            "last_accessed": "2022-01-04",
+            "url": ""
         },
     ]);
 
@@ -137,7 +141,7 @@ export default {
 
 
     <div class="row" v-for="repo in repoInfo">
-      <router-link :to="{ path: '/repoinfo' }"><button class="button-6"> 
+      <router-link :to="{ path: '/repoinfo' }"><button class="button-6" @click="handleGithubURLSubmit(repo.url)"> 
           <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
           <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
       </button></router-link>
