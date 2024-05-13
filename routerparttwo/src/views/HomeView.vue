@@ -107,7 +107,7 @@ export default {
       //checking for correct repo name in console
       console.log(repo)
 
-      const data = {'name': repo};
+      const data = {'name': repo}; //possibly change repo name to repo link as it is easier in backend
 
       const postOptions = {
           method: 'POST',
@@ -144,7 +144,7 @@ export default {
         <label style="display: inline-block; width: 250px;" for="urlTextfield" >Enter GitHub URL:</label>
         <div style="display: flex; align-items: center;">
           <input id="urlTextfield" v-model="inputUrl" style="width: 500px; height: 50px;"></input>
-          <button style="height: 50px; margin-left: 20px;" @click="handleGithubURLSubmit(inputUrl)" >Submit</button>
+          <button class="button-6" style="width: 57px; height: 50px; margin-left: 3px; font-size: smaller;" @click="handleGithubURLSubmit(inputUrl)" >Submit</button>
         </div>  
       </div>
     </div> 
