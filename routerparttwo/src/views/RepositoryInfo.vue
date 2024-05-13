@@ -15,9 +15,9 @@
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker" >Select date range:</label>
-      <div style="display: flex; align-items: center;"> 
-        <VueDatePicker id="datePicker" v-model="selectedRange" range style="width: 500px; height: 50px;" ></VueDatePicker>
-        <button style="height: 50px; margin-left: 20px;" @click="handleDateSubmit(selectedRange)" >Reload</button>
+      <div id="datePicker" style="display: flex; align-items: flex-start;"> 
+        <VueDatePicker v-model="selectedRange" range style="width: 500px; height: 50px;" ></VueDatePicker>
+        <button class="button-6" style="width: 57px; height: 38px; margin-left: 3px; font-size: smaller;" @click="handleDateSubmit(selectedRange)" >Reload</button>
       </div>
     </div>
   </div> 
