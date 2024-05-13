@@ -95,6 +95,14 @@ async def process_page(session, pr_url):
         # Gather the results and wait until all tasks are complete
         pull_results = await asyncio.gather(*tasks)
 
+        # Iterate over the results to save comments to the database
+        for pull_result in pull_results:
+            pull_request_instance, all_commits, all_comments = pull_result
+            for comment in all_comments:
+                models.Comment.save_comment_to_db(comment, pull_request_instance)
+            for commit in all_commits:
+                models.Commit.save_commit_to_db(commit, pull_request_instance)
+
         return pull_results #[[pr, [commits], [comments]], [pr, [commits], [comments]]] for each pr
 
 async def process_pull_request(session, pull_request):
@@ -104,8 +112,22 @@ async def process_pull_request(session, pull_request):
     # Fetch the comments of a pull request asynchronously
     all_comments = await fetch_comments(session, pull_request)
 
+    # Get the PullRequest instance from the database
+    pull_request_instance = models.PullRequest.objects.get_or_create(
+        url=pull_request['url'],
+        defaults={
+            'name': '',
+            'updated_at': pull_request['updated_at'],
+            'date': pull_request['created_at'],
+            'title': pull_request['title'],
+            'body': pull_request['body'],
+            'user': pull_request['user']['login'],
+            'number': pull_request['number']
+        }
+    )[0]
+
     # Return commits and comments
-    return pull_request, all_commits, all_comments
+    return pull_request_instance, all_commits, all_comments
 
 async def fetch_commits(session, pull_request):
     # Construct the URL to fetch the commit information from GitHub
@@ -117,9 +139,9 @@ async def fetch_commits(session, pull_request):
         pr_commits = await response.json()
 
         # Iterate over each commit retrieved
-        for commit in pr_commits:
+        #for commit in pr_commits:
             # Create Commit object and save it to the database
-            models.Commit.save_commit_to_db(commit)
+            #models.Commit.save_commit_to_db(commit)
 
         # Return the list of commits  
         return pr_commits
@@ -145,6 +167,8 @@ async def fetch_comments(session, pull_request):
                 for comment in comments:
                     comment['comment_type'] = type
                     all_comments.append(comment)
+                    #models.Comment.save_comment_to_db(comment, )
+
                     if type == 'review API':
                         pr_nested_comment_url = pr_comments_reviews_url + f'/{comment['id']}/comments'
                         #pr_nested_comment_url = f'https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}/reviews/{comment['id']}/comments'
