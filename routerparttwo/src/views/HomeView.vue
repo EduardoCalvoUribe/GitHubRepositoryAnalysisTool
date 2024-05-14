@@ -93,8 +93,7 @@ export default {
       //checking for correct repo name in console
       console.log(repo)
 
-      const data = {'name': repo}; //possibly change repo name to repo link as it is easier in backend
-
+      const data = {'url': repo}; 
       const postOptions = {
           method: 'POST',
           headers: {
@@ -146,7 +145,7 @@ export default {
           <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
       </button></router-link>
       <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
-        <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.name)">x</div>
+        <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.url)">x</div>
       </button>
     </div> 
 
