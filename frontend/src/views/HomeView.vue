@@ -147,7 +147,7 @@ export default {
           <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
       </button></router-link>
       <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
-        <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.url)">x</div>
+        <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.id)">x</div>
       </button>
     </div> 
 
