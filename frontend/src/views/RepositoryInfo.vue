@@ -7,7 +7,7 @@
 
   <header>
     <div style="font-size: 180%; justify-content: left;" >
-      Repository Name
+      
     </div>
   </header>
 
@@ -142,7 +142,7 @@ export default {
 }
 
 .grid-item {
-  background-color: #b60aad; /* Background color for grid items */
+  background-color: #157eff4d; /* Background color for grid items */
   padding: 50px; /* Padding inside grid items */
   text-align: center; /* Centering text inside grid items */
   border: 1px solid #ccc; /* Border for grid items */
