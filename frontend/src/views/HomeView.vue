@@ -10,22 +10,22 @@ export default {
         {
             "name": "repo1",
             "last_accessed": "2022-01-01",
-            "url": ""
+            "id": ""
         },
         {
             "name": "repo2",
             "last_accessed": "2022-01-02",
-            "url": ""
+            "id": ""
         },
         {
             "name": "repo3",
             "last_accessed": "2022-01-03",
-            "url": ""
+            "id": ""
         },
         {
             "name": "repo4",
             "last_accessed": "2022-01-04",
-            "url": ""
+            "id": ""
         },
     ]);
 
