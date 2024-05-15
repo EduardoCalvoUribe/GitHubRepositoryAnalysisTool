@@ -74,7 +74,7 @@ export default {
 
     onMounted(async () => {
 
-      const data = {'id': repoId};
+      const data = {'id': $route.params.id};
 
       const postOptions = {
           method: 'POST',
@@ -85,7 +85,7 @@ export default {
       };
 
       try {
-          const response = await fetchData('http://127.0.0.1:8000/github/github-pulls/'.concat(inputUrl), postOptions);
+          const response = await fetchData('http://127.0.0.1:8000/github/github-pulls/', postOptions);
           this.githubResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
       } catch (error) {
           console.error('Error:', error);

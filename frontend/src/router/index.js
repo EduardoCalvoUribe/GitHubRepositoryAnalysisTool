@@ -18,7 +18,7 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue')
     },
     {
-      path: '/repoinfo',
+      path: '/repoinfo/:id',
       name: 'repoinfo',
       component: () => import('../views/RepositoryInfo.vue')
     },
