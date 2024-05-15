@@ -30,7 +30,7 @@ async def comment_visual(response):
         # Print the textual content of all_comments separated by dashes 
         for comment in all_comments:
             text_to_display += '-----------------</p>'
-            text_to_display += f'</b>Type of comment:</b> {comment['comment_type']}</p>'
+            text_to_display += f"</b>Type of comment:</b> {comment['comment_type']}</p>"
             if 'body' in comment and comment['body']:  
                 text_to_display += comment['body']
                 total_amount_comments += 1
@@ -74,7 +74,7 @@ async def get_pull_request_comments(owner, repo, pull_number, headers, session):
                     comment['comment_type'] = type
                     all_comments.append(comment)
                     if type == 'review API':
-                        pr_nested_comment_url = f'https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}/reviews/{comment['id']}/comments'
+                        pr_nested_comment_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}/reviews/{comment['id']}/comments"
                         task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, type, session))
                         tasks.append(task)
 
