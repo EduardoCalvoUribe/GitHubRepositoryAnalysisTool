@@ -32,7 +32,9 @@ export default {
     onMounted(async () => {
       try {
         const info = await fetchData(''); // Insert correct endpoint here.
-        repoInfo.value = info; // Update repoInfo with the fetched backend db data.
+        if (info) {
+          repoInfo.value = info; // Update repoInfo with the fetched backend db data.
+        }
       } catch (error) {
         console.error('Error:', error)
       }
