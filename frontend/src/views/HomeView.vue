@@ -142,7 +142,7 @@ export default {
 
 
     <div class="row" v-for="repo in repoInfo">
-      <router-link :to="{ path: '/repoinfo' }"><button class="button-6" @click="handleGithubURLSubmit(repo.url)"> 
+      <router-link :to="{ path: '/repoinfo' }"><button class="button-6" > 
           <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
           <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
       </button></router-link>
