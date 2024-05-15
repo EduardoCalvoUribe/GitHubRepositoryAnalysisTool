@@ -77,6 +77,7 @@ export default {
     onMounted(async () => {
 
       const data = {'id': route.params.id};
+      console.log(data)
 
       const postOptions = {
           method: 'POST',
@@ -87,8 +88,9 @@ export default {
       };
 
       try {
-          const response = await fetchData('http://127.0.0.1:8000/github/all', postOptions);
-          this.githubResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
+          const response = await fetchData('http://127.0.0.1:8000/all/', postOptions);
+          console.log(response)
+          // this.githubResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
       } catch (error) {
           console.error('Error:', error);
       }

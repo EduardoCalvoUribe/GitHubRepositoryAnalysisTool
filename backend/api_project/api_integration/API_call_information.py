@@ -11,8 +11,10 @@ import asyncio
 import time
 import re
 from urllib.parse import urlparse, parse_qs
+from django.views.decorators.csrf import csrf_exempt
 
 # This function should return visual on everything and call functions to get all information
+@csrf_exempt
 async def get_github_information(response):
     start_time = time.time() # Variable to check the runtime of the function
     owner = 'IntersectMBO'
