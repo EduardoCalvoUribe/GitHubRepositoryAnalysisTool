@@ -70,9 +70,29 @@ export default {
           "title": "pull request 4",
           "author": "David"
       },
-  ]);
+    ]);
 
-  return { pullRequestInfo };
+    onMounted(async () => {
+
+      const data = {'id': repoId};
+
+      const postOptions = {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+      };
+
+      try {
+          const response = await fetchData('http://127.0.0.1:8000/github/github-pulls/'.concat(inputUrl), postOptions);
+          this.githubResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
+      } catch (error) {
+          console.error('Error:', error);
+      }
+    })
+
+    return { pullRequestInfo };
   },
 
   data() {
