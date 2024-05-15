@@ -10,22 +10,22 @@ export default {
         {
             "name": "repo1",
             "last_accessed": "2022-01-01",
-            "url": ""
+            "id": "1"
         },
         {
             "name": "repo2",
             "last_accessed": "2022-01-02",
-            "url": ""
+            "id": "2"
         },
         {
             "name": "repo3",
             "last_accessed": "2022-01-03",
-            "url": ""
+            "id": "3"
         },
         {
             "name": "repo4",
             "last_accessed": "2022-01-04",
-            "url": ""
+            "id": "4"
         },
     ]);
 
@@ -142,7 +142,7 @@ export default {
 
 
     <div class="row" v-for="repo in repoInfo">
-      <router-link :to="{ path: '/repoinfo' }"><button class="button-6" > 
+      <router-link :to="{ path: '/repoinfo/' + repo.id }"><button class="button-6" > 
           <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
           <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
       </button></router-link>

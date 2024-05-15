@@ -7,7 +7,7 @@
 
   <header>
     <div style="font-size: 180%; justify-content: left;" >
-      Repository Name
+      
     </div>
   </header>
 
@@ -70,9 +70,29 @@ export default {
           "title": "pull request 4",
           "author": "David"
       },
-  ]);
+    ]);
 
-  return { pullRequestInfo };
+    onMounted(async () => {
+
+      const data = {'id': $route.params.id};
+
+      const postOptions = {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+      };
+
+      try {
+          const response = await fetchData('http://127.0.0.1:8000/github/github-pulls/', postOptions);
+          this.githubResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
+      } catch (error) {
+          console.error('Error:', error);
+      }
+    })
+
+    return { pullRequestInfo };
   },
 
   data() {
@@ -122,7 +142,7 @@ export default {
 }
 
 .grid-item {
-  background-color: #b60aad; /* Background color for grid items */
+  background-color: #157eff4d; /* Background color for grid items */
   padding: 50px; /* Padding inside grid items */
   text-align: center; /* Centering text inside grid items */
   border: 1px solid #ccc; /* Border for grid items */
