@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.utils import timezone
 from django.db import models
+from datetime import date
 from . import functions
 
 class Users(models.Model): # user
@@ -71,11 +72,11 @@ class PullRequest(models.Model): # pull request
     name = models.CharField(max_length=100)
     url = models.URLField()
     updated_at = timezone.now()
-    date = models.DateField()
+    date = models.DateField(default=date.today)
     title = models.CharField(max_length=100)
     body = models.CharField(max_length=100)
     user = models.CharField(max_length=100)
-    number = models.IntegerField()
+    number = models.IntegerField(default=0)
     #comments = models.JSONField(blank=True, default=dict)
     #closed = model.
 
@@ -116,13 +117,13 @@ class PullRequest(models.Model): # pull request
 class Commit(models.Model): # commit
     name = models.CharField(max_length=100)
     url = models.URLField()
-    date = models.DateField()
+    date = models.DateField(default=date.today)
     updated_at = timezone.now()
     title = models.CharField(max_length=100)
     body = models.CharField(max_length=500)
     user = models.CharField(max_length=100)
     comments = models.JSONField(blank=True, default=dict)
-    pull_request = models.ForeignKey('PullRequest', on_delete=models.CASCADE, related_name='commits')
+    #pull_request = models.ForeignKey('PullRequest', on_delete=models.CASCADE, related_name='commits', default=)
 
     def __str__(self):
         return self.name
@@ -147,7 +148,7 @@ class Commit(models.Model): # commit
             setattr(commit, "body", '')
             setattr(commit, "user", commit_response['author']['login'])
             setattr(commit, "comments", '')
-            setattr(commit, 'pull_request', pull_request)
+            #setattr(commit, 'pull_request', pull_request)
 
             commit.save()
             data = list(commit.objects.values())
@@ -161,11 +162,11 @@ class Commit(models.Model): # commit
 
 class Comment(models.Model): # commit
     url = models.URLField()
-    date = models.DateField()
+    date = models.DateField(default=date.today)
     updated_at = timezone.now()
     body = models.CharField(max_length=500)
     user = models.CharField(max_length=100)
-    pull_request = models.ForeignKey('PullRequest', on_delete=models.CASCADE, related_name='comments')
+    #pull_request = models.ForeignKey('PullRequest', on_delete=models.CASCADE, related_name='comments')
 
     def __str__(self):
         return self.name
@@ -187,7 +188,7 @@ class Comment(models.Model): # commit
             setattr(comment, "date", comment_response['comment']['author']['date'])
             setattr(comment, "body", comment_response['body'])
             setattr(comment, "user", comment_response['user']['login'])
-            setattr(comment, 'pull_request', pull_request)
+            #setattr(comment, 'pull_request', pull_request)
 
             comment.save()
             data = list(comment.objects.values())
