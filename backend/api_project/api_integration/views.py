@@ -98,8 +98,21 @@ def process_vue_POST_request(request):
         
         # Assuming that POST request contains 'url' key and associated value
         url = data.get('url')
+        token = data.get("token")
+        data = functions.get_data_from_url(url, token) # save data from url to DB and return it
+    return data
 
-    return url
+def process_vue_delete_request(request):
+    # If the user request is an HTTP POST request
+
+    if request.method == "POST": # might need to change this line 
+        # Use built-in json Python package to parse JSON string and convert into a Python dictionary
+        data = json.loads(request.body)
+        # Assuming that POST request contains 'url' key and associated value
+        url = data.get('url')
+        succeeded = functions.delete_entry_db(url, url) # delete data from database
+    return succeeded
+
 
 # Simple rapper function which can display POST request Github API URL on Django website
 def display_POST_request(request):

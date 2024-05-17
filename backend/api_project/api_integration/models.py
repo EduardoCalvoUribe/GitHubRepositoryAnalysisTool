@@ -40,6 +40,7 @@ class Repos(models.Model): # repository, might have to change this into comment
     updated_at = timezone.now() # time of last update
     contributers = models.JSONField(blank=True, default=dict) # list of amount of pull request per users
     pull_requests = models.JSONField(blank=True, default=dict) # list of pull request in repository
+    token = models.CharField(max_length=100) # save personal access token
 
     def __str__(self):
         return self.name
@@ -58,8 +59,29 @@ class Repos(models.Model): # repository, might have to change this into comment
                             setattr(repo, key, value)
                     else:
                         setattr(repo, key, "")
+
             setattr(repo, "contributers", functions.pull_request_per_user()) # update users
             setattr(repo, "pull_requests", {"a":1})
+            repo.save()
+        except Exception as e:
+            return JsonResponse({"error": str(e)})
+        
+    @classmethod
+    def update_repo_in_db(self, json_response, repo, token):
+        try:
+        # Convert API response to JSON format
+            for key,value in json_response.items():
+                if key is not None:
+                    if value is not None:
+                        if "_url" in key or "_url" in value:
+                            setattr(repo, key, {'a':1})
+                        else:
+                            setattr(repo, key, value)
+                    else:
+                        setattr(repo, key, "")
+            setattr(repo, "contributers", functions.pull_request_per_user()) # update users
+            setattr(repo, "pull_requests", {"a":1})
+            setattr(repo, "token", token)
             repo.save()
         except Exception as e:
             return JsonResponse({"error": str(e)})
