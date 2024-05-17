@@ -81,7 +81,7 @@ export default {
       try {
           // https://github.com/IntersectMBO/plutus
           // TODO: Instead of cocatenating, extract from POST options (postOptions.body?). Also modify urls.py for this
-          const response = await fetchData('http://127.0.0.1:8000/github/github-pulls/'.concat(inputUrl), postOptions);
+          const response = await fetchData('http://127.0.0.1:8000/all/', postOptions);
           // const response = await fetch(url, postOptions);
           // const json = await response.json();
           this.githubResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
