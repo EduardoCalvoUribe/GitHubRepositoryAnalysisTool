@@ -8,7 +8,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
 from .models import Users
-from .models import Repos
+from .models import Repos, PullRequest, Commit
 from . import functions
 # from .serializers import ItemSerializer
 from django.views.decorators.csrf import csrf_exempt
@@ -109,7 +109,7 @@ def process_vue_POST_request(request):
         # Assuming that POST request contains 'url' key and associated value
         url = data.get('url')
 
-    return JsonResponse(str(url), safe=False)
+    return str(url)
 
 # Simple rapper function which can display POST request Github API URL on Django website
 def display_POST_request(request):
@@ -180,5 +180,18 @@ def assign_Github_variables(parsed_url):
   if len(parsed_url) > 5 and parsed_url[3] == 'pull' and parsed_url[5] == 'commits':
         variable_dictionary["nested_commit"] = parsed_url[5]
         variable_dictionary["nested_commit_sha"] = parsed_url[6] if len(parsed_url) > 6 else ""
-    
-    
+
+
+@csrf_exempt
+def frontendInfo(request):
+    # Retrieve all instances of PullRequest model
+    pull_requests = Commit.objects.all()
+    print(pull_requests)
+
+    # Extract names from each instance
+    names = [pull_request.title for pull_request in pull_requests]
+
+    # Print or use the names as needed
+    print(names)
+    names = ["test1", "test2"]
+    return JsonResponse({'names': names}, safe=False)

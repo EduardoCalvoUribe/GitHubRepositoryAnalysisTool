@@ -11,6 +11,7 @@
     </div>
   </header>
 
+  <div style="margin-top: 8%;" v-html="dbResponse" ></div> 
 
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
@@ -88,9 +89,9 @@ export default {
       };
 
       try {
-          const response = await fetchData('http://127.0.0.1:8000/all/', postOptions);
-          console.log(response)
-          // this.githubResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
+          const response = await fetchData('http://127.0.0.1:8000/database/', postOptions);
+          console.log(JSON.stringify(response));
+          this.dbResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
       } catch (error) {
           console.error('Error:', error);
       }
