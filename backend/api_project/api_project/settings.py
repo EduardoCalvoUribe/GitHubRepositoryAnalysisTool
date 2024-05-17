@@ -16,7 +16,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Adding personal access token
-GITHUB_PERSONAL_ACCESS_TOKEN = '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' 
+GITHUB_PERSONAL_ACCESS_TOKEN = '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' 
 
 #List of relevant GitHub API Endpoints
 # GITHUB_API_ENDPOINTS = ['https://api.github.com/user']
@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-rxaah127^g+4er%f8k1wrh_1h3yjy+!-pt3^-9^vdpl8zpxt+&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -60,6 +60,8 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True  # Do not use this in production!
 
 ROOT_URLCONF = 'api_project.urls'
 

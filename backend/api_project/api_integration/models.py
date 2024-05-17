@@ -93,27 +93,37 @@ class PullRequest(models.Model): # pull request
     name = models.CharField(max_length=100)
     url = models.URLField()
     updated_at = timezone.now()
+    date = models.DateField()
     title = models.CharField(max_length=100)
     body = models.CharField(max_length=100)
     user = models.CharField(max_length=100)
-    comments = models.JSONField(blank=True, default=dict)
+    number = models.IntegerField()
+    #comments = models.JSONField(blank=True, default=dict)
     #closed = model.
 
     def __str__(self):
         return self.name
     
     @classmethod
-    def save_pull_to_db(request, json_response):
+    def save_pull_to_db(request, pull_response):
         try:
             # Convert API response to JSON format
             pull_request = PullRequest()
 
-            for key,value in json_response.items():
+            for key,value in pull_response.items():
                 if key is not None:
                     if value is not None:
                         setattr(pull_request, key, value)
                     else:
                         setattr(pull_request, key, "")
+
+            setattr(pull_request, "name", '')
+            setattr(pull_request, "url", pull_response['url'])
+            setattr(pull_request, "date", pull_response['created_at'])
+            setattr(pull_request, "title", pull_response['title'])
+            setattr(pull_request, "body", pull_response['body'])
+            setattr(pull_request, "user", pull_response['user']['login'])
+            setattr(pull_request, "number", pull_response['number'])
 
             pull_request.save()
             data = list(pull_request.objects.values())
@@ -134,12 +144,13 @@ class Commit(models.Model): # commit
     body = models.CharField(max_length=500)
     user = models.CharField(max_length=100)
     comments = models.JSONField(blank=True, default=dict)
+    pull_request = models.ForeignKey('PullRequest', on_delete=models.CASCADE, related_name='commits')
 
     def __str__(self):
         return self.name
     
     @classmethod
-    def save_commit_to_db(request, commit_response):
+    def save_commit_to_db(request, commit_response, pull_request):
         try:
             # Convert API response to JSON format
             commit = Commit()
@@ -158,9 +169,50 @@ class Commit(models.Model): # commit
             setattr(commit, "body", '')
             setattr(commit, "user", commit_response['author']['login'])
             setattr(commit, "comments", '')
+            setattr(commit, 'pull_request', pull_request)
 
             commit.save()
             data = list(commit.objects.values())
+            return JsonResponse({'data': data})
+        except Exception as e:
+            return JsonResponse({"error": str(e)})
+
+    class Meta:
+        app_label = 'api_integration'
+
+
+class Comment(models.Model): # commit
+    url = models.URLField()
+    date = models.DateField()
+    updated_at = timezone.now()
+    body = models.CharField(max_length=500)
+    user = models.CharField(max_length=100)
+    pull_request = models.ForeignKey('PullRequest', on_delete=models.CASCADE, related_name='comments')
+
+    def __str__(self):
+        return self.name
+    
+    @classmethod
+    def save_comment_to_db(request, comment_response, pull_request):
+        try:
+            # Convert API response to JSON format
+            comment = Comment()
+
+            for key,value in comment_response.items():
+                if key is not None:
+                    if value is not None:
+                        setattr(comment, key, value)
+                    else:
+                        setattr(comment, key, "")
+            
+            setattr(comment, "url", comment_response['comment']['url'])
+            setattr(comment, "date", comment_response['comment']['author']['date'])
+            setattr(comment, "body", comment_response['body'])
+            setattr(comment, "user", comment_response['user']['login'])
+            setattr(comment, 'pull_request', pull_request)
+
+            comment.save()
+            data = list(comment.objects.values())
             return JsonResponse({'data': data})
         except Exception as e:
             return JsonResponse({"error": str(e)})

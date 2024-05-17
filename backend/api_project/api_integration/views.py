@@ -10,6 +10,7 @@ from .models import Users
 from .models import Repos
 from . import functions
 # from .serializers import ItemSerializer
+from django.views.decorators.csrf import csrf_exempt
 
 # TO ADD: list of relevant API endpoints as a Python list/enum.
 
@@ -45,15 +46,22 @@ def github_repo_pull_comments(request, owner, repo, pull_number):
         # If the request was not successful, return an empty dictionary
         return JsonResponse({}, status=api_response.status_code)
     
-
-
-     
-
+@csrf_exempt
 # API call to https://api.github.com/repos/django/django/pulls endpoint. 
 # TO ADD: Repos as variable
-def github_repo_pull_requests(request):
+def github_repo_pull_requests(request, url):
     # API call authorisation
-    url = 'https://api.github.com/repos/django/django/pulls'
+    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
+    headers = {'Authorization': f'token {personal_access_token}'}
+
+    # TODO: Extract owner and repo from URL
+    # Example Input = 'github.com/repos/IntersectMBO/plutus/pulls'
+    # Example Desired Output = 'https://api.github.com/repos/IntersectMBO/plutus'
+    # proof of concept:
+    # owner = url.split('/')[3]
+    # repo = url.split('/')[4]
+    # api_response = requests.get(f'https://api.github.com/repos/{owner}/{repo}/pulls', headers=headers)
+
     # Make the GET request to the GitHub API
     api_response = functions.get_api_reponse(url)
 
@@ -87,7 +95,8 @@ def handle_API_request(request,URL):
 
     # Return text_to_display in Django HttpResponse format (in order to display on URL)
     return HttpResponse(text_to_display)
-    
+   
+@csrf_exempt 
 # This function accepts an incoming HTTP request, which is assumed to be a POST request. 
 # The function returns a user-requested Github API URL in String form which is extracted from the HTTP request
 def process_vue_POST_request(request):
