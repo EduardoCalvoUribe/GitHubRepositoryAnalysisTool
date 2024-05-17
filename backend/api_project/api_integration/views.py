@@ -3,6 +3,7 @@ from django.http import HttpResponse
 import numpy as np
 import requests
 import json
+import re
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
@@ -107,21 +108,8 @@ def process_vue_POST_request(request):
         
         # Assuming that POST request contains 'url' key and associated value
         url = data.get('url')
-        token = data.get("token")
-        data = functions.get_data_from_url(url, token) # save data from url to DB and return it
-    return data
 
-def process_vue_delete_request(request):
-    # If the user request is an HTTP POST request
-
-    if request.method == "POST": # might need to change this line 
-        # Use built-in json Python package to parse JSON string and convert into a Python dictionary
-        data = json.loads(request.body)
-        # Assuming that POST request contains 'url' key and associated value
-        url = data.get('url')
-        succeeded = functions.delete_entry_db(url, url) # delete data from database
-    return succeeded
-
+    return JsonResponse(str(url), safe=False)
 
 # Simple rapper function which can display POST request Github API URL on Django website
 def display_POST_request(request):
@@ -149,4 +137,48 @@ def load_repos(request):
 def load_quantify_users(request):
      data = functions.pull_request_per_user(request) # get amount of pull request per user
      return JsonResponse({'repositories': data})
+
+# Helper function that parses Github URLs into a list of variables
+# Assuming that Github URLs always follow the same pattern, i.e. https://gihtub.com/[username]/[repo_name]/etc...
+# Returns a list of variables if the provided URL was a Github URL
+def parse_Github_url_variables(url):
+  # Indicate empty URL if url is empty
+  if not url:
+    return ['empty URL']
+
+  # Filter out www, http and https from URL
+  filtered_url = re.sub(r'https?://(www\.)?', '', url)
+  parsed_url = filtered_url.split('/')
+
+  
+  if parsed_url[0] != 'github.com':
+    return ['URL is not a Github URL']
+  else:
+    return parsed_url
+
+# Function which accepts list of Github variables and returns a dictionary containing
+# all variables contained in the parsed URL. 
+def assign_Github_variables(parsed_url):
+  variable_dictionary = {
+      "username":"",
+      "repo_name":"",
+      "pull_number":"",
+      "nested_commit":"",
+      "nested_commit_sha":"",
+  }
+
+  # Assign username to variable_dictionary (if available)
+  if len(parsed_url) > 1:
+        variable_dictionary["username"] = parsed_url[1]
+  # Assign repo_name to variable_dictionary (if available)
+  if len(parsed_url) > 2:
+        variable_dictionary["repo_name"] = parsed_url[2]
+  # Assign pull_number to variable_dictionary (if available)
+  if len(parsed_url) > 3 and parsed_url[3] == 'pull':
+        variable_dictionary["pull_number"] = parsed_url[4] if len(parsed_url) > 4 else ""
+  # Assign nested_commit and nested_commit_sha to variable_dictionary (if available)
+  if len(parsed_url) > 5 and parsed_url[3] == 'pull' and parsed_url[5] == 'commits':
+        variable_dictionary["nested_commit"] = parsed_url[5]
+        variable_dictionary["nested_commit_sha"] = parsed_url[6] if len(parsed_url) > 6 else ""
+    
     
