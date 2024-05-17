@@ -38,6 +38,7 @@
     gap: 10px; /* Space between boxes */
     justify-content: center; /* Center the boxes horizontally */
     padding: 20px 0; /* Optional: padding around the container */
+    text-align: center;
   }
   .box {
     flex: 1; /* Each box takes equal space */
