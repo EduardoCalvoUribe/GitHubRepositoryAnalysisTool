@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "routerparttwo",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,10 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.4.15"
+    "@vuepic/vue-datepicker": "^8.5.0",
+    "vue": "^3.4.21",
+    "vue-grid-layout": "^2.4.0",
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.3",
-    "vite": "^5.0.11"
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.2.8"
   }
 }

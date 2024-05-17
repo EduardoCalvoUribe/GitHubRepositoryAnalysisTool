@@ -37,10 +37,10 @@ async def get_github_information(response):
                     text_to_display += f"<p><b>Message</b>: {commit['commit']['message']}</p>"
                     text_to_display += '<p>----------------------------</p>'
                 for comment in pr[2]:
-                    text_to_display += f'</b>Type of comment:</b> {comment['comment_type']}</p>'
+                    text_to_display += f"</b>Type of comment:</b> {comment['comment_type']}</p>"
                     if 'body' in comment and comment['body']:  
-                        text_to_display += f'<p></b>Author</b>: {comment['user']['login']}'
-                        text_to_display += f'<p></b>Message</b>: {comment['body']}</p>'
+                        text_to_display += f"<p></b>Author</b>: {comment['user']['login']}"
+                        text_to_display += f"<p></b>Message</b>: {comment['body']}</p>"
                     else:
                         text_to_display += 'No body'
                     text_to_display += '<p>----------------------------</p>'
@@ -170,7 +170,7 @@ async def fetch_comments(session, pull_request):
                     #models.Comment.save_comment_to_db(comment, )
 
                     if type == 'review API':
-                        pr_nested_comment_url = pr_comments_reviews_url + f'/{comment['id']}/comments'
+                        pr_nested_comment_url = pr_comments_reviews_url + f"/{comment['id']}/comments"
                         #pr_nested_comment_url = f'https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}/reviews/{comment['id']}/comments'
                         task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, type, session))
                         tasks.append(task)
