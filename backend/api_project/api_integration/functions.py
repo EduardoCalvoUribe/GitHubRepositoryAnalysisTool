@@ -2,6 +2,7 @@ from django.conf import settings
 from django.http import JsonResponse
 import requests
 from .models import * 
+from django.views.decorators.csrf import csrf_exempt
 
 
 def get_api_reponse(URL):
@@ -48,6 +49,9 @@ def get_data_from_url(self, url, token):
     Repos.update_repo_in_db(response,repo, token) # update repo item with response data
     return repo# send back newly added repo
 
-def delete_entry_db(self, url):
+@csrf_exempt
+def delete_entry_db(url):
+    # url = process_vue_POST_request(url)
+    print(url)
     Repos.objects.filter(url=url).delete()
     return True

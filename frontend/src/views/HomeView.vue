@@ -107,7 +107,7 @@ export default {
       // send repo name to backend through correct path that still needs to be created
       try {
         console.log('entered try')
-        const response = await fetchData('', postOptions);
+        const response = await fetchData('http://127.0.0.1:8000/delete/', postOptions);
       } catch (error) {
           console.error('Error:', error);
       }

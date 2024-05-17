@@ -1,5 +1,5 @@
 from django.urls import path, include
-from . import views, comment_info, API_call_information
+from . import views, comment_info, API_call_information, functions
 
 
 # importing nlp_functions to test function output on webpage. 
@@ -18,5 +18,6 @@ urlpatterns = [
     path('nlp/',FleschReadingEase.calculate_flesch_reading_ease,name='nlp'), #URL handle for parsing POST request data
     path('comments/', comment_info.comment_visual, name ='comments'),
     path('all/', API_call_information.get_github_information, name = 'all'),
-    path('database/', views.frontendInfo, name = 'database')
+    path('database/', views.frontendInfo, name = 'database'),
+    path('delete/', functions.delete_entry_db, name = 'delete')
 ]
