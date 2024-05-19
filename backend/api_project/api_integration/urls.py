@@ -19,5 +19,5 @@ urlpatterns = [
     path('comments/', comment_info.comment_visual, name ='comments'),
     path('all/', API_call_information.get_github_information, name = 'all'),
     path('database/', views.frontendInfo, name = 'database'),
-    path('delete/', functions.delete_entry_db, name = 'delete')
+    path('delete/', views.delete_entry_db, name = 'delete')
 ]

@@ -195,3 +195,11 @@ def frontendInfo(request):
     print(names)
     names = ["test1", "test2"]
     return JsonResponse({'names': names}, safe=False)
+
+@csrf_exempt
+def delete_entry_db(request):
+    # extract id from POST request
+    id = process_vue_POST_request(request)
+    # delete repodata corresponding to id from database
+    Repos.objects.filter(id=id).delete()
+    return JsonResponse(id, safe=False)
