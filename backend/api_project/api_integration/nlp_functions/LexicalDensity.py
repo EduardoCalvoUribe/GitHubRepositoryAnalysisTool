@@ -38,7 +38,7 @@ def single_message_lexical_density(message):
   if total_word_count == 0:
     return 0 
   else:
-    return lexical_items_count/total_word_count
+    return (lexical_items_count/total_word_count)*100
 
 
 # This function computes the average lexical density for a list of message strings.
