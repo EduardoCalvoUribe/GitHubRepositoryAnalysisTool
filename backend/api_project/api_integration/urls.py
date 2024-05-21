@@ -1,6 +1,5 @@
 from django.urls import path, include
-from . import views, comment_info, API_call_information, functions
-from . import views, comment_info, API_call_information,general_semantic_score
+from . import views, comment_info, API_call_information, functions, general_semantic_score
 
 
 # importing nlp_functions to test function output on webpage. 
@@ -20,8 +19,7 @@ urlpatterns = [
     path('comments/', comment_info.comment_visual, name ='comments'),
     path('all/', API_call_information.get_github_information, name = 'all'),
     path('database/', views.frontendInfo, name = 'database'),
-    path('delete/', views.delete_entry_db, name = 'delete')
-    path('all/', API_call_information.get_github_information, name = 'all'), 
+    path('delete/', views.delete_entry_db, name = 'delete'),
     path('semantic',general_semantic_score.displaySemantic, name = 'semantic'),
     path('commentList',general_semantic_score.get_comments, name = 'commentList'),
 ]
