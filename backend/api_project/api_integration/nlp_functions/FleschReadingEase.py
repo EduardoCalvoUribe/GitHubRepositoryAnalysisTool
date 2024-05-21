@@ -20,6 +20,7 @@ from nltk.tokenize import sent_tokenize
 
 #Function which calculates the Flesch reading ease metric for a given message.
 #Returns Flesch reading ease as a single numerical value
+# If division by 0 occurs -1 is returned.
 def calculate_flesch_reading_ease(message):
     # Count number of words with .split() function. By default the separator character is any whitespace
     wordCount = len(message.split())
@@ -32,32 +33,20 @@ def calculate_flesch_reading_ease(message):
     for word in message.split():
         syllableCount += syllable_count(word)
     
-    # Calculate Flesch reading ease score with the associated formula
-    # Initialise Flesch reading ease score as 0 
-    flesch_reading_ease_score = 0
 
-    # If wordCount or sentenceCount are 0, let Flesch reading ease score be 
-    # out of bounds (max Flesch reading ease score is around 121) due to undefined division by 0
-    if (sentenceCount == 0 or wordCount == 0):
-        flesch_reading_ease_score = 1000
-    else:
-    # else calculate Flesch reading ease score
-        flesch_reading_ease_score = 206.835 - (1.015 * (wordCount/sentenceCount)) - (84.6 * (syllableCount/wordCount))
+    # If sentenceCount or wordCount are 0, return -1 to prevent division by 0
+    if sentenceCount == 0 or wordCount == 0:
+        return -1
+    
+    # Calculate Flesch reading ease score
+    flesch_reading_ease_score = 206.835 - (1.015 * (wordCount / sentenceCount)) - (84.6 * (syllableCount / wordCount))
 
-    # Return Flesch reading ease score.
-    # If Flesch reading ease score is 1000, then an undefined division by 0 has occurred. 
+    # Bound the Flesch reading ease score between 0 and 100
+    flesch_reading_ease_score = max(0, min(flesch_reading_ease_score, 100))
+
+    # Return Flesch reading ease score.  
     return flesch_reading_ease_score 
 
-
-    # Code for future reference, might be relevant if lower bound for Flesch reading ease score is set to 0.
-    # if flesch_reading_ease_score > 0:
-    #     return flesch_reading_ease_score
-    # # Else if Flesch reading ease score is 0, return 0.
-    # elif flesch_reading_ease_score == 0:
-    #     return 0
-    # # Return -1 if sentenceCount = 0 or wordCount = 0 (undefined division by 0 in formula)
-    # elif flesch_reading_ease_score < 0:
-    #     return -1
 
 #Helper function which checks if word is in cmudict dictionary.
 def lookup_word(word):
