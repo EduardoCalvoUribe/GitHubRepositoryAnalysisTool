@@ -1,13 +1,21 @@
 <template>
   <header>
-    <div style="font-size: 180%;">
+    <RouterLink to="/repoinfo/${id}">Repository Infomation</RouterLink>
+    <RouterLink style="margin-left: 2%" to="/prpage">Pull Requests</RouterLink>
+    <RouterLink style="margin-left: 2%" to="/commitpage">Commits</RouterLink>
+    <RouterLink style="margin-left: 2%" to="/commentpage">Comments</RouterLink>
+
+  </header>
+
+  <RouterView />
+  <header>
+    <div style="font-size: 180%;  margin-top: 30px;">
       Repository Information
     </div>
   </header>
 
   <header>
     <div style="font-size: 180%; justify-content: left;" >
-      
     </div>
   </header>
 
@@ -183,5 +191,19 @@ export default {
   text-align: center; /* Centering text inside grid items */
   border: 1px solid #ccc; /* Border for grid items */
 }
+.box-container {
+    display: flex;
+    gap: 10px; /* Space between boxes */
+    justify-content: center; /* Center the boxes horizontally */
+    padding: 20px 0; /* Optional: padding around the container */
+    text-align: center;
+  }
+  .box {
+    flex: 1; /* Each box takes equal space */
+    padding: 20px;
+    background-color: rgb(255, 255, 255);
+    text-align: center;
+    border: 1px solid #ffffff;
+  }
 </style>
   

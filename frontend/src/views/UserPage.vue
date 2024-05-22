@@ -1,6 +1,11 @@
 <template>
   <header>
-    <div style="font-size: 180%;">
+    <RouterLink to="/repoinfo/${id}">Repository Infomation</RouterLink>
+    <RouterLink style="margin-left: 2%" to="/prpage">Pull Requests</RouterLink>
+    <RouterLink style="margin-left: 2%" to="/commitpage">Commits</RouterLink>
+    <RouterLink style="margin-left: 2%" to="/commentpage">Comments</RouterLink>
+
+    <div style="font-size: 180%;  margin-top: 30px;">
       User Page
     </div>
   </header>
