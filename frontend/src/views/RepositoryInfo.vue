@@ -39,7 +39,12 @@
     </div>
   </div>
 
-  <div style="margin-top: 4%; display: flex; justify-content: center;">
+  
+  <div >
+    <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
+  </div>
+  
+  <div v-if="selectedOption && selectedOption.name === 'Pull Requests'" style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests" >Pull Requests:</label>
       <div id="pullRequests"class="row" v-for="pullrequest in fakejson.repository.pull_requests">
@@ -52,7 +57,7 @@
     </div>
   </div> 
 
-  <div style="margin-top: 4%; display: flex; justify-content: center;">
+  <div v-else-if="selectedOption && selectedOption.name === 'Contributors'" style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users" >Contributors:</label>
       <div id="users"class="row" v-for="user in fakejson.repository.contributors">
@@ -72,10 +77,14 @@ import { ref, onMounted } from 'vue';
 import { fetchData } from '../fetchData.js'
 import { useRoute } from 'vue-router';
 import fakejson from '../test.json';
+import Dropdown from 'primevue/dropdown';
+// import SelectButton from 'primevue/dropdown';
 
 export default {
   components: {
     VueDatePicker,
+    Dropdown,
+    // SelectButton,
   },
 
   setup() {
@@ -126,6 +135,12 @@ export default {
 
   data() {
     return {
+      selectedOption: null,
+      options: [
+        { name: 'Pull Requests' },
+        { name: 'Contributors' },
+        // Add more options if needeed
+      ],
       fakejson,
       selectedRange: null,
       items: [
