@@ -1,7 +1,6 @@
 <template>
-    <header>
-
-    <RouterLink to="/repoinfo/1">Repository Infomation</RouterLink>
+  <header>
+    <RouterLink to="/repoinfo/${id}">Repository Infomation</RouterLink>
     <RouterLink to="/prpage">Pull Requests</RouterLink>
     <RouterLink to="/commitpage">Commits</RouterLink>
     <RouterLink to="/commentpage">Comments</RouterLink>

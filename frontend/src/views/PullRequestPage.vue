@@ -1,6 +1,13 @@
+<script>
+import testJson from '../test.json';
+
+export default {
+  data() {
+    return testJson}}
+</script>
 <template>
   <header>
-    <RouterLink to="/repoinfo/1">Repository Infomation</RouterLink>
+    <RouterLink to="/repoinfo/${id}">Repository Infomation</RouterLink>
     <RouterLink to="/prpage">Pull Requests</RouterLink>
     <RouterLink to="/commitpage">Commits</RouterLink>
     <RouterLink to="/commentpage">Comments</RouterLink>
