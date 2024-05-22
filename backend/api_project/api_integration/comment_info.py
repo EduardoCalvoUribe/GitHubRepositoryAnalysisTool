@@ -63,7 +63,7 @@ async def get_pull_request_comments(owner, repo, pull_number, headers, session):
     # Recursive definition which retrieves all comments for a given URL    
     async def retrieve_comments(comment_url, type, session):
         # Make API request to specified url
-        #response = requests.get(comment_url, headers=headers)
+        # response = requests.get(comment_url, headers=headers)
         async with session.get(comment_url) as response:
             # Because of recursion, check if API request actually gets a correct response
             if response.status == 200:
@@ -88,3 +88,30 @@ async def get_pull_request_comments(owner, repo, pull_number, headers, session):
 
     # Return list containing all comments
     return all_comments
+
+
+# Function based on comment_visual which stores and returns all comments with body as a list.
+async def list_of_comments():
+    # NOTE: Personal access token with repo permission turned on IS REQUIRED!
+    personal_access_token = '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'
+
+    # Headers for the API request
+    headers = {'Authorization': f'token {personal_access_token}'}
+
+    # Testing with open pull request at https://github.com/lucidrains/PaLM-rlhf-pytorch/pull/52
+    owner = 'IntersectMBO'
+    repo = 'plutus'
+    pull_number = 5772
+
+    # Test run to retrieve all comments from https://github.com/lucidrains/PaLM-rlhf-pytorch/pull/52
+    async with aiohttp.ClientSession(headers=headers,trust_env=True) as session: 
+        all_comments = await get_pull_request_comments(owner, repo, pull_number, headers, session)
+
+        comments_with_body = []
+
+        # Collect comments containing a body into a list
+        for comment in all_comments:
+            if 'body' in comment and comment['body']:
+                comments_with_body.append(comment['body'])
+
+        return comments_with_body

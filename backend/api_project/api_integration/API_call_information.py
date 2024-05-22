@@ -1,28 +1,34 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import requests
 from django.conf import settings
 from datetime import datetime, timedelta
 from collections import Counter
 from . import functions
 from . import models 
+from . import views
 import aiohttp
 import asyncio
 import time
 import re
 from urllib.parse import urlparse, parse_qs
-from . import views
+from django.views.decorators.csrf import csrf_exempt
+from asgiref.sync import sync_to_async
 
 # This function should return visual on everything and call functions to get all information
-async def get_github_information(response, url):
+@csrf_exempt
+async def get_github_information(response):
     start_time = time.time() # Variable to check the runtime of the function
-    #owner = 'IntersectMBO'
-    #repo = 'govtool'
-
+    # owner = 'IntersectMBO'
+    # repo = 'govtool'
+    
+    url = views.process_vue_POST_request(response)
     parsed_variables = views.parse_Github_url_variables(url)
     owner = parsed_variables[1]
     repo = parsed_variables[2]
-
+    print(owner)
+    print(repo)
+    
     # NOTE: Personal access token with repo permission turned on IS REQUIRED!
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
     # Headers for the API request
@@ -70,7 +76,7 @@ async def get_github_information(response, url):
         else:
             print("Failed to fetch rate limit information")
 
-        return HttpResponse(text_to_display)
+        return JsonResponse(text_to_display, safe=False)
 
 
 async def handle_pull_requests(session, owner, repo):
@@ -104,9 +110,9 @@ async def process_page(session, pr_url):
         for pull_result in pull_results:
             pull_request_instance, all_commits, all_comments = pull_result
             for comment in all_comments:
-                models.Comment.save_comment_to_db(comment, pull_request_instance)
+                await sync_to_async(models.Comment.save_comment_to_db)(comment, pull_request_instance)
             for commit in all_commits:
-                models.Commit.save_commit_to_db(commit, pull_request_instance)
+                await sync_to_async(models.Commit.save_commit_to_db)(commit, pull_request_instance)
 
         return pull_results #[[pr, [commits], [comments]], [pr, [commits], [comments]]] for each pr
 
@@ -117,22 +123,24 @@ async def process_pull_request(session, pull_request):
     # Fetch the comments of a pull request asynchronously
     all_comments = await fetch_comments(session, pull_request)
 
+    pull_request_instance = pull_request
     # Get the PullRequest instance from the database
-    pull_request_instance = models.PullRequest.objects.get_or_create(
-        url=pull_request['url'],
-        defaults={
-            'name': '',
-            'updated_at': pull_request['updated_at'],
-            'date': pull_request['created_at'],
-            'title': pull_request['title'],
-            'body': pull_request['body'],
-            'user': pull_request['user']['login'],
-            'number': pull_request['number']
-        }
-    )[0]
+    # pr_instance = await sync_to_async(models.PullRequest.objects.get_or_create)(
+    #     url=pull_request['url'],
+    #     defaults={
+    #         'name': '',
+    #         'updated_at': pull_request['updated_at'],
+    #         'date': pull_request['created_at'],
+    #         'title': pull_request['title'],
+    #         'body': pull_request['body'],
+    #         'user': pull_request['user']['login'],
+    #         'number': pull_request['number']
+    #     }
+    # )
+    # pull_request_instance = pr_instance[0]
 
     # Return commits and comments
-    return pull_request_instance, all_commits, all_comments
+    return pull_request_instance, all_commits, all_comments #, 
 
 async def fetch_commits(session, pull_request):
     # Construct the URL to fetch the commit information from GitHub

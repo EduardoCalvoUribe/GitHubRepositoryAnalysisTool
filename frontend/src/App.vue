@@ -7,7 +7,7 @@ import { RouterLink, RouterView } from 'vue-router'
   <header>
     
     <RouterLink to="/">Home</RouterLink>
-    <RouterLink to="/about">About</RouterLink>
+    <!-- <RouterLink to="/about">About</RouterLink> -->
     <RouterLink to="/repoinfo">Repository Infomation</RouterLink>
     <RouterLink to="/prpage">Pull Requests</RouterLink>
     <RouterLink to="/commitpage">Commits</RouterLink>

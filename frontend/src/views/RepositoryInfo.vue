@@ -11,6 +11,7 @@
     </div>
   </header>
 
+  <div style="margin-top: 8%;" v-html="dbResponse" ></div> 
 
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
@@ -46,6 +47,7 @@ import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import { ref, onMounted } from 'vue';
 import { fetchData } from '../fetchData.js'
+import { useRoute } from 'vue-router';
 
 export default {
   components: {
@@ -53,6 +55,7 @@ export default {
   },
 
   setup() {
+    const route = useRoute();
     const pullRequestInfo = ref([
       {
           "title": "pull request 1",
@@ -74,7 +77,8 @@ export default {
 
     onMounted(async () => {
 
-      const data = {'id': repoId};
+      const data = {'id': route.params.id};
+      console.log(data)
 
       const postOptions = {
           method: 'POST',
@@ -85,8 +89,9 @@ export default {
       };
 
       try {
-          const response = await fetchData('http://127.0.0.1:8000/github/github-pulls/'.concat(inputUrl), postOptions);
-          this.githubResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
+          const response = await fetchData('http://127.0.0.1:8000/database/', postOptions);
+          console.log(JSON.stringify(response));
+          this.dbResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
       } catch (error) {
           console.error('Error:', error);
       }

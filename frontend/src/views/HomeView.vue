@@ -10,22 +10,22 @@ export default {
         {
             "name": "repo1",
             "last_accessed": "2022-01-01",
-            "id": ""
+            "id": "1"
         },
         {
             "name": "repo2",
             "last_accessed": "2022-01-02",
-            "id": ""
+            "id": "2"
         },
         {
             "name": "repo3",
             "last_accessed": "2022-01-03",
-            "id": ""
+            "id": "3"
         },
         {
             "name": "repo4",
             "last_accessed": "2022-01-04",
-            "id": ""
+            "id": "4"
         },
     ]);
 
@@ -81,7 +81,8 @@ export default {
       try {
           // https://github.com/IntersectMBO/plutus
           // TODO: Instead of cocatenating, extract from POST options (postOptions.body?). Also modify urls.py for this
-          const response = await fetchData('http://127.0.0.1:8000/github/github-pulls/'.concat(inputUrl), postOptions);
+          const response = await fetchData('http://127.0.0.1:8000/all/', postOptions);
+          console.log(JSON.stringify(response))
           // const response = await fetch(url, postOptions);
           // const json = await response.json();
           this.githubResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
@@ -106,7 +107,7 @@ export default {
       // send repo name to backend through correct path that still needs to be created
       try {
         console.log('entered try')
-        const response = await fetchData('', postOptions);
+        const response = await fetchData('http://127.0.0.1:8000/delete/', postOptions);
       } catch (error) {
           console.error('Error:', error);
       }
@@ -142,12 +143,12 @@ export default {
 
 
     <div class="row" v-for="repo in repoInfo">
-      <router-link :to="{ path: '/repoinfo' }"><button class="button-6" @click="handleGithubURLSubmit(repo.url)"> 
+      <router-link :to="{ path: '/repoinfo/' + repo.id }"><button class="button-6" > 
           <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
           <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
       </button></router-link>
       <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
-        <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.url)">x</div>
+        <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.id)">x</div>
       </button>
     </div> 
 
