@@ -36,7 +36,7 @@ comment_list = asyncio.run(get_comments())
 
 
 # Retrieve PyGithub commit object
-commit = CodeCommitMessageRatio.get_Github_commit_object(repository_owner, repository_name, commit_sha, github_token)
+commitobject = CodeCommitMessageRatio.get_Github_commit_object(repository_owner, repository_name, commit_sha, github_token)
 
 
 # Sigmoid function used for bounding commit message/code ratio value between 0 and 100
@@ -64,9 +64,11 @@ def calculate_semantic_score(commit):
 # Accepts additional parameters ld_weight, fre_weight and cmcl_weight, representing the weights
 # for lexical density, Flesch reading ease and commit message length/code length ratio respectively.
 # In order to retrieve message from commit object, let commit_message = commit.commit.message
-def calculate_weighted_semantic_score(commit, ld_weight, fre_weight, cmcl_weight):
+def calculate_weighted_commit_semantic_score(commitJSON, ld_weight, fre_weight, cmcl_weight, commit_url):
     # Get commit message in string form
-    commit_message = commit.commit.message
+    commit_message = commitJSON["commit"]["message"]
+    parsed_commit_url = parse_Github_url_variables(commit_url)
+    commit = CodeCommitMessageRatio.get_Github_commit_object(parsed_commit_url[1], parsed_commit_url[2], parsed_commit_url[6])
     
     # Get commit message/code length ratio, bounded between 0 and 1 by sigmoid function
     bounded_ratio = sigmoid(CodeCommitMessageRatio.compute_code_commit_ratio(commit))

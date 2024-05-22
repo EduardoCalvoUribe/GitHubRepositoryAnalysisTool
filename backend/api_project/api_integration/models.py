@@ -38,9 +38,9 @@ class Users(models.Model): # user
 class Repos(models.Model): # repository, might have to change this into comment
     name = models.CharField(max_length=100) # name of repository
     url = models.URLField() # api url of repository
-    updated_at = timezone.now() # time of last update
-    contributers = models.JSONField(blank=True, default=dict) # list of amount of pull request per users
-    pull_requests = models.JSONField(blank=True, default=dict) # list of pull request in repository
+    updated_at = timezone.now() # time of last update in database
+    contributers = models.JSONField(blank=True, default=dict) # list of users
+    pull_requests = models.JSONField(blank=True, default=dict) # list of pull request in repository (Should be linked to the classes)
     token = models.CharField(max_length=100) # save personal access token
 
     def __str__(self):
@@ -91,7 +91,7 @@ class Repos(models.Model): # repository, might have to change this into comment
         app_label = 'api_integration'
 
 class PullRequest(models.Model): # pull request
-    name = models.CharField(max_length=100)
+    #name = models.CharField(max_length=100) # Can be deleted
     url = models.URLField()
     updated_at = timezone.now()
     date = models.DateField(default=date.today)
@@ -99,8 +99,8 @@ class PullRequest(models.Model): # pull request
     body = models.CharField(max_length=100)
     user = models.CharField(max_length=100)
     number = models.IntegerField(default=0)
-    #comments = models.JSONField(blank=True, default=dict)
-    #closed = model.
+    # TODO: Add attribute of a list of all commits instances
+    # TODO: Add attribute of a list of all comment instances
 
     def __str__(self):
         return self.name
@@ -118,7 +118,7 @@ class PullRequest(models.Model): # pull request
                     else:
                         setattr(pull_request, key, "")
 
-            setattr(pull_request, "name", '')
+            #setattr(pull_request, "name", '')
             setattr(pull_request, "url", pull_response['url'])
             setattr(pull_request, "date", pull_response['created_at'])
             setattr(pull_request, "title", pull_response['title'])
@@ -142,16 +142,16 @@ class Commit(models.Model): # commit
     date = models.DateField(default=date.today)
     updated_at = timezone.now()
     title = models.CharField(max_length=100)
-    body = models.CharField(max_length=500)
+    #body = models.CharField(max_length=500) # Can be deleted, not used I think
     user = models.CharField(max_length=100)
-    comments = models.JSONField(blank=True, default=dict)
-    #pull_request = models.ForeignKey('PullRequest', on_delete=models.CASCADE, related_name='commits', default=)
+    #comments = models.JSONField(blank=True, default=dict) # Not used at the moment
+    # TODO: Add attribute for the semantic score 
 
     def __str__(self):
         return self.name
     
     @classmethod
-    def save_commit_to_db(request, commit_response, pull_request):
+    def save_commit_to_db(request, commit_response):
         try:
             # Convert API response to JSON format
             commit = Commit()
@@ -167,10 +167,9 @@ class Commit(models.Model): # commit
             setattr(commit, "url", commit_response['commit']['url'])
             setattr(commit, "date", commit_response['commit']['author']['date'])
             setattr(commit, "title", commit_response['commit']['message'])
-            setattr(commit, "body", '')
+            #setattr(commit, "body", '')
             setattr(commit, "user", commit_response['author']['login'])
-            setattr(commit, "comments", '')
-            #setattr(commit, 'pull_request', pull_request)
+            #setattr(commit, "comments", '')
 
             commit.save()
             data = list(commit.objects.values())
@@ -182,19 +181,19 @@ class Commit(models.Model): # commit
         app_label = 'api_integration'
 
 
-class Comment(models.Model): # commit
-    url = models.URLField()
-    date = models.DateField(default=date.today)
-    updated_at = timezone.now()
-    body = models.CharField(max_length=500)
-    user = models.CharField(max_length=100)
-    #pull_request = models.ForeignKey('PullRequest', on_delete=models.CASCADE, related_name='comments')
+class Comment(models.Model): # comment
+    url = models.URLField() # API url of comment
+    date = models.DateField(default=date.today) # Date of comment
+    updated_at = timezone.now() # Date last updated in database
+    body = models.CharField(max_length=500) # Body of comment
+    user = models.CharField(max_length=100) # User that posted the comment
+    # TODO: Add attribute for the semantic score
 
     def __str__(self):
         return self.name
     
     @classmethod
-    def save_comment_to_db(request, comment_response, pull_request):
+    def save_comment_to_db(request, comment_response, semantic_score):
         try:
             # Convert API response to JSON format
             comment = Comment()
@@ -210,7 +209,7 @@ class Comment(models.Model): # commit
             setattr(comment, "date", comment_response['comment']['author']['date'])
             setattr(comment, "body", comment_response['body'])
             setattr(comment, "user", comment_response['user']['login'])
-            #setattr(comment, 'pull_request', pull_request)
+            #TODO: Add #setattr(comment, "semantic", semantic_score)
 
             comment.save()
             data = list(comment.objects.values())
