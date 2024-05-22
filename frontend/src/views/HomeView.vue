@@ -120,7 +120,7 @@ export default {
 
 <template>
   <header>
-    <div style="font-size: 180%;">
+    <div style="font-size: 180%;  margin-top: 30px;">
       Repository Analysis Tool
     </div>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
