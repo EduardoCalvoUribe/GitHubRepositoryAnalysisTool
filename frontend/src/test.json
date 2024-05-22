@@ -1,0 +1,39 @@
+{
+    "repository": {
+        "id": "123456",
+        "name": "my-repo",
+        "owner": "my-username",
+        "description": "A sample repository",
+        "url": "https://github.com/my-username/my-repo",
+        "contributors": [
+            "user1",
+            "user2",
+            "user3"
+        ],
+        "number_of_commits": 100,
+        "number_of_pullrequests": 10,
+        "pull_requests": [
+            {
+                "id": "43",
+                "date": "2018-01-01",
+                "author": "user1",
+                "commits": [
+                    {
+                        "id": "123",
+                        "date": "2017-01-01",
+                        "author": "user1",
+                        "message": "A commit message",
+                        "semantic_score": "0.8"
+                    },
+                    {
+                        "id": "124",
+                        "date": "2017-01-02",
+                        "author": "user2",
+                        "message": "Another commit message",
+                        "semantic_score": "0.7"
+                    }
+                ]
+            }
+        ]
+    }
+}
