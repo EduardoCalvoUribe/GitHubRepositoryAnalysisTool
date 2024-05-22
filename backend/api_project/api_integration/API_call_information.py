@@ -45,6 +45,8 @@ async def get_github_information(response):
     headers = {'Authorization': f'token {personal_access_token}'}
 
     async with aiohttp.ClientSession(headers=headers) as session:
+        # TODO: Create Repo instance for database
+
         # Results is a list of each page of a repo, each page has multiple pull requests and each pull request have multiple commits and comments
         results = await handle_fetch_requests(session, owner, repo)
 
@@ -185,6 +187,8 @@ async def process_pull_request(session, pull_request):
 
     # Fetch the comments of a pull request asynchronously
     all_comments = await fetch_comments(session, pull_request)
+
+    # TODO: Create Pull request instance for database
 
     # Return commits and comments
     return all_commits, all_comments 
