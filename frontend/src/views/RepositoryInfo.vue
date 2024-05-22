@@ -29,14 +29,37 @@
     </div>
   </div>
 
+  <!-- <div>
+    <b-dropdown id="dropdown-1" text="Dropdown Button" class="m-md-2">
+      <b-dropdown-item>First Action</b-dropdown-item>
+      <b-dropdown-item>Second Action</b-dropdown-item>
+      <b-dropdown-item>Third Action</b-dropdown-item>
+      <b-dropdown-divider></b-dropdown-divider>
+      <b-dropdown-item active>Active action</b-dropdown-item>
+      <b-dropdown-item disabled>Disabled action</b-dropdown-item>
+    </b-dropdown>
+  </div> -->
+
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests" >Pull Requests:</label>
-      <div id="pullRequests"class="row" v-for="pullrequest in pullRequestInfo">
+      <div id="pullRequests"class="row" v-for="pullrequest in fakejson.repository.pull_requests">
         <router-link :to="{ path: '/prpage' }"><button class="button-6">
-            <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title }}</h2></span>
+            <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.id}}</h2></span>
             <span class="last-accessed">Author: {{ pullrequest.author }}</span>
             <span class="last-accessed">Semantic score: {{ pullrequest.author }}</span>
+        </button></router-link>
+      </div> 
+    </div>
+  </div> 
+
+  <div style="margin-top: 4%; display: flex; justify-content: center;">
+    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+      <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users" >Contributors:</label>
+      <div id="users"class="row" v-for="user in fakejson.repository.contributors">
+        <router-link :to="{ path: '/prpage' }"><button class="button-6">
+            <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
+            <span class="last-accessed">Semantic score: {{ user }}</span>
         </button></router-link>
       </div> 
     </div>
@@ -49,10 +72,15 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import { ref, onMounted } from 'vue';
 import { fetchData } from '../fetchData.js'
 import { useRoute } from 'vue-router';
+import fakejson from '../test.json';
+// import Bdropdown from 'bootstrap-vue';
+// import BdropdownItem from 'bootstrap-vue';
 
 export default {
   components: {
-    VueDatePicker
+    VueDatePicker,
+    // Bdropdown,
+    // BdropdownItem
   },
 
   setup() {
@@ -103,12 +131,14 @@ export default {
 
   data() {
     return {
+      fakejson,
       selectedRange: null,
       items: [
-        { id: 1, text: 'Number of Pull Requests', path: '/prpage' },
-        { id: 2, text: 'Number of Commits', path: '/commitpage' },
+        { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_pullrequests, path: '/prpage' },
+        { id: 2, text: 'Number of Commits: ' + fakejson.repository.number_of_commits, path: '/commitpage' },
         { id: 3, text: 'Extra Repository Information' },
         // Add more items as needed
+      
       ]
     }
   },
