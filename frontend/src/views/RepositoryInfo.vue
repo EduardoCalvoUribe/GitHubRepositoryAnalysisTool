@@ -87,7 +87,7 @@ import Dropdown from 'primevue/dropdown';
 export default {
   components: {
     VueDatePicker,
-    BarChart
+    BarChart,
     Dropdown,
     // SelectButton,
   },
