@@ -32,20 +32,7 @@ export default {
       This is the pull request information.
     </div>
 
-    <div class="box-container">
-      <div class="box">
-        <button class="button-6" style="width: 100px; height: 100px; font-size: 250%;">{{number_of_pullrequests}}</button>
-        <div>Number of Pull Requests</div>
-      </div>
-      <div class="box">
-        <button class="button-6" style="width: 100px; height: 100px; font-size: 250%;">{{ number_of_commits }}</button>
-        <div>Number of Commits</div>
-      </div>
-      <div class="box">
-        <button class="button-6" style="width: 100px; height: 100px; font-size: 250%;">3</button>
-        <div>Commits per Pull Request</div>
-      </div>
-    </div>
+   
   </body>
 </template>
 

@@ -31,9 +31,11 @@
     </div>
   </div> 
 
-  <div class="grid-container">
-    <div class="grid-item" v-for="item in items" :key="item.id">
-      <router-link :to="item.path">{{ item.text }}</router-link>
+  <div class="box-container">
+    <div class="box" v-for="item in items" :key="item.id">
+      <router-link :to="item.path">
+        <button class="button-6" style="width: 150px; height: 100px; font-size: 100%;">{{item.text}}</button>
+      </router-link>
     </div>
   </div>
 
