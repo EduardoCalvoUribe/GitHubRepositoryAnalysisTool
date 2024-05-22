@@ -36,6 +36,7 @@
         <router-link :to="{ path: '/prpage' }"><button class="button-6">
             <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title }}</h2></span>
             <span class="last-accessed">Author: {{ pullrequest.author }}</span>
+            <span class="last-accessed">Semantic score: {{ pullrequest.author }}</span>
         </button></router-link>
       </div> 
     </div>
