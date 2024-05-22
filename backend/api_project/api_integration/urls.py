@@ -19,3 +19,4 @@ urlpatterns = [
     path('comments/', comment_info.comment_visual, name ='comments'),
     path('all/', API_call_information.get_github_information, name = 'all') 
 ]
+    

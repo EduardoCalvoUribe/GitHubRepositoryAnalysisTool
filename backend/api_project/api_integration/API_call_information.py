@@ -11,12 +11,17 @@ import asyncio
 import time
 import re
 from urllib.parse import urlparse, parse_qs
+from . import views
 
 # This function should return visual on everything and call functions to get all information
-async def get_github_information(response):
+async def get_github_information(response, url):
     start_time = time.time() # Variable to check the runtime of the function
-    owner = 'IntersectMBO'
-    repo = 'govtool'
+    #owner = 'IntersectMBO'
+    #repo = 'govtool'
+
+    parsed_variables = views.parse_Github_url_variables(url)
+    owner = parsed_variables[1]
+    repo = parsed_variables[2]
 
     # NOTE: Personal access token with repo permission turned on IS REQUIRED!
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
