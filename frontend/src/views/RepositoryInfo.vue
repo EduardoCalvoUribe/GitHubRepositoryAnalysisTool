@@ -41,6 +41,7 @@
   
   <div >
     <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
+    <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
   </div>
   
   <div v-if="selectedOption && selectedOption.name === 'Pull Requests'" style="margin-top: 4%; display: flex; justify-content: center;">
@@ -139,11 +140,18 @@ export default {
 
   data() {
     return {
-      selectedOption: null,
+      selectedOption: { name: 'Pull Requests'},
       options: [
         { name: 'Pull Requests' },
         { name: 'Contributors' },
         // Add more options if needeed
+      ],
+      selectedSort: null,
+      sorts: [
+        { name: 'Semantic Score Ascending' },
+        { name: 'Semantic Score Descending' },
+        { name: 'Date Oldest to Newest' },
+        { name: 'Date Newest to Oldest' },
       ],
       fakejson,
       selectedRange: null,
@@ -192,6 +200,10 @@ export default {
           console.error('Error:', error);
       }
     },
+
+    async sortLists(items) {
+      // TODO: implement sorting on relevant sorts
+    }
   },
 }
 </script>
