@@ -8,10 +8,10 @@ import { RouterLink, RouterView } from 'vue-router'
     
     <RouterLink to="/">Home</RouterLink>
     <!-- <RouterLink to="/about">About</RouterLink> -->
-    <RouterLink to="/repoinfo">Repository Infomation</RouterLink>
+    <!-- <RouterLink to="/repoinfo">Repository Infomation</RouterLink>
     <RouterLink to="/prpage">Pull Requests</RouterLink>
     <RouterLink to="/commitpage">Commits</RouterLink>
-    <RouterLink to="/commentpage">Comments</RouterLink>
+    <RouterLink to="/commentpage">Comments</RouterLink> -->
 
   </header>
 

@@ -1,5 +1,15 @@
 <template>
   <header>
+    <RouterLink to="/repoinfo/1">Repository Infomation</RouterLink>
+    <RouterLink to="/prpage">Pull Requests</RouterLink>
+    <RouterLink to="/commitpage">Commits</RouterLink>
+    <RouterLink to="/commentpage">Comments</RouterLink>
+
+  </header>
+
+  <RouterView />
+
+  <header>
     <div style="font-size: 180%;">
       Pull Request Page
     </div>
