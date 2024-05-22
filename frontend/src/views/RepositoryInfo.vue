@@ -63,6 +63,9 @@
       </div> 
     </div>
   </div> 
+
+  <BarChart />
+
 </template>
   
 <script>
@@ -72,10 +75,12 @@ import { ref, onMounted } from 'vue';
 import { fetchData } from '../fetchData.js'
 import { useRoute } from 'vue-router';
 import fakejson from '../test.json';
+import BarChart from '../components/BarChart.vue';
 
 export default {
   components: {
     VueDatePicker,
+    BarChart
   },
 
   setup() {
