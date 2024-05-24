@@ -67,9 +67,7 @@ def calculate_semantic_score(commit):
 def calculate_weighted_commit_semantic_score(commitJSON, ld_weight, fre_weight, cmcl_weight, commit_url):
     # Get commit message in string form
     commit_message = commitJSON["commit"]["message"]
-    print(commit_url)
     parsed_commit_url = parse_Github_url_variables(commit_url)
-    print(parsed_commit_url)
     commit = CodeCommitMessageRatio.get_Github_commit_object(parsed_commit_url[2], parsed_commit_url[3], parsed_commit_url[-1])
     
     # Get commit message/code length ratio, bounded between 0 and 1 by sigmoid function

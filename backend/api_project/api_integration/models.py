@@ -153,10 +153,11 @@ class Commit(models.Model): # commit
         return self.name
     
     @classmethod
-    async def save_commit_to_db(request, commit_response, commit_semantic_score):
+    def save_commit_to_db(request, commit_response, commit_semantic_score):
         try:
             # Convert API response to JSON format
             commit = Commit()
+            print("YES")
 
             for key,value in commit_response.items():
                 if key is not None:
@@ -174,8 +175,9 @@ class Commit(models.Model): # commit
             #setattr(commit, "comments", '')
             setattr(commit, "semantic_score", commit_semantic_score)
 
-            #commit.save()
-            await sync_to_async(commit.save)()
+            print(commit)
+            commit.save()
+            print(Commit.objects.all())
             data = list(commit.objects.values())
             return JsonResponse({'data': data})
         except Exception as e:
@@ -199,12 +201,9 @@ class Comment(models.Model): # comment
     
     @classmethod
     async def save_comment_to_db(request, comment_response, semantic_score):
-        print("HELLLLLLLLLLLLLLLLLLLLOOOO")
         try:
             # Convert API response to JSON format
-            print("BYEEEEEEEEEEEEEEEEEEEEEE")
             comment = await Comment.objects.create()
-            print("GFHGDSFGJDFSDSF")
             #for key,value in comment_response.items():
                 #if key is not None:
                     #if value is not None:
