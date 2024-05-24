@@ -135,7 +135,7 @@ class PullRequest(models.Model): # pull request
 
     class Meta:
         app_label = 'api_integration'
-
+    
 
 class Commit(models.Model): # commit
     name = models.CharField(max_length=100)
