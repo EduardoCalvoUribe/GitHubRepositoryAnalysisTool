@@ -5,6 +5,7 @@ from django.conf import settings
 from datetime import datetime, timedelta
 from collections import Counter
 from . import functions, models, views, general_semantic_score
+from .models import Commit, Comment, Users, Repos, PullRequest
 import aiohttp
 import asyncio
 import time
@@ -53,29 +54,6 @@ async def get_github_information(response):
         # Text to display that everything went correctly
         text_to_display = 'It Worked!'
 
-        # This for loop is only for creating displayable text on a website (not important for loop and can be deleted in end)
-        for page in results:
-            for pr in page:
-                text_to_display = text_to_display + '<p></b>Information from Pull request:</b> #' + str(pr[0]['number']) + '</p>------------------------------'
-                for commit in pr[1]:
-                    text_to_display += f"<p><b>Author</b>: {commit['author']['login'] if commit['author'] else 'Unknown'}</p>"
-                    text_to_display += f"<p><b>Date</b>: {commit['commit']['author']['date']}</p>"
-                    text_to_display += f"<p><b>Message</b>: {commit['commit']['message']}</p>"
-                    text_to_display += '<p>----------------------------</p>'
-                for comment in pr[2]:
-                    text_to_display += f"</b>Type of comment:</b> {comment['comment_type']}</p>"
-                    if 'body' in comment and comment['body']:  
-                        text_to_display += f"<p></b>Author</b>: {comment['user']['login']}"
-                        text_to_display += f"<p></b>Message</b>: {comment['body']}</p>"
-                    else:
-                        text_to_display += 'No body'
-                    text_to_display += '<p>----------------------------</p>'
-                text_to_display += '<p></b>------------------------------------------------------------------------</b></p>'
-
-        end_time = time.time() # Variable to check the total runtime of the function
-        duration = end_time - start_time # Total runtime of the function
-        print(duration) # Printing the duration to compare different functions' speed  
-
         # Code used to check how many API calls are used, how many you have left and when it resets
         response = requests.get('https://api.github.com/rate_limit', headers=headers)
         if response.status_code == 200:
@@ -91,6 +69,31 @@ async def get_github_information(response):
             print(f"Reset time (GMT+2): {reset_time_gmt2.strftime('%Y-%m-%d %H:%M:%S')} GMT+2")
         else:
             print("Failed to fetch rate limit information")
+
+        # This for loop is only for creating displayable text on a website (not important for loop and can be deleted in end)
+        for page in results:
+            for pr in page:
+                #text_to_display = text_to_display + '<p></b>Information from Pull request:</b> #' + str(pr[0]['number']) + '</p>------------------------------'
+                for commit in pr[0]:
+                    text_to_display += f"<p><b>Author</b>: {commit['author']['login'] if commit['author'] else 'Unknown'}</p>"
+                    text_to_display += f"<p><b>Date</b>: {commit['commit']['author']['date']}</p>"
+                    text_to_display += f"<p><b>Message</b>: {commit['commit']['message']}</p>"
+                    text_to_display += '<p>----------------------------</p>'
+                for comment in pr[1]:
+                    text_to_display += f"</b>Type of comment:</b> {comment['comment_type']}</p>"
+                    if 'body' in comment and comment['body']:  
+                        text_to_display += f"<p></b>Author</b>: {comment['user']['login']}"
+                        text_to_display += f"<p></b>Message</b>: {comment['body']}</p>"
+                    else:
+                        text_to_display += 'No body'
+                    text_to_display += '<p>----------------------------</p>'
+                text_to_display += '<p></b>------------------------------------------------------------------------</b></p>'
+
+        end_time = time.time() # Variable to check the total runtime of the function
+        duration = end_time - start_time # Total runtime of the function
+        print(duration) # Printing the duration to compare different functions' speed  
+
+        
 
         # Return JsonResponse to frontend (return can eventually be deleted/reformed)
         return JsonResponse(text_to_display, safe=False)
@@ -161,14 +164,16 @@ async def process_page(session, pr_url):
                 #Calculation of semantic score
                 comment_semantic_score = general_semantic_score.calculate_weighted_comment_semantic_score(comment['body'], 0.5, 0.5)
                 # Create comment instance in database
-                await sync_to_async(models.Comment.save_comment_to_db)(comment, comment_semantic_score)
+                await models.Comment.save_comment_to_db(comment, comment_semantic_score)
             for commit in all_commits:
                 # Calculation of semantic score
                 commit_semantic_score = general_semantic_score.calculate_weighted_commit_semantic_score(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
                 # Create commit instance in database
-                await sync_to_async(models.Commit.save_commit_to_db)(commit, commit_semantic_score)
+                #models.Commit.save_commit_to_db(commit, commit_semantic_score)
 
-        return pull_results #[[pr, [commits], [comments]], [pr, [commits], [comments]]] for each pr
+        #await sync_to_async(print)(Commit.objects.all())
+
+        return pull_results #[[[commits], [comments]], [commits], [comments]]] for each pr
 
 async def process_pull_request(session, pull_request):
     """

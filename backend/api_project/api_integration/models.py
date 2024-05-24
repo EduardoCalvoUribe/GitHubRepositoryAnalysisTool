@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.db import models
 from datetime import date
 from . import functions
+from asgiref.sync import sync_to_async
 
 class Users(models.Model): # user
     name = models.CharField(max_length=100)
@@ -152,7 +153,7 @@ class Commit(models.Model): # commit
         return self.name
     
     @classmethod
-    def save_commit_to_db(request, commit_response, commit_semantic_score):
+    async def save_commit_to_db(request, commit_response, commit_semantic_score):
         try:
             # Convert API response to JSON format
             commit = Commit()
@@ -173,7 +174,8 @@ class Commit(models.Model): # commit
             #setattr(commit, "comments", '')
             setattr(commit, "semantic_score", commit_semantic_score)
 
-            commit.save()
+            #commit.save()
+            await sync_to_async(commit.save)()
             data = list(commit.objects.values())
             return JsonResponse({'data': data})
         except Exception as e:
@@ -196,11 +198,13 @@ class Comment(models.Model): # comment
         return self.name
     
     @classmethod
-    def save_comment_to_db(request, comment_response, semantic_score):
+    async def save_comment_to_db(request, comment_response, semantic_score):
+        print("HELLLLLLLLLLLLLLLLLLLLOOOO")
         try:
             # Convert API response to JSON format
-            comment = Comment()
-
+            print("BYEEEEEEEEEEEEEEEEEEEEEE")
+            comment = await Comment.objects.create()
+            print("GFHGDSFGJDFSDSF")
             #for key,value in comment_response.items():
                 #if key is not None:
                     #if value is not None:
@@ -208,13 +212,17 @@ class Comment(models.Model): # comment
                     #else:
                         #setattr(comment, key, "")
             
-            setattr(comment, "url", comment_response['comment']['url'])
-            setattr(comment, "date", comment_response['comment']['author']['date'])
-            setattr(comment, "body", comment_response['body'])
-            setattr(comment, "user", comment_response['user']['login'])
-            setattr(comment, "semantic", semantic_score)
+            #setattr(comment, "url", comment_response['comment']['url'])
+            #setattr(comment, "date", comment_response['comment']['author']['date'])
+            #setattr(comment, "body", comment_response['body'])
+            #setattr(comment, "user", comment_response['user']['login'])
+            #setattr(comment, "semantic", semantic_score)
+            comment.url = comment_response['comment']['url']
 
-            comment.save()
+            print(comment)
+            print("SUUUUUUUUUPEEEER")
+            await sync_to_async(comment.save)()
+            print(Comment.objects.all)
             data = list(comment.objects.values())
             return JsonResponse({'data': data})
         except Exception as e:

@@ -16,7 +16,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Adding personal access token
-GITHUB_PERSONAL_ACCESS_TOKEN = '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' 
+GITHUB_PERSONAL_ACCESS_TOKEN = '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' 
 
 #List of relevant GitHub API Endpoints
 # GITHUB_API_ENDPOINTS = ['https://api.github.com/user']
