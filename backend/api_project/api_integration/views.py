@@ -151,7 +151,7 @@ def parse_Github_url_variables(url):
   parsed_url = filtered_url.split('/')
 
   
-  if parsed_url[0] != 'github.com':
+  if parsed_url[0] != 'api.github.com':
     return ['URL is not a Github URL']
   else:
     return parsed_url

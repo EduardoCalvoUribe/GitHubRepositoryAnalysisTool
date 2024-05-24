@@ -22,5 +22,6 @@ urlpatterns = [
     path('delete/', views.delete_entry_db, name = 'delete'),
     path('semantic',general_semantic_score.displaySemantic, name = 'semantic'),
     path('commentList',general_semantic_score.get_comments, name = 'commentList'),
+    path('databaseprint/', functions.show_database, name = 'datbaseshow')
 ]
     

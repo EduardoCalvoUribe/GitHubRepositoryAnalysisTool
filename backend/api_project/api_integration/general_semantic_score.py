@@ -8,14 +8,14 @@ from .comment_info import list_of_comments
 import asyncio
 
 # Define and parse URL
-url = 'https://github.com/lucidrains/PaLM-rlhf-pytorch/pull/52/commits/297ac3e4c65f034de6ff3fa85008d871d6d786b2' #figure out how to set url from frontend
-url_parsed = parse_Github_url_variables(url)
-github_token = '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' #figure out how to import from settings.py
-headers = {'Authorization': f'token {github_token}'}
+#url = 'https://github.com/lucidrains/PaLM-rlhf-pytorch/pull/52/commits/297ac3e4c65f034de6ff3fa85008d871d6d786b2' #figure out how to set url from frontend
+#url_parsed = parse_Github_url_variables(url)
+#github_token = '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' #figure out how to import from settings.py
+#headers = {'Authorization': f'token {github_token}'}
 
-repository_owner = url_parsed[1]
-repository_name = url_parsed[2]
-commit_sha = url_parsed[6]
+#repository_owner = url_parsed[1]
+#repository_name = url_parsed[2]
+#commit_sha = url_parsed[6]
 
 
 
@@ -26,7 +26,7 @@ async def get_comments():
    return comments
 
 # list of all comments, awaits until get_comments() is complete
-comment_list = asyncio.run(get_comments())
+#comment_list = asyncio.run(get_comments())
 
 
 # Retrieve all comments from get_comments until event loop is complete. 
@@ -36,7 +36,7 @@ comment_list = asyncio.run(get_comments())
 
 
 # Retrieve PyGithub commit object
-commitobject = CodeCommitMessageRatio.get_Github_commit_object(repository_owner, repository_name, commit_sha, github_token)
+#commitobject = CodeCommitMessageRatio.get_Github_commit_object(repository_owner, repository_name, commit_sha)
 
 
 # Sigmoid function used for bounding commit message/code ratio value between 0 and 100
@@ -67,8 +67,10 @@ def calculate_semantic_score(commit):
 def calculate_weighted_commit_semantic_score(commitJSON, ld_weight, fre_weight, cmcl_weight, commit_url):
     # Get commit message in string form
     commit_message = commitJSON["commit"]["message"]
+    print(commit_url)
     parsed_commit_url = parse_Github_url_variables(commit_url)
-    commit = CodeCommitMessageRatio.get_Github_commit_object(parsed_commit_url[1], parsed_commit_url[2], parsed_commit_url[6])
+    print(parsed_commit_url)
+    commit = CodeCommitMessageRatio.get_Github_commit_object(parsed_commit_url[2], parsed_commit_url[3], parsed_commit_url[-1])
     
     # Get commit message/code length ratio, bounded between 0 and 1 by sigmoid function
     bounded_ratio = sigmoid(CodeCommitMessageRatio.compute_code_commit_ratio(commit))
@@ -115,7 +117,8 @@ def calculate_average_weighted_comment_semantic_score(message_list, ld_weight, f
 def displaySemantic(request):
 #    return HttpResponse(calculate_weighted_semantic_score(commit,0,100,0))    
 #    return HttpResponse(calculate_weighted_comment_semantic_score(comment_list[0],100,100))  #
-   return HttpResponse(calculate_average_weighted_comment_semantic_score(comment_list[1:10],1,100))  
+   #return HttpResponse(calculate_average_weighted_comment_semantic_score(comment_list[1:10],1,100)) 
+   return ""
 
 
 

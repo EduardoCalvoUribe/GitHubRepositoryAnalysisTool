@@ -41,7 +41,7 @@ class Repos(models.Model): # repository, might have to change this into comment
     updated_at = timezone.now() # time of last update in database
     contributers = models.JSONField(blank=True, default=dict) # list of users
     pull_requests = models.JSONField(blank=True, default=dict) # list of pull request in repository (Should be linked to the classes)
-    token = models.CharField(max_length=100) # save personal access token
+    token = models.CharField(max_length=100, default = "") # save personal access token
 
     def __str__(self):
         return self.name
@@ -146,12 +146,13 @@ class Commit(models.Model): # commit
     user = models.CharField(max_length=100)
     #comments = models.JSONField(blank=True, default=dict) # Not used at the moment
     # TODO: Add attribute for the semantic score 
+    semantic_score = models.FloatField(default=0.0)
 
     def __str__(self):
         return self.name
     
     @classmethod
-    def save_commit_to_db(request, commit_response):
+    def save_commit_to_db(request, commit_response, commit_semantic_score):
         try:
             # Convert API response to JSON format
             commit = Commit()
@@ -170,6 +171,7 @@ class Commit(models.Model): # commit
             #setattr(commit, "body", '')
             setattr(commit, "user", commit_response['author']['login'])
             #setattr(commit, "comments", '')
+            setattr(commit, "semantic_score", commit_semantic_score)
 
             commit.save()
             data = list(commit.objects.values())
@@ -188,6 +190,7 @@ class Comment(models.Model): # comment
     body = models.CharField(max_length=500) # Body of comment
     user = models.CharField(max_length=100) # User that posted the comment
     # TODO: Add attribute for the semantic score
+    semantic_score = models.FloatField(default=0.0)
 
     def __str__(self):
         return self.name
@@ -198,18 +201,18 @@ class Comment(models.Model): # comment
             # Convert API response to JSON format
             comment = Comment()
 
-            for key,value in comment_response.items():
-                if key is not None:
-                    if value is not None:
-                        setattr(comment, key, value)
-                    else:
-                        setattr(comment, key, "")
+            #for key,value in comment_response.items():
+                #if key is not None:
+                    #if value is not None:
+                        #setattr(comment, key, value)
+                    #else:
+                        #setattr(comment, key, "")
             
             setattr(comment, "url", comment_response['comment']['url'])
             setattr(comment, "date", comment_response['comment']['author']['date'])
             setattr(comment, "body", comment_response['body'])
             setattr(comment, "user", comment_response['user']['login'])
-            #TODO: Add #setattr(comment, "semantic", semantic_score)
+            setattr(comment, "semantic", semantic_score)
 
             comment.save()
             data = list(comment.objects.values())

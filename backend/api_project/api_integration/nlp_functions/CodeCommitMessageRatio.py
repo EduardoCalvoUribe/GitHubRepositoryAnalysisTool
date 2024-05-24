@@ -7,7 +7,9 @@ from django.conf import settings
 def get_Github_commit_object(repository_owner, repository_name, commit_sha):
     # Initialize PyGithub with token
     g = Github(settings.GITHUB_PERSONAL_ACCESS_TOKEN)
-
+    print(repository_owner)
+    print(repository_name)
+    print(commit_sha)
     # Get the repository object
     repo = g.get_repo(f"{repository_owner}/{repository_name}")
 

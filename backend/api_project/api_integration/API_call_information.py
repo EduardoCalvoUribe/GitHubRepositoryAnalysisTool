@@ -31,13 +31,13 @@ async def get_github_information(response):
                   formatted as HTML for display purposes.
     """
     start_time = time.time() # Variable to check the runtime of the function
-    # owner = 'IntersectMBO'
-    # repo = 'govtool'
+    owner = 'lucidrains'
+    repo = 'PaLM-rlhf-pytorch'
     
-    url = views.process_vue_POST_request(response)
-    parsed_variables = views.parse_Github_url_variables(url)
-    owner = parsed_variables[1]
-    repo = parsed_variables[2]
+    #url = views.process_vue_POST_request(response)
+    #parsed_variables = views.parse_Github_url_variables(url)
+    #owner = parsed_variables[1]
+    #repo = parsed_variables[2]
     
     # NOTE: Personal access token with repo permission turned on IS REQUIRED!
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
