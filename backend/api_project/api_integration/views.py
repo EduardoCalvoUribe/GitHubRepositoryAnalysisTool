@@ -13,6 +13,11 @@ from . import functions
 # from .serializers import ItemSerializer
 from django.views.decorators.csrf import csrf_exempt
 
+from django.http import JsonResponse
+from .models import Comment
+from datetime import date
+
+
 # TO ADD: list of relevant API endpoints as a Python list/enum.
 
 # API call to https://api.github.com/user endpoint
@@ -203,3 +208,30 @@ def delete_entry_db(request):
     # delete repodata corresponding to id from database
     Repos.objects.filter(id=id).delete()
     return JsonResponse(id, safe=False)
+
+
+def save_comment_view(request):
+    # Example data for creating a Comment instance
+    comment_response = {
+        'comment': {
+            'url': 'http://example.com/comment/1',
+            'author': {'date': '2024-05-24'}
+        },
+        'body': 'This is a comment',
+        'user': {'login': 'testuser'}
+    }
+    semantic_score = 0.85
+
+    # Create and save the Comment instance
+    comment = Comment(
+        url=comment_response['comment']['url'],
+        date=comment_response['comment']['author']['date'],
+        body=comment_response['body'],
+        user=comment_response['user']['login'],
+        semantic_score=semantic_score
+    )
+    comment.save()
+
+    # Retrieve all Comment instances from the database
+    data = list(Comment.objects.values())
+    return JsonResponse({'data': data})

@@ -195,6 +195,17 @@ class Comment(models.Model): # comment
     user = models.CharField(max_length=100) # User that posted the comment
     # TODO: Add attribute for the semantic score
     semantic_score = models.FloatField(default=0.0)
+     
+    
+    comment = Comment(
+        url='http://example.com/comment/1',
+        date=date.today(),
+        body='This is a comment',
+        user='testuser',
+        semantic_score=0.85
+    )
+    comment.save()
+    new_comment = Comment(url,date,updated)
 
     def __str__(self):
         return self.name
