@@ -75,8 +75,16 @@ async def get_github_information(response):
             for pr in page:
                 #text_to_display = text_to_display + '<p></b>Information from Pull request:</b> #' + str(pr[0]['number']) + '</p>------------------------------'
                 for commit in pr[0]:
+                    #print(commit['commit']['url'])
                     commit_semantic_score = general_semantic_score.calculate_weighted_commit_semantic_score(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
-                    models.Commit.save_commit_to_db(commit, commit_semantic_score)
+                    commit_db = models.Commit(name = commit['commit']['message'],
+                                            url = commit['commit']['url'],
+                                            title = commit['commit']['message'],
+                                            user = commit['author']['login'],
+                                            #date = ,
+                                            semantic_score = commit_semantic_score)
+                    await sync_to_async(commit_db.save)()
+                    #models.Commit.save_commit_to_db(commit, commit_semantic_score)
                     text_to_display += f"<p><b>Author</b>: {commit['author']['login'] if commit['author'] else 'Unknown'}</p>"
                     text_to_display += f"<p><b>Date</b>: {commit['commit']['author']['date']}</p>"
                     text_to_display += f"<p><b>Message</b>: {commit['commit']['message']}</p>"

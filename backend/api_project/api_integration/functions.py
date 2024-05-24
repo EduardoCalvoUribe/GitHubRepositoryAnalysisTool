@@ -1,8 +1,7 @@
 from django.conf import settings
 from django.http import JsonResponse
 import requests
-from . import models
-from .models import Commit, Comment, PullRequest, Repos, Users 
+from .models import *
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 

@@ -140,43 +140,51 @@ class PullRequest(models.Model): # pull request
 class Commit(models.Model): # commit
     name = models.CharField(max_length=100)
     url = models.URLField()
-    date = models.DateField(default=date.today)
-    updated_at = timezone.now()
     title = models.CharField(max_length=100)
-    #body = models.CharField(max_length=500) # Can be deleted, not used I think
     user = models.CharField(max_length=100)
-    #comments = models.JSONField(blank=True, default=dict) # Not used at the moment
-    # TODO: Add attribute for the semantic score 
+    date = models.DateField(default=date.today)
     semantic_score = models.FloatField(default=0.0)
+    updated_at = timezone.now()    
 
     def __str__(self):
         return self.name
     
     @classmethod
-    def save_commit_to_db(request, commit_response, commit_semantic_score):
+    async def save_commit_to_db(request, commit_response, commit_semantic_score):
         try:
             # Convert API response to JSON format
-            commit = Commit()
+            commit = Commit.objects.create(
+                name = commit_response['commit']['message'],
+                url = commit_response['commit']['url'],
+                title = commit_response['commit']['message'],
+                user = commit_response['author']['login'],
+                date = commit_response['commit']['author']['date'],
+                semantic_score = commit_semantic_score
+            )
+            await sync_to_async(commit.save)()
             print("YES")
 
-            for key,value in commit_response.items():
-                if key is not None:
-                    if value is not None:
-                        setattr(commit, key, value)
-                    else:
-                        setattr(commit, key, "")
+            #for key,value in commit_response.items():
+                #if key is not None:
+                    #if value is not None:
+                        #setattr(commit, key, value)
+                    #else:
+                        #setattr(commit, key, "")
             
-            setattr(commit, "name", commit_response['commit']['message'])
-            setattr(commit, "url", commit_response['commit']['url'])
-            setattr(commit, "date", commit_response['commit']['author']['date'])
-            setattr(commit, "title", commit_response['commit']['message'])
+           # setattr(commit, "name", commit_response['commit']['message'])
+           # setattr(commit, "url", commit_response['commit']['url'])
+           # setattr(commit, "date", commit_response['commit']['author']['date'])
+           # setattr(commit, "title", commit_response['commit']['message'])
             #setattr(commit, "body", '')
-            setattr(commit, "user", commit_response['author']['login'])
+           # setattr(commit, "user", commit_response['author']['login'])
             #setattr(commit, "comments", '')
-            setattr(commit, "semantic_score", commit_semantic_score)
+           # setattr(commit, "semantic_score", commit_semantic_score)
 
-            print(commit)
-            commit.save()
+            print(commit.name)
+            print(commit.url)
+            print(commit.semantic_score)
+            #commit.asave()
+            print("HELPPPPPP")
             print(Commit.objects.all())
             data = list(commit.objects.values())
             return JsonResponse({'data': data})
