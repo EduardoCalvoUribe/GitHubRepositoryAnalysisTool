@@ -38,10 +38,11 @@ class Users(models.Model): # user
 
 class Repos(models.Model): # repository, might have to change this into comment
     name = models.CharField(max_length=100) # name of repository
+    owner = models.CharField(max_length=100, default = "") # Ownver of the repository
     url = models.URLField() # api url of repository
-    updated_at = timezone.now() # time of last update in database
-    contributers = models.JSONField(blank=True, default=dict) # list of users
-    pull_requests = models.JSONField(blank=True, default=dict) # list of pull request in repository (Should be linked to the classes)
+    updated_at = models.DateTimeField(default=timezone.now) # time of last update in database
+    #contributers = models.JSONField(blank=True, default=dict) # list of users
+    #pull_requests = models.JSONField(blank=True, default=dict) # list of pull request in repository (Should be linked to the classes)
     token = models.CharField(max_length=100, default = "") # save personal access token
 
     def __str__(self):
@@ -92,16 +93,14 @@ class Repos(models.Model): # repository, might have to change this into comment
         app_label = 'api_integration'
 
 class PullRequest(models.Model): # pull request
-    #name = models.CharField(max_length=100) # Can be deleted
+    repo = models.ForeignKey(Repos, related_name="pull_requests", on_delete=models.CASCADE, null=True, blank=True)
     url = models.URLField()
-    updated_at = timezone.now()
+    updated_at = models.DateTimeField(default=timezone.now)
     date = models.DateField(default=date.today)
     title = models.CharField(max_length=100)
-    body = models.CharField(max_length=100)
+    body = models.TextField(null=True, blank=True)
     user = models.CharField(max_length=100)
     number = models.IntegerField(default=0)
-    # TODO: Add attribute of a list of all commits instances
-    # TODO: Add attribute of a list of all comment instances
 
     def __str__(self):
         return self.name
@@ -138,13 +137,14 @@ class PullRequest(models.Model): # pull request
     
 
 class Commit(models.Model): # commit
+    pull_request = models.ForeignKey(PullRequest, related_name='commits', on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     url = models.URLField()
     title = models.CharField(max_length=100)
     user = models.CharField(max_length=100)
     date = models.DateField(default=date.today)
     semantic_score = models.FloatField(default=0.0)
-    updated_at = timezone.now()    
+    updated_at = models.DateTimeField(default=timezone.now)   
 
     def __str__(self):
         return self.name
@@ -196,24 +196,13 @@ class Commit(models.Model): # commit
 
 
 class Comment(models.Model): # comment
+    pull_request = models.ForeignKey(PullRequest, related_name='comments', on_delete=models.CASCADE, null=True, blank=True)
     url = models.URLField() # API url of comment
     date = models.DateField(default=date.today) # Date of comment
-    updated_at = timezone.now() # Date last updated in database
+    updated_at = models.DateTimeField(default=timezone.now) # Date last updated in database
     body = models.CharField(max_length=500) # Body of comment
     user = models.CharField(max_length=100) # User that posted the comment
-    # TODO: Add attribute for the semantic score
     semantic_score = models.FloatField(default=0.0)
-     
-    
-    comment = Comment(
-        url='http://example.com/comment/1',
-        date=date.today(),
-        body='This is a comment',
-        user='testuser',
-        semantic_score=0.85
-    )
-    comment.save()
-    new_comment = Comment(url,date,updated)
 
     def __str__(self):
         return self.name
@@ -235,7 +224,6 @@ class Comment(models.Model): # comment
             #setattr(comment, "body", comment_response['body'])
             #setattr(comment, "user", comment_response['user']['login'])
             #setattr(comment, "semantic", semantic_score)
-            comment.url = comment_response['comment']['url']
 
             print(comment)
             print("SUUUUUUUUUPEEEER")

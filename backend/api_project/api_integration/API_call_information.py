@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import requests
 from django.conf import settings
+from django.utils import timezone
 from datetime import datetime, timedelta
 from collections import Counter
 from . import functions, models, views, general_semantic_score
@@ -35,7 +36,7 @@ async def get_github_information(response):
     owner = 'lucidrains'
     repo = 'PaLM-rlhf-pytorch'
     
-    #url = views.process_vue_POST_request(response)
+    #repo_url = views.process_vue_POST_request(response)
     #parsed_variables = views.parse_Github_url_variables(url)
     #owner = parsed_variables[1]
     #repo = parsed_variables[2]
@@ -46,7 +47,12 @@ async def get_github_information(response):
     headers = {'Authorization': f'token {personal_access_token}'}
 
     async with aiohttp.ClientSession(headers=headers) as session:
-        # TODO: Create Repo instance for database
+        repo_db = models.Repos(name = repo,
+                               owner = owner,
+                               url = '',
+                               updated_at = timezone.now(),
+                               token = '')#settings.GITHUB_PERSONAL_ACCESS_TOKEN)
+        await sync_to_async(repo_db.save)()
 
         # Results is a list of each page of a repo, each page has multiple pull requests and each pull request have multiple commits and comments
         results = await handle_fetch_requests(session, owner, repo)
@@ -73,23 +79,44 @@ async def get_github_information(response):
         # This for loop is only for creating displayable text on a website (not important for loop and can be deleted in end)
         for page in results:
             for pr in page:
-                #text_to_display = text_to_display + '<p></b>Information from Pull request:</b> #' + str(pr[0]['number']) + '</p>------------------------------'
-                for commit in pr[0]:
-                    #print(commit['commit']['url'])
+                pull_db = models.PullRequest(repo = repo_db,
+                                             url = pr[0]['url'],
+                                             updated_at = timezone.now(),
+                                             date = datetime.strptime(pr[0]['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                                             title = pr[0]['title'],
+                                             body = pr[0]['body'],
+                                             user = pr[0]['user']['login'],
+                                             number = pr[0]['number'])
+                await sync_to_async(pull_db.save)()
+
+                text_to_display = text_to_display + '<p></b>Information from Pull request:</b> #' + str(pr[0]['number']) + '</p>------------------------------'
+                for commit in pr[1]:
                     commit_semantic_score = general_semantic_score.calculate_weighted_commit_semantic_score(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
-                    commit_db = models.Commit(name = commit['commit']['message'],
+                    commit_db = models.Commit(pull_request = pull_db,
+                                            name = commit['commit']['message'],
                                             url = commit['commit']['url'],
                                             title = commit['commit']['message'],
                                             user = commit['author']['login'],
-                                            #date = ,
-                                            semantic_score = commit_semantic_score)
+                                            date = datetime.strptime(commit['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                                            semantic_score = commit_semantic_score,
+                                            updated_at = timezone.now())
                     await sync_to_async(commit_db.save)()
-                    #models.Commit.save_commit_to_db(commit, commit_semantic_score)
+
                     text_to_display += f"<p><b>Author</b>: {commit['author']['login'] if commit['author'] else 'Unknown'}</p>"
                     text_to_display += f"<p><b>Date</b>: {commit['commit']['author']['date']}</p>"
                     text_to_display += f"<p><b>Message</b>: {commit['commit']['message']}</p>"
                     text_to_display += '<p>----------------------------</p>'
-                for comment in pr[1]:
+                for comment in pr[2]:
+                    comment_semantic_score = general_semantic_score.calculate_weighted_comment_semantic_score(comment['body'], 0.5, 0.5)
+                    comment_db = models.Comment(pull_request = pull_db,
+                                                url = comment['url'],
+                                                date = datetime.strptime(comment['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                                                updated_at = timezone.now(),
+                                                body = comment['body'],
+                                                user = comment['user']['login'],
+                                                semantic_score = comment_semantic_score)
+                    await sync_to_async(comment_db.save)()
+
                     text_to_display += f"</b>Type of comment:</b> {comment['comment_type']}</p>"
                     if 'body' in comment and comment['body']:  
                         text_to_display += f"<p></b>Author</b>: {comment['user']['login']}"
@@ -102,8 +129,6 @@ async def get_github_information(response):
         end_time = time.time() # Variable to check the total runtime of the function
         duration = end_time - start_time # Total runtime of the function
         print(duration) # Printing the duration to compare different functions' speed  
-
-        
 
         # Return JsonResponse to frontend (return can eventually be deleted/reformed)
         return JsonResponse(text_to_display, safe=False)
@@ -167,23 +192,7 @@ async def process_page(session, pr_url):
         # Gather the results and wait until all tasks are complete
         pull_results = await asyncio.gather(*tasks)
 
-        # Iterate over the results to save comments to the database
-        for pull_result in pull_results:
-            all_commits, all_comments = pull_result
-            for comment in all_comments:
-                #Calculation of semantic score
-                comment_semantic_score = general_semantic_score.calculate_weighted_comment_semantic_score(comment['body'], 0.5, 0.5)
-                # Create comment instance in database
-                await models.Comment.save_comment_to_db(comment, comment_semantic_score)
-            for commit in all_commits:
-                # Calculation of semantic score
-                commit_semantic_score = general_semantic_score.calculate_weighted_commit_semantic_score(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
-                # Create commit instance in database
-                #models.Commit.save_commit_to_db(commit, commit_semantic_score)
-
-        #await sync_to_async(print)(Commit.objects.all())
-
-        return pull_results #[[[commits], [comments]], [commits], [comments]]] for each pr
+        return pull_results #[[[pr, [commits], [comments]], [pr, [commits], [comments]]] for each pr
 
 async def process_pull_request(session, pull_request):
     """
@@ -203,10 +212,8 @@ async def process_pull_request(session, pull_request):
     # Fetch the comments of a pull request asynchronously
     all_comments = await fetch_comments(session, pull_request)
 
-    # TODO: Create Pull request instance for database
-
     # Return commits and comments
-    return all_commits, all_comments 
+    return pull_request, all_commits, all_comments 
 
 async def fetch_commits(session, pull_request):
     """
@@ -270,7 +277,8 @@ async def fetch_comments(session, pull_request):
                 for comment in comments:
                     # Actually do not know whether the type of the comment is still important. Used it once but changes some things
                     comment['comment_type'] = type
-                    all_comments.append(comment)
+                    if 'body' in comment and comment['body']:
+                        all_comments.append(comment)
                     
                     if type == 'review API':
                         # Creating a new link to get comments of a review (nested comments)

@@ -23,6 +23,8 @@ urlpatterns = [
     path('semantic',general_semantic_score.displaySemantic, name = 'semantic'),
     path('commentList',general_semantic_score.get_comments, name = 'commentList'),
     path('databaseprint/', functions.show_database, name = 'datbaseshow'),
-    path('help/',views.save_comment_view, name = 'help')
+    path('help/',views.save_comment_view, name = 'help'),
+    path('deleteAll', views.delete_all_records, name = 'deleteAll'),
+    path('package', views.repo_frontend_info, name = 'frontend_info')
 ]
     

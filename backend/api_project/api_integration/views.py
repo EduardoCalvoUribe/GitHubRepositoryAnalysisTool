@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.core.serializers import serialize
 import numpy as np
 import requests
 import json
@@ -16,9 +17,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from .models import Comment
 from datetime import date
-
-
-# TO ADD: list of relevant API endpoints as a Python list/enum.
 
 # API call to https://api.github.com/user endpoint
 def github_user_info(request):
@@ -120,9 +118,6 @@ def process_vue_POST_request(request):
 def display_POST_request(request):
     url = process_vue_POST_request(request)
     return HttpResponse(url)
-
-
-
 
 # This function is an example call of handle_API_request for API endpoint https://api.github.com/user.
 def testUser(request):   
@@ -235,3 +230,75 @@ def save_comment_view(request):
     # Retrieve all Comment instances from the database
     data = list(Comment.objects.values())
     return JsonResponse({'data': data})
+
+# Function to delete all items from database
+def delete_all_records(request):
+    try:
+        Users.objects.all().delete()
+        Repos.objects.all().delete()
+        PullRequest.objects.all().delete()
+        Commit.objects.all().delete()
+        Comment.objects.all().delete()
+        return True, "All records deleted successfully."
+    except Exception as e:
+        return False, str(e)
+
+# Function to send a package of all repo information to the frontend
+def repo_frontend_info(request):
+    repo_name = 'PaLM-rlhf-pytorch'
+    try:
+        repo = Repos.objects.get(name=repo_name)
+        pull_requests = repo.pull_requests.all()
+        
+        data = {
+            "Repo": {
+                "name": repo.name,
+                "url": repo.url,
+                "updated_at": repo.updated_at,
+                "pull_requests": []
+            }
+        }
+        
+        for pr in pull_requests:
+            pr_data = {
+                "url": pr.url,
+                "updated_at": pr.updated_at,
+                "date": pr.date,
+                "title": pr.title,
+                "body": pr.body,
+                "user": pr.user,
+                "number": pr.number,
+                "commits": [],
+                "comments": []
+            }
+            
+            for commit in pr.commits.all():
+                commit_data = {
+                    "name": commit.name,
+                    "url": commit.url,
+                    "title": commit.title,
+                    "user": commit.user,
+                    "date": commit.date,
+                    "semantic_score": commit.semantic_score,
+                    "updated_at": commit.updated_at,
+                }
+                pr_data["commits"].append(commit_data)
+            
+            for comment in pr.comments.all():
+                comment_data = {
+                    "url": comment.url,
+                    "date": comment.date,
+                    "body": comment.body,
+                    "user": comment.user,
+                    "semantic_score": comment.semantic_score,
+                    "updated_at": comment.updated_at,
+                }
+                pr_data["comments"].append(comment_data)
+            
+            data["Repo"]["pull_requests"].append(pr_data)
+        
+        return JsonResponse(data)
+    except Repos.DoesNotExist:
+        return JsonResponse({"error": "Repository not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
