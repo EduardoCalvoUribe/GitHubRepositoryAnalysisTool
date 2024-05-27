@@ -6,19 +6,11 @@
     <RouterLink style="margin-left: 2%" to="/commentpage">Comments</RouterLink>
   </header>
 
-  <RouterView />
   <header>
     <div style="font-size: 180%; margin-top: 30px;">
       Repository Information
     </div>
   </header>
-
-  <header>
-    <div style="font-size: 180%; justify-content: left;" >
-    </div>
-  </header>
-
-  <div style="margin-top: 8%;" v-html="dbResponse"></div>
 
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
@@ -38,7 +30,6 @@
     </div>
   </div>
 
-  
   <div >
     <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
     <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
@@ -87,38 +78,19 @@ import Dropdown from 'primevue/dropdown';
 
 export default {
   components: {
-    VueDatePicker,
-    BarChart,
-    Dropdown,
+    VueDatePicker, // datepicker component that lets user pick date range
+    BarChart, // chart compoment that allows for displaying of charts
+    Dropdown, // dropdown component which lets user selct option from dropdown menu
     // SelectButton,
   },
 
   setup() {
-    const route = useRoute();
-    const pullRequestInfo = ref([
-      {
-          "title": "pull request 1",
-          "author": "Bob"
-      },
-      {
-          "title": "pull request 2",
-          "author": "Janet"
-      },
-      {
-          "title": "pull request 3",
-          "author": "Alice"
-      },
-      {
-          "title": "pull request 4",
-          "author": "David"
-      },
-    ]);
-
+    const route = useRoute(); // allows for passage of variables from homepage to current page
+    
     onMounted(async () => {
-      const data = {'id': route.params.id};
-      console.log(data)
+      const data = {'id': route.params.id}; // define data to be sent in postOptions, repo id in this case
 
-      const postOptions = {
+      const postOptions = { // defines how data is sent to backend, POST request in this case
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -127,41 +99,37 @@ export default {
       };
 
       try {
-          const response = await fetchData('http://127.0.0.1:8000/database/', postOptions);
-          console.log(JSON.stringify(response));
-          this.dbResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
+          const response = await fetchData('http://127.0.0.1:8000/database/', postOptions); // send repo id to backend function through path 'database'
       } catch (error) {
           console.error('Error:', error);
       }
     })
-
-    return { pullRequestInfo };
   },
 
   data() {
     return {
-      selectedOption: { name: 'Pull Requests'},
-      options: [
+      selectedOption: { name: 'Pull Requests'}, // view option user selects from dropdown menu, default set to pull requests
+      options: [ // different possible view options
         { name: 'Pull Requests' },
         { name: 'Contributors' },
         // Add more options if needeed
       ],
-      selectedSort: null,
-      sorts: [
+      selectedSort: null, // sort option user selects from dropdown menu, default set to newest to oldest?
+      sorts: [ // different possible sort options
         { name: 'Semantic Score Ascending' },
         { name: 'Semantic Score Descending' },
         { name: 'Date Oldest to Newest' },
         { name: 'Date Newest to Oldest' },
       ],
-      fakejson,
-      selectedRange: null,
-      items: [
+      fakejson, // temporary variable that loads in a fake json test file
+      selectedRange: null, // date range that the user selects in date picker
+      items: [ // items are the boxes with content being diplayed on the page§
         { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_pullrequests, path: '/prpage' },
         { id: 2, text: 'Number of Commits: ' + fakejson.repository.number_of_commits, path: '/commitpage' },
         { id: 3, text: 'Extra Repository Information' },
         // Add more items as needed
       ],
-      chartData: {
+      chartData: { 
         labels: [ 'January', 'February', 'March', 'April', 'May', 'June', 'July'],
         datasets: [
           {
@@ -179,23 +147,18 @@ export default {
 
   methods: {
     async handleDateSubmit(range) {
-      // update selected date range when input is given
-      // this.selectedRange = range;
-      console.log('entered function')
+      const data = {'date': range}; // define data to be sent in postOptions, date range in this case
 
-      const data = {'date': range};
-
-      const postOptions = {
+      const postOptions = { // defines how data is sent to backend, POST request in this case
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
           },
           body: JSON.stringify(data),
       };
-      // send date range to backend through correct path that still needs to be created
+     
       try {
-        console.log('entered try')
-        const response = await fetchData('', postOptions);
+        const response = await fetchData('', postOptions);  // send date range to backend through correct path that still needs to be created
       } catch (error) {
           console.error('Error:', error);
       }
@@ -221,6 +184,7 @@ export default {
   text-align: center;
   border: 1px solid #ccc;
 }
+
 .box-container {
   display: flex;
   gap: 10px;
@@ -228,6 +192,7 @@ export default {
   padding: 20px 0;
   text-align: center;
 }
+
 .box {
   flex: 1;
   padding: 20px;
