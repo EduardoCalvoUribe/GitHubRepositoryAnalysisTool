@@ -67,7 +67,7 @@
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users" >Contributors:</label>
       <div id="users"class="row" v-for="user in fakejson.repository.contributors">
-        <router-link :to="{ path: '/prpage' }"><button class="button-6">
+        <router-link :to="{ path: '/prpage/'+fakejson.repository.pull_requests.id }"><button class="button-6">
             <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
             <span class="last-accessed">Semantic score: {{ user }}</span>
         </button></router-link>
@@ -144,8 +144,8 @@ export default {
       fakejson,
       selectedRange: null,
       items: [
-        { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_pullrequests, path: '/prpage' },
-        { id: 2, text: 'Number of Commits: ' + fakejson.repository.number_of_commits, path: '/commitpage' },
+        { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_pullrequests, path: '/prpage/'+fakejson.repository.pull_requests[0].id },
+        { id: 2, text: 'Number of Commits: ' + fakejson.repository.number_of_commits, path: '/commitpage'},
         { id: 3, text: 'Extra Repository Information' },
         // Add more items as needed
       
