@@ -54,32 +54,34 @@
     </div>
   </div>
 
-  <div >
-    <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
-    <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
-  </div>
-  
-  <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && githubResponse" style="margin-top: 4%; display: flex; justify-content: center;">
+  <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
-      <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
-        <router-link :to="{ path: '/prpage' }"><button class="button-6">
-            <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
-            <span class="last-accessed">Author: {{ pullrequest.user }}</span>
-            <span class="last-accessed">Date {{ pullrequest.date }}</span>
-        </button></router-link>
+      <div>
+        <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
+        <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
       </div>
-    </div>
-  </div>
-
-  <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && githubResponse" style="margin-top: 4%; display: flex; justify-content: center;">
-    <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
-      <div id="users" class="row" v-for="pullrequest in githubResponse.Repo.pull_requests">
-        <router-link :to="{ path: '/userpage' }"><button class="button-6">
-            <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
-            <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
-        </button></router-link>
+      <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && githubResponse" style=" display: flex; justify-content: center;">
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
+          <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
+            <router-link :to="{ path: '/prpage' }"><button class="button-6">
+                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
+                <span class="last-accessed">Author: {{ pullrequest.user }}</span>
+                <span class="last-accessed">Date {{ pullrequest.date }}</span>
+            </button></router-link>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && githubResponse" style=" display: flex; justify-content: center;">
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
+          <div id="users" class="row" v-for="pullrequest in githubResponse.Repo.pull_requests">
+            <router-link :to="{ path: '/userpage' }"><button class="button-6">
+                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
+                <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
+            </button></router-link>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -163,7 +165,7 @@ export default {
 
     const sortedPullRequests = computed(() => {
       if (!githubResponse.value) return [];
-      else if (selectedSort.value.contains('Date')) {
+      else if (selectedSort.value.name.includes('Date')) {
         return sortListsDate(githubResponse.value.Repo.pull_requests, selectedSort.value);
       } else {
         return sortListsScore(githubResponse.value.Repo.pull_requests, selectedSort.value);
