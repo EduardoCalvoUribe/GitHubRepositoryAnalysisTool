@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.core.serializers import serialize
 import numpy as np
 import requests
 import json
@@ -13,7 +14,9 @@ from . import functions
 # from .serializers import ItemSerializer
 from django.views.decorators.csrf import csrf_exempt
 
-# TO ADD: list of relevant API endpoints as a Python list/enum.
+from django.http import JsonResponse
+from .models import Comment
+from datetime import date
 
 # API call to https://api.github.com/user endpoint
 def github_user_info(request):
@@ -116,9 +119,6 @@ def display_POST_request(request):
     url = process_vue_POST_request(request)
     return HttpResponse(url)
 
-
-
-
 # This function is an example call of handle_API_request for API endpoint https://api.github.com/user.
 def testUser(request):   
     return handle_API_request(request,'https://api.github.com/user')
@@ -151,7 +151,7 @@ def parse_Github_url_variables(url):
   parsed_url = filtered_url.split('/')
 
   
-  if parsed_url[0] != 'github.com':
+  if parsed_url[0] != 'api.github.com':
     return ['URL is not a Github URL']
   else:
     return parsed_url
@@ -203,3 +203,102 @@ def delete_entry_db(request):
     # delete repodata corresponding to id from database
     Repos.objects.filter(id=id).delete()
     return JsonResponse(id, safe=False)
+
+
+def save_comment_view(request):
+    # Example data for creating a Comment instance
+    comment_response = {
+        'comment': {
+            'url': 'http://example.com/comment/1',
+            'author': {'date': '2024-05-24'}
+        },
+        'body': 'This is a comment',
+        'user': {'login': 'testuser'}
+    }
+    semantic_score = 0.85
+
+    # Create and save the Comment instance
+    comment = Comment(
+        url=comment_response['comment']['url'],
+        date=comment_response['comment']['author']['date'],
+        body=comment_response['body'],
+        user=comment_response['user']['login'],
+        semantic_score=semantic_score
+    )
+    comment.save()
+
+    # Retrieve all Comment instances from the database
+    data = list(Comment.objects.values())
+    return JsonResponse({'data': data})
+
+# Function to delete all items from database
+def delete_all_records(request):
+    try:
+        Users.objects.all().delete()
+        Repos.objects.all().delete()
+        PullRequest.objects.all().delete()
+        Commit.objects.all().delete()
+        Comment.objects.all().delete()
+        return True, "All records deleted successfully."
+    except Exception as e:
+        return False, str(e)
+
+# Function to send a package of all repo information to the frontend
+def repo_frontend_info(request):
+    repo_name = 'PaLM-rlhf-pytorch'
+    try:
+        repo = Repos.objects.get(name=repo_name)
+        pull_requests = repo.pull_requests.all()
+        
+        data = {
+            "Repo": {
+                "name": repo.name,
+                "url": repo.url,
+                "updated_at": repo.updated_at,
+                "pull_requests": []
+            }
+        }
+        
+        for pr in pull_requests:
+            pr_data = {
+                "url": pr.url,
+                "updated_at": pr.updated_at,
+                "date": pr.date,
+                "title": pr.title,
+                "body": pr.body,
+                "user": pr.user,
+                "number": pr.number,
+                "commits": [],
+                "comments": []
+            }
+            
+            for commit in pr.commits.all():
+                commit_data = {
+                    "name": commit.name,
+                    "url": commit.url,
+                    "title": commit.title,
+                    "user": commit.user,
+                    "date": commit.date,
+                    "semantic_score": commit.semantic_score,
+                    "updated_at": commit.updated_at,
+                }
+                pr_data["commits"].append(commit_data)
+            
+            for comment in pr.comments.all():
+                comment_data = {
+                    "url": comment.url,
+                    "date": comment.date,
+                    "body": comment.body,
+                    "user": comment.user,
+                    "semantic_score": comment.semantic_score,
+                    "updated_at": comment.updated_at,
+                }
+                pr_data["comments"].append(comment_data)
+            
+            data["Repo"]["pull_requests"].append(pr_data)
+        
+        return JsonResponse(data)
+    except Repos.DoesNotExist:
+        return JsonResponse({"error": "Repository not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

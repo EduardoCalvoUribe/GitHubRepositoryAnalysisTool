@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.http import JsonResponse
 import requests
-from .models import * 
+from .models import *
 from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
 
 
 def get_api_reponse(URL):
@@ -48,4 +49,8 @@ def get_data_from_url(self, url, token):
     repo = Repos()  # create new repo item 
     Repos.update_repo_in_db(response,repo, token) # update repo item with response data
     return repo# send back newly added repo
+
+def show_database(request):
+    database = str(Commit.objects.all())
+    return HttpResponse(database)
 

@@ -1,12 +1,12 @@
 # Import PyGithub in project. Library should be automatically installed through requirements.txt
 # Alternatively install library with !pip install PyGithub
 from github import Github
+from django.conf import settings
 
 # Returns PyGithub commit object for a provided repository_owner, repository_name, commit_sha, github_token
-def get_Github_commit_object(repository_owner, repository_name, commit_sha, github_token):
+def get_Github_commit_object(repository_owner, repository_name, commit_sha):
     # Initialize PyGithub with token
-    g = Github(github_token)
-
+    g = Github(settings.GITHUB_PERSONAL_ACCESS_TOKEN)
     # Get the repository object
     repo = g.get_repo(f"{repository_owner}/{repository_name}")
 

@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.db import models
 from datetime import date
 from . import functions
+from asgiref.sync import sync_to_async
 
 class Users(models.Model): # user
     name = models.CharField(max_length=100)
@@ -37,11 +38,12 @@ class Users(models.Model): # user
 
 class Repos(models.Model): # repository, might have to change this into comment
     name = models.CharField(max_length=100) # name of repository
+    owner = models.CharField(max_length=100, default = "") # Ownver of the repository
     url = models.URLField() # api url of repository
-    updated_at = timezone.now() # time of last update
-    contributers = models.JSONField(blank=True, default=dict) # list of amount of pull request per users
-    pull_requests = models.JSONField(blank=True, default=dict) # list of pull request in repository
-    token = models.CharField(max_length=100) # save personal access token
+    updated_at = models.DateTimeField(default=timezone.now) # time of last update in database
+    #contributers = models.JSONField(blank=True, default=dict) # list of users
+    #pull_requests = models.JSONField(blank=True, default=dict) # list of pull request in repository (Should be linked to the classes)
+    token = models.CharField(max_length=100, default = "") # save personal access token
 
     def __str__(self):
         return self.name
@@ -91,16 +93,14 @@ class Repos(models.Model): # repository, might have to change this into comment
         app_label = 'api_integration'
 
 class PullRequest(models.Model): # pull request
-    name = models.CharField(max_length=100)
+    repo = models.ForeignKey(Repos, related_name="pull_requests", on_delete=models.CASCADE, null=True, blank=True)
     url = models.URLField()
-    updated_at = timezone.now()
+    updated_at = models.DateTimeField(default=timezone.now)
     date = models.DateField(default=date.today)
     title = models.CharField(max_length=100)
-    body = models.CharField(max_length=100)
+    body = models.TextField(null=True, blank=True)
     user = models.CharField(max_length=100)
     number = models.IntegerField(default=0)
-    #comments = models.JSONField(blank=True, default=dict)
-    #closed = model.
 
     def __str__(self):
         return self.name
@@ -118,7 +118,7 @@ class PullRequest(models.Model): # pull request
                     else:
                         setattr(pull_request, key, "")
 
-            setattr(pull_request, "name", '')
+            #setattr(pull_request, "name", '')
             setattr(pull_request, "url", pull_response['url'])
             setattr(pull_request, "date", pull_response['created_at'])
             setattr(pull_request, "title", pull_response['title'])
@@ -134,45 +134,58 @@ class PullRequest(models.Model): # pull request
 
     class Meta:
         app_label = 'api_integration'
-
+    
 
 class Commit(models.Model): # commit
+    pull_request = models.ForeignKey(PullRequest, related_name='commits', on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     url = models.URLField()
-    date = models.DateField(default=date.today)
-    updated_at = timezone.now()
     title = models.CharField(max_length=100)
-    body = models.CharField(max_length=500)
     user = models.CharField(max_length=100)
-    comments = models.JSONField(blank=True, default=dict)
-    #pull_request = models.ForeignKey('PullRequest', on_delete=models.CASCADE, related_name='commits', default=)
+    date = models.DateField(default=date.today)
+    semantic_score = models.FloatField(default=0.0)
+    updated_at = models.DateTimeField(default=timezone.now)   
 
     def __str__(self):
         return self.name
     
     @classmethod
-    def save_commit_to_db(request, commit_response, pull_request):
+    async def save_commit_to_db(request, commit_response, commit_semantic_score):
         try:
             # Convert API response to JSON format
-            commit = Commit()
+            commit = Commit.objects.create(
+                name = commit_response['commit']['message'],
+                url = commit_response['commit']['url'],
+                title = commit_response['commit']['message'],
+                user = commit_response['author']['login'],
+                date = commit_response['commit']['author']['date'],
+                semantic_score = commit_semantic_score
+            )
+            await sync_to_async(commit.save)()
+            print("YES")
 
-            for key,value in commit_response.items():
-                if key is not None:
-                    if value is not None:
-                        setattr(commit, key, value)
-                    else:
-                        setattr(commit, key, "")
+            #for key,value in commit_response.items():
+                #if key is not None:
+                    #if value is not None:
+                        #setattr(commit, key, value)
+                    #else:
+                        #setattr(commit, key, "")
             
-            setattr(commit, "name", commit_response['commit']['message'])
-            setattr(commit, "url", commit_response['commit']['url'])
-            setattr(commit, "date", commit_response['commit']['author']['date'])
-            setattr(commit, "title", commit_response['commit']['message'])
-            setattr(commit, "body", '')
-            setattr(commit, "user", commit_response['author']['login'])
-            setattr(commit, "comments", '')
-            #setattr(commit, 'pull_request', pull_request)
+           # setattr(commit, "name", commit_response['commit']['message'])
+           # setattr(commit, "url", commit_response['commit']['url'])
+           # setattr(commit, "date", commit_response['commit']['author']['date'])
+           # setattr(commit, "title", commit_response['commit']['message'])
+            #setattr(commit, "body", '')
+           # setattr(commit, "user", commit_response['author']['login'])
+            #setattr(commit, "comments", '')
+           # setattr(commit, "semantic_score", commit_semantic_score)
 
-            commit.save()
+            print(commit.name)
+            print(commit.url)
+            print(commit.semantic_score)
+            #commit.asave()
+            print("HELPPPPPP")
+            print(Commit.objects.all())
             data = list(commit.objects.values())
             return JsonResponse({'data': data})
         except Exception as e:
@@ -182,37 +195,40 @@ class Commit(models.Model): # commit
         app_label = 'api_integration'
 
 
-class Comment(models.Model): # commit
-    url = models.URLField()
-    date = models.DateField(default=date.today)
-    updated_at = timezone.now()
-    body = models.CharField(max_length=500)
-    user = models.CharField(max_length=100)
-    #pull_request = models.ForeignKey('PullRequest', on_delete=models.CASCADE, related_name='comments')
+class Comment(models.Model): # comment
+    pull_request = models.ForeignKey(PullRequest, related_name='comments', on_delete=models.CASCADE, null=True, blank=True)
+    url = models.URLField() # API url of comment
+    date = models.DateField(default=date.today) # Date of comment
+    updated_at = models.DateTimeField(default=timezone.now) # Date last updated in database
+    body = models.CharField(max_length=500) # Body of comment
+    user = models.CharField(max_length=100) # User that posted the comment
+    semantic_score = models.FloatField(default=0.0)
 
     def __str__(self):
         return self.name
     
     @classmethod
-    def save_comment_to_db(request, comment_response, pull_request):
+    async def save_comment_to_db(request, comment_response, semantic_score):
         try:
             # Convert API response to JSON format
-            comment = Comment()
-
-            for key,value in comment_response.items():
-                if key is not None:
-                    if value is not None:
-                        setattr(comment, key, value)
-                    else:
-                        setattr(comment, key, "")
+            comment = await Comment.objects.create()
+            #for key,value in comment_response.items():
+                #if key is not None:
+                    #if value is not None:
+                        #setattr(comment, key, value)
+                    #else:
+                        #setattr(comment, key, "")
             
-            setattr(comment, "url", comment_response['comment']['url'])
-            setattr(comment, "date", comment_response['comment']['author']['date'])
-            setattr(comment, "body", comment_response['body'])
-            setattr(comment, "user", comment_response['user']['login'])
-            #setattr(comment, 'pull_request', pull_request)
+            #setattr(comment, "url", comment_response['comment']['url'])
+            #setattr(comment, "date", comment_response['comment']['author']['date'])
+            #setattr(comment, "body", comment_response['body'])
+            #setattr(comment, "user", comment_response['user']['login'])
+            #setattr(comment, "semantic", semantic_score)
 
-            comment.save()
+            print(comment)
+            print("SUUUUUUUUUPEEEER")
+            await sync_to_async(comment.save)()
+            print(Comment.objects.all)
             data = list(comment.objects.values())
             return JsonResponse({'data': data})
         except Exception as e:
