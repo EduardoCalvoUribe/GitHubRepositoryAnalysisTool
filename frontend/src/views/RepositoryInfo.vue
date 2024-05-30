@@ -30,31 +30,55 @@
     </div>
   </div>
 
+  <!-- <div>
+    <pre v-if="githubResponse">{{ githubResponse }}</pre>
+  </div> -->
+
+  <div v-if="githubResponse">
+    <!-- Display repository name -->
+    <div>Repository Name: {{ githubResponse.Repo.name }}</div>
+
+    <!-- Display URL -->
+    <div>URL: {{ githubResponse.Repo.url }}</div>
+
+    <!-- Display last updated time -->
+    <div>Last Updated: {{ githubResponse.Repo.updated_at }}</div>
+
+    <!-- Display pull requests -->
+    <div v-if="githubResponse.Repo.pull_requests.length > 0">
+      <div v-for="pullRequest in githubResponse.Repo.pull_requests" :key="pullRequest.number">
+        <div>Pull Request Title: {{ pullRequest.title }}</div>
+        <div>Author: {{ pullRequest.user }}</div>
+        <!-- Add more properties as needed -->
+      </div>
+    </div>
+  </div>
+
   <div >
     <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
     <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
   </div>
   
-  <div v-if="selectedOption && selectedOption.name === 'Pull Requests'" style="margin-top: 4%; display: flex; justify-content: center;">
+  <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && githubResponse" style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
-      <div id="pullRequests" class="row" v-for="pullrequest in fakejson.repository.pull_requests">
+      <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
         <router-link :to="{ path: '/prpage' }"><button class="button-6">
-            <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.id}}</h2></span>
-            <span class="last-accessed">Author: {{ pullrequest.author }}</span>
-            <span class="last-accessed">Semantic score: {{ pullrequest.author }}</span>
+            <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
+            <span class="last-accessed">Author: {{ pullrequest.user }}</span>
+            <span class="last-accessed">Date {{ pullrequest.date }}</span>
         </button></router-link>
       </div>
     </div>
   </div>
 
-  <div v-else-if="selectedOption && selectedOption.name === 'Contributors'" style="margin-top: 4%; display: flex; justify-content: center;">
+  <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && githubResponse" style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
-      <div id="users" class="row" v-for="user in fakejson.repository.contributors">
+      <div id="users" class="row" v-for="pullrequest in githubResponse.Repo.pull_requests">
         <router-link :to="{ path: '/userpage' }"><button class="button-6">
-            <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
-            <span class="last-accessed">Semantic score: {{ user }}</span>
+            <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
+            <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
         </button></router-link>
       </div>
     </div>
@@ -68,7 +92,7 @@
 <script>
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { fetchData } from '../fetchData.js'
 import { useRoute } from 'vue-router';
 import fakejson from '../test.json';
@@ -86,6 +110,14 @@ export default {
 
   setup() {
     const route = useRoute(); // allows for passage of variables from homepage to current page
+    const githubResponse = ref(null);
+    const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
+    const sorts = ref([ // different possible sort options
+        // { name: 'Semantic Score Ascending' },
+        // { name: 'Semantic Score Descending' },
+        { name: 'Date Oldest to Newest' },
+        { name: 'Date Newest to Oldest' },
+      ]);
     
     onMounted(async () => {
       const data = {'id': route.params.id}; // define data to be sent in postOptions, repo id in this case
@@ -99,11 +131,51 @@ export default {
       };
 
       try {
-          const response = await fetchData('http://127.0.0.1:8000/database/', postOptions); // send repo id to backend function through path 'database'
+          const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
+          console.log(response)
+          // githubResponse.value = JSON.stringify(response, null, 2);
+          githubResponse.value = response;
+          console.log(githubResponse)
       } catch (error) {
           console.error('Error:', error);
       }
     })
+
+    const sortListsDate = (list, choice) => {
+      if (choice.name == 'Date Oldest to Newest') {
+        const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
+        return sorted_list;
+      } else {
+        const sorted_list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
+        return sorted_list;
+      }
+    };
+
+    const sortListsScore = (list, choice) => {
+      if (choice.name == 'Semantic Score Ascending') {
+        const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
+        return sorted_list;
+      } else {
+        const sorted_list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
+        return sorted_list;
+      }
+    };
+
+    const sortedPullRequests = computed(() => {
+      if (!githubResponse.value) return [];
+      else if (selectedSort.value.contains('Date')) {
+        return sortListsDate(githubResponse.value.Repo.pull_requests, selectedSort.value);
+      } else {
+        return sortListsScore(githubResponse.value.Repo.pull_requests, selectedSort.value);
+      }
+    });
+
+    return {
+      githubResponse,
+      sortedPullRequests,
+      selectedSort,
+      sorts,
+    }
   },
 
   data() {
@@ -114,14 +186,6 @@ export default {
         { name: 'Contributors' },
         // Add more options if needeed
       ],
-      selectedSort: null, // sort option user selects from dropdown menu, default set to newest to oldest?
-      sorts: [ // different possible sort options
-        { name: 'Semantic Score Ascending' },
-        { name: 'Semantic Score Descending' },
-        { name: 'Date Oldest to Newest' },
-        { name: 'Date Newest to Oldest' },
-      ],
-      fakejson, // temporary variable that loads in a fake json test file
       selectedRange: null, // date range that the user selects in date picker
       items: [ // items are the boxes with content being diplayed on the page§
         { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_pullrequests, path: '/prpage' },
@@ -163,10 +227,6 @@ export default {
           console.error('Error:', error);
       }
     },
-
-    async sortLists(items) {
-      // TODO: implement sorting on relevant sorts
-    }
   },
 }
 </script>

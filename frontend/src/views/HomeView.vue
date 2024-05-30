@@ -44,7 +44,12 @@ export default {
   },
   data() {
     return {
-      invalidInput: false // set to false by default so false message is not displayed constantly
+      invalidInput: false, // set to false by default so false message is not displayed constantly
+      selectedSort: null, // sort option user selects from dropdown menu, default set to newest to oldest?
+      sorts: [ // different possible sort options
+        { name: 'Date Oldest to Newest' },
+        { name: 'Date Newest to Oldest' },
+      ],
     }
   },
   methods: {
@@ -118,6 +123,8 @@ export default {
     </div> 
 
     <div v-if="invalidInput" style="color: red; margin-top: 2%; display: flex; justify-content: center; margin-bottom: 5%">Invalid input! Please enter a valid GitHub URL.</div>
+
+    <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
 
     <div class="row" v-for="repo in repoInfo">
       <router-link :to="{ path: '/repoinfo/' + repo.id }"><button class="button-6" > 
