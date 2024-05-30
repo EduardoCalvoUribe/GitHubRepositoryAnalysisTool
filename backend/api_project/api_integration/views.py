@@ -8,8 +8,8 @@ import re
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
-from .models import Users
-from .models import Repos, PullRequest, Commit
+from .models import User
+from .models import Repository, PullRequest, Commit
 from . import functions
 # from .serializers import ItemSerializer
 from django.views.decorators.csrf import csrf_exempt
@@ -21,7 +21,7 @@ from datetime import date
 # API call to https://api.github.com/user endpoint
 def github_user_info(request):
     json_response = functions.get_api_reponse('https://api.github.com/user').json()
-    Users.save_user_to_db(json_response)
+    User.save_user_to_db(json_response)
     return JsonResponse(json_response)
 
 # API call to https://api.github.com/user endpoint
@@ -31,7 +31,7 @@ def github_repo_info(request):
     try:
         api_response = functions.get_api_reponse(api_url)
         pull_requests = api_response.json()
-        Repos.save_repo_to_db(pull_requests)
+        Repository.save_repo_to_db(pull_requests)
         return JsonResponse({'pull_requests': pull_requests})
 
     except requests.RequestException as e:
@@ -125,12 +125,12 @@ def testUser(request):
     
 # list all save users
 def load_users(request):
-        data = list(Users.objects.values())
+        data = list(User.objects.values())
         return JsonResponse({'users': data})
 
 # list all saved repositories
 def load_repos(request):
-        data = list(Repos.objects.values())
+        data = list(Repository.objects.values())
         return JsonResponse({'repositories': data})
     
 
@@ -201,7 +201,7 @@ def delete_entry_db(request):
     # extract id from POST request
     id = process_vue_POST_request(request)
     # delete repodata corresponding to id from database
-    Repos.objects.filter(id=id).delete()
+    Repository.objects.filter(id=id).delete()
     return JsonResponse(id, safe=False)
 
 
@@ -234,8 +234,8 @@ def save_comment_view(request):
 # Function to delete all items from database
 def delete_all_records(request):
     try:
-        Users.objects.all().delete()
-        Repos.objects.all().delete()
+        User.objects.all().delete()
+        Repository.objects.all().delete()
         PullRequest.objects.all().delete()
         Commit.objects.all().delete()
         Comment.objects.all().delete()
@@ -247,7 +247,7 @@ def delete_all_records(request):
 def repo_frontend_info(request):
     repo_name = 'PaLM-rlhf-pytorch'
     try:
-        repo = Repos.objects.get(name=repo_name)
+        repo = Repository.objects.get(name=repo_name)
         pull_requests = repo.pull_requests.all()
         
         data = {
@@ -298,7 +298,7 @@ def repo_frontend_info(request):
             data["Repo"]["pull_requests"].append(pr_data)
         
         return JsonResponse(data)
-    except Repos.DoesNotExist:
+    except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
