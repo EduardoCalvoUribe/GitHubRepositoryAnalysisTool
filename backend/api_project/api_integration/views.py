@@ -203,7 +203,10 @@ def delete_entry_db(request):
     # extract id from POST request
     id = process_vue_POST_request(request)
     # delete repodata corresponding to id from database
-    Repository.objects.filter(id=id).delete()
+    repository = Repository.objects.filter(id=id)
+    repository.delete()
+    
+    
     return JsonResponse(id, safe=False)
 
 
@@ -252,57 +255,61 @@ def repo_frontend_info(request):
     #repo_url = process_vue_POST_request(request)
     #print(repo_url)
     try:
-        repo = Repository.objects.get(name=repo_name)
-        pull_requests = repo.pull_requests.all()
-        
-        data = {
-            "Repo": {
-                "name": repo.name,
-                "url": repo.url,
-                "updated_at": repo.updated_at,
-                "pull_requests": []
-            }
-        }
-        
-        for pr in pull_requests:
-            pr_data = {
-                "url": pr.url,
-                "updated_at": pr.updated_at,
-                "date": pr.date,
-                "title": pr.title,
-                "body": pr.body,
-                "user": pr.user,
-                "number": pr.number,
-                "commits": [],
-                "comments": []
+        repositories = Repository.objects.all()
+        info = []
+        for repo in repositories: # we should send info of all stored info
+        #repo = Repository.objects.get(name=repo_name)
+            pull_requests = repo.pull_requests.all()
+            
+            data = {
+                "Repo": {
+                    "name": repo.name,
+                    "url": repo.url,
+                    "updated_at": repo.updated_at,
+                    "pull_requests": []
+                }
             }
             
-            for commit in pr.commits.all():
-                commit_data = {
-                    "name": commit.name,
-                    "url": commit.url,
-                    "title": commit.title,
-                    "user": commit.user,
-                    "date": commit.date,
-                    "semantic_score": commit.semantic_score,
-                    "updated_at": commit.updated_at,
+            for pr in pull_requests:
+                pr_data = {
+                    "url": pr.url,
+                    "updated_at": pr.updated_at,
+                    "date": pr.date,
+                    "title": pr.title,
+                    "body": pr.body,
+                    "user": pr.user,
+                    "number": pr.number,
+                    "commits": [],
+                    "comments": []
                 }
-                pr_data["commits"].append(commit_data)
-            
-            for comment in pr.comments.all():
-                comment_data = {
-                    "url": comment.url,
-                    "date": comment.date,
-                    "body": comment.body,
-                    "user": comment.user,
-                    "semantic_score": comment.semantic_score,
-                    "updated_at": comment.updated_at,
-                }
-                pr_data["comments"].append(comment_data)
-            
-            data["Repo"]["pull_requests"].append(pr_data)
+                
+                for commit in pr.commits.all():
+                    commit_data = {
+                        "name": commit.name,
+                        "url": commit.url,
+                        "title": commit.title,
+                        "user": commit.user,
+                        "date": commit.date,
+                        "semantic_score": commit.semantic_score,
+                        "updated_at": commit.updated_at,
+                    }
+                    pr_data["commits"].append(commit_data)
+                
+                for comment in pr.comments.all():
+                    comment_data = {
+                        "url": comment.url,
+                        "date": comment.date,
+                        "body": comment.body,
+                        "user": comment.user,
+                        "semantic_score": comment.semantic_score,
+                        "updated_at": comment.updated_at,
+                    }
+                    pr_data["comments"].append(comment_data)
+                
+                data["Repo"]["pull_requests"].append(pr_data)
+                info.append[data]
         
-        return JsonResponse(data)
+        return JsonResponse(info)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
     except Exception as e:
