@@ -64,7 +64,7 @@
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
           <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
-            <router-link :to="{ path: '/prpage' }"><button class="button-6">
+            <router-link :to="{ path: '/prpage/' + pullrequest.number }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
                 <span class="last-accessed">Author: {{ pullrequest.user }}</span>
                 <span class="last-accessed">Date {{ pullrequest.date }}</span>
@@ -92,11 +92,12 @@
 </template>
 
 <script>
+import { ref, onMounted, computed } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
-import { ref, onMounted, computed } from 'vue';
 import { fetchData } from '../fetchData.js'
 import { useRoute } from 'vue-router';
+import { githubResponse } from '../repoPackage.js';
 import fakejson from '../test.json';
 import BarChart from '../components/BarChart.vue';
 import Dropdown from 'primevue/dropdown';
@@ -112,7 +113,6 @@ export default {
 
   setup() {
     const route = useRoute(); // allows for passage of variables from homepage to current page
-    const githubResponse = ref(null);
     const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
     const sorts = ref([ // different possible sort options
         // { name: 'Semantic Score Ascending' },
