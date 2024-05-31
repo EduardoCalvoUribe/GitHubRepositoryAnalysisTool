@@ -53,35 +53,34 @@
       </div>
     </div>
   </div>
-
-  <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
+  
+  <div v-if="selectedOption && selectedOption.name === 'Pull Requests'" style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <div>
-        <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
-        <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
+      <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
+      <div id="pullRequests" class="row" v-for="pullrequest in fakejson.repository.pull_requests">
+        <router-link :to="{ path: '/prpage' }"><button class="button-6">
+            <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.id}}</h2></span>
+            <span class="last-accessed">Author: {{ pullrequest.author }}</span>
+            <span class="last-accessed">Semantic score: {{ pullrequest.author }}</span>
+        </button></router-link>
       </div>
-      <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && githubResponse" style=" display: flex; justify-content: center;">
-        <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
-          <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
-            <router-link :to="{ path: '/prpage' }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
-                <span class="last-accessed">Author: {{ pullrequest.user }}</span>
-                <span class="last-accessed">Date {{ pullrequest.date }}</span>
-            </button></router-link>
-          </div>
-        </div>
-      </div>
-      <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && githubResponse" style=" display: flex; justify-content: center;">
-        <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
-          <div id="users" class="row" v-for="pullrequest in githubResponse.Repo.pull_requests">
-            <router-link :to="{ path: '/userpage' }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
-                <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
-            </button></router-link>
-          </div>
-        </div>
+    </div>
+  </div>
+
+  <div v-else-if="selectedOption && selectedOption.name === 'Contributors'" style="margin-top: 4%; display: flex; justify-content: center;">
+    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+<<<<<<< HEAD
+      <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users" >Contributors:</label>
+      <div id="users"class="row" v-for="user in fakejson.repository.contributors">
+        <router-link :to="{ path: '/prpage/'+fakejson.repository.pull_requests.id }"><button class="button-6">
+=======
+      <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
+      <div id="users" class="row" v-for="user in fakejson.repository.contributors">
+        <router-link :to="{ path: '/userpage' }"><button class="button-6">
+>>>>>>> 9686cddf469d90a5e7f011caef6da559e8c464b7
+            <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
+            <span class="last-accessed">Semantic score: {{ user }}</span>
+        </button></router-link>
       </div>
     </div>
   </div>
@@ -182,6 +181,13 @@ export default {
 
   data() {
     return {
+<<<<<<< HEAD
+      fakejson,
+      selectedRange: null,
+      items: [
+        { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_pullrequests, path: '/prpage/'+fakejson.repository.pull_requests[0].id },
+        { id: 2, text: 'Number of Commits: ' + fakejson.repository.number_of_commits, path: '/commitpage'},
+=======
       selectedOption: { name: 'Pull Requests'}, // view option user selects from dropdown menu, default set to pull requests
       options: [ // different possible view options
         { name: 'Pull Requests' },
@@ -192,6 +198,7 @@ export default {
       items: [ // items are the boxes with content being diplayed on the page§
         { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_pullrequests, path: '/prpage' },
         { id: 2, text: 'Number of Commits: ' + fakejson.repository.number_of_commits, path: '/commitpage' },
+>>>>>>> 9686cddf469d90a5e7f011caef6da559e8c464b7
         { id: 3, text: 'Extra Repository Information' },
         // Add more items as needed
       ],
