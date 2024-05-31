@@ -5,7 +5,7 @@ from datetime import date
 from . import functions
 from asgiref.sync import sync_to_async
 
-class Users(models.Model): # user
+class User(models.Model): # user
     name = models.CharField(max_length=100)
     url = models.URLField()
     login = models.CharField(max_length=100, blank=True)
@@ -17,7 +17,7 @@ class Users(models.Model): # user
     def save_user_to_db(request, json_response):
         try:
             # Convert API response to JSON format
-            user = Users()
+            user = User()
 
             for key,value in json_response.items():
                 if key is not None:
@@ -27,7 +27,7 @@ class Users(models.Model): # user
                         setattr(user, key, "")
 
             user.save()
-            data = list(Users.objects.values())
+            data = list(User.objects.values())
             return JsonResponse({'data': data})
         except Exception as e:
             return JsonResponse({"error": str(e)})
@@ -36,7 +36,7 @@ class Users(models.Model): # user
         app_label = 'api_integration'
 
 
-class Repos(models.Model): # repository, might have to change this into comment
+class Repository(models.Model): # repository, might have to change this into comment
     name = models.CharField(max_length=100) # name of repository
     owner = models.CharField(max_length=100, default = "") # Ownver of the repository
     url = models.URLField() # api url of repository
@@ -52,7 +52,7 @@ class Repos(models.Model): # repository, might have to change this into comment
     def save_repo_to_db(self, json_response):
         try:
         # Convert API response to JSON format
-            repo = Repos()
+            repo = Repository()
             for key,value in json_response.items():
                 if key is not None:
                     if value is not None:
@@ -93,7 +93,7 @@ class Repos(models.Model): # repository, might have to change this into comment
         app_label = 'api_integration'
 
 class PullRequest(models.Model): # pull request
-    repo = models.ForeignKey(Repos, related_name="pull_requests", on_delete=models.CASCADE, null=True, blank=True)
+    repo = models.ForeignKey(Repository, related_name="pull_requests", on_delete=models.CASCADE, null=True, blank=True)
     url = models.URLField()
     updated_at = models.DateTimeField(default=timezone.now)
     date = models.DateField(default=date.today)

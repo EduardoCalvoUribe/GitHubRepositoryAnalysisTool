@@ -6,7 +6,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from collections import Counter
 from . import functions, models, views, general_semantic_score
-from .models import Commit, Comment, Users, Repos, PullRequest
+from .models import Commit, Comment, User, Repository, PullRequest
 import aiohttp
 import asyncio
 import time
@@ -47,7 +47,7 @@ async def get_github_information(response):
     headers = {'Authorization': f'token {personal_access_token}'}
 
     async with aiohttp.ClientSession(headers=headers) as session:
-        repo_db = models.Repos(name = repo,
+        repo_db = models.Repository(name = repo,
                                owner = owner,
                                url = '',
                                updated_at = timezone.now(),

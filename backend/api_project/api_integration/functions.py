@@ -15,7 +15,7 @@ def get_api_reponse(URL):
 
 
 def get_personal_access_token(self, URL):
-    for repo in Repos.objects:
+    for repo in Repository.objects:
         if repo.url == URL:
             pat = repo.token
     pat = False
@@ -40,14 +40,14 @@ def pull_request_per_user(self):
     return sorted_user_count_dict
 
 def get_data_from_url(self, url, token):
-    data = list(Repos.objects) # get all repos in database
+    data = list(Repository.objects) # get all repos in database
     response = get_api_reponse(url)
     for entry in data: # loop over all entries in database
         if entry.url == url: # check if url of entry matches given url
-            Repos.update_repo_in_db(response,entry, token) # update values of Repo
+            Repository.update_repo_in_db(response,entry, token) # update values of Repo
             return entry # send back updated repo
-    repo = Repos()  # create new repo item 
-    Repos.update_repo_in_db(response,repo, token) # update repo item with response data
+    repo = Repository()  # create new repo item 
+    Repository.update_repo_in_db(response,repo, token) # update repo item with response data
     return repo# send back newly added repo
 
 def show_database(request):
