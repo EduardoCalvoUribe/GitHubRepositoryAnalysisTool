@@ -122,7 +122,7 @@ export default {
       ]);
     
     onMounted(async () => {
-      const data = {'id': route.params.id}; // define data to be sent in postOptions, repo id in this case
+      const data = {'url': route.params.url}; // define data to be sent in postOptions, repo id in this case
 
       const postOptions = { // defines how data is sent to backend, POST request in this case
           method: 'POST',

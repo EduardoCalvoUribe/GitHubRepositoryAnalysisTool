@@ -6,32 +6,33 @@ export default {
   components: {
   },
   setup() {
-    const repoInfo = ref([ // Uses this by default, but is updated with fetched data from backend in onMounted.
-        {
-            "name": "repo1",
-            "last_accessed": "2022-01-01",
-            "id": "1"
-        },
-        {
-            "name": "repo2",
-            "last_accessed": "2022-01-02",
-            "id": "2"
-        },
-        {
-            "name": "repo3",
-            "last_accessed": "2022-01-03",
-            "id": "3"
-        },
-        {
-            "name": "repo4",
-            "last_accessed": "2022-01-04",
-            "id": "4"
-        },
-    ]);
+    const repoInfo = ref(null);
+    // const repoInfo = ref([ // Uses this by default, but is updated with fetched data from backend in onMounted.
+    //     {
+    //         "name": "repo1",
+    //         "last_accessed": "2022-01-01",
+    //         "id": "1"
+    //     },
+    //     {
+    //         "name": "repo2",
+    //         "last_accessed": "2022-01-02",
+    //         "id": "2"
+    //     },
+    //     {
+    //         "name": "repo3",
+    //         "last_accessed": "2022-01-03",
+    //         "id": "3"
+    //     },
+    //     {
+    //         "name": "repo4",
+    //         "last_accessed": "2022-01-04",
+    //         "id": "4"
+    //     },
+    // ]);
 
     onMounted(async () => {
       try {
-        const info = await fetchData(''); // Insert correct endpoint here.
+        const info = await fetchData('http://127.0.0.1:8000/home'); // Insert correct endpoint here.
         if (info) {
           repoInfo.value = info; // Update repoInfo with the fetched backend db data.
         }
@@ -130,8 +131,8 @@ export default {
         <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="repos">Tracked Repositories:</label>
         <div id="repos"class="row" v-for="repo in repoInfo">
           <router-link :to="{ path: '/repoinfo/' + repo.id }"><button class="button-6" > 
-              <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
-              <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
+              <span><h2 style="margin-left: 0.3rem;">{{ repo[0].name }}</h2></span>
+              <span class="last-accessed">Last Accessed: {{ repo[0].updated_at }}</span>
           </button></router-link>
           <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
             <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.id)">x</div>

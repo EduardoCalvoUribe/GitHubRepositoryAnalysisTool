@@ -33,13 +33,14 @@ async def get_github_information(response):
                   formatted as HTML for display purposes.
     """
     start_time = time.time() # Variable to check the runtime of the function
-    owner = 'lucidrains'
-    repo = 'PaLM-rlhf-pytorch'
+    #owner = 'lucidrains'
+    #repo = 'PaLM-rlhf-pytorch'
     
-    #repo_url = views.process_vue_POST_request(response)
-    #parsed_variables = views.parse_Github_url_variables(url)
-    #owner = parsed_variables[1]
-    #repo = parsed_variables[2]
+    repo_url = views.process_vue_POST_request(response)
+    parsed_variables = views.parse_Github_url_variables(repo_url)
+    print(parsed_variables)
+    owner = parsed_variables[1]
+    repo = parsed_variables[2]
     
     # NOTE: Personal access token with repo permission turned on IS REQUIRED!
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
@@ -49,7 +50,7 @@ async def get_github_information(response):
     async with aiohttp.ClientSession(headers=headers) as session:
         repo_db = models.Repository(name = repo,
                                owner = owner,
-                               url = '',
+                               url = repo_url,
                                updated_at = timezone.now(),
                                token = '')#settings.GITHUB_PERSONAL_ACCESS_TOKEN)
         await sync_to_async(repo_db.save)()

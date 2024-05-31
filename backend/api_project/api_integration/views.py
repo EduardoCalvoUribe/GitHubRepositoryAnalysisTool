@@ -17,6 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from .models import Comment
 from datetime import date
+from collections import OrderedDict
 
 # API call to https://api.github.com/user endpoint
 def github_user_info(request):
@@ -150,8 +151,9 @@ def parse_Github_url_variables(url):
   filtered_url = re.sub(r'https?://(www\.)?', '', url)
   parsed_url = filtered_url.split('/')
 
+  return parsed_url
   
-  if parsed_url[0] != 'api.github.com':
+  if parsed_url[0] != 'github.com':
     return ['URL is not a Github URL']
   else:
     return parsed_url
@@ -247,6 +249,8 @@ def delete_all_records(request):
 @csrf_exempt
 def repo_frontend_info(request):
     repo_name = 'PaLM-rlhf-pytorch'
+    #repo_url = process_vue_POST_request(request)
+    #print(repo_url)
     try:
         repo = Repository.objects.get(name=repo_name)
         pull_requests = repo.pull_requests.all()
@@ -303,3 +307,23 @@ def repo_frontend_info(request):
         return JsonResponse({"error": "Repository not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
+#Create a data package that is used by the frontend to show on the frontend
+def homepage_datapackage(request):
+    try:
+        #We import all the repositories from the database
+        repos = Repository.objects.all()
+
+        # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
+        unique_repos = list(OrderedDict((repo.id, {
+            "name": repo.name,
+            "id": repo.id,
+            "url": repo.url,
+            "updated_at": repo.updated_at,
+        }) for repo in repos).values())
+
+        # The Repos is a list that has name & updated_at as values
+        data = {"Repos" : unique_repos}
+        return JsonResponse(data)
+    except Repository.DoesNotExist:
+        return JsonResponse({"error": "Repository not found"}, status=404)

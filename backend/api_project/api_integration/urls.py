@@ -25,6 +25,7 @@ urlpatterns = [
     path('databaseprint/', functions.show_database, name = 'datbaseshow'),
     path('help/',views.save_comment_view, name = 'help'),
     path('deleteAll', views.delete_all_records, name = 'deleteAll'),
-    path('package', views.repo_frontend_info, name = 'frontend_info')
+    path('package', views.repo_frontend_info, name = 'frontend_info'),
+    path('home', views.homepage_datapackage, name = 'homepage_datapackage')
 ]
     
