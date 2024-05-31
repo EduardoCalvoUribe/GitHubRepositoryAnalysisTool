@@ -40,37 +40,35 @@ export default {
       }
     });
 
-    return { repoInfo };
+    return { repoInfo }; // allows for repoInfo to be used in the template of this file
   },
   data() {
     return {
-      githubURL: '',
-      tableContent: '',
-      githubResponse: '',
-      invalidInput: false
+      invalidInput: false, // set to false by default so false message is not displayed constantly
+      selectedSort: null, // sort option user selects from dropdown menu, default set to newest to oldest?
+      sorts: [ // different possible sort options
+        { name: 'Date Oldest to Newest' },
+        { name: 'Date Newest to Oldest' },
+      ],
     }
   },
   methods: {
-
+   
     async checkInput(str) {
-      const regex = /^(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+(?:\.git)?\/?$/;
-      return regex.test(str);
+      const regex = /^(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+(?:\.git)?\/?$/; // regular expression that checks whether a string is a valid Github repo url
+      return regex.test(str); // boolean true or false is returned
     },
 
     async handleGithubURLSubmit(inputUrl) {
-      //var githubURL = document.getElementById('githubURL').value;
-      this.invalidInput = false;
-      if (!(await this.checkInput(inputUrl))) {
-        console.log('Not a github repository and githubURL value is: ', inputUrl)
-        this.invalidInput = true;
+      this.invalidInput = false; // sets variable invalidInput to false so that false message is not displayed
+      if (!(await this.checkInput(inputUrl))) { // checks if input url from user is valid Github repo url
+        this.invalidInput = true; // if input is not valid invalidInput is set to false so false message can be displayed
         return;
       }
 
-      console.log('handleGithubURLSubmit called and url given as valid', inputUrl) 
+      const data = {'url': inputUrl}; // define data to be sent in postOptions, repo url in this case
 
-      const data = {'url': inputUrl};
-
-      const postOptions = {
+      const postOptions = { // defines how data is sent to backend, POST request in this case
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -79,55 +77,42 @@ export default {
       };
 
       try {
-          // https://github.com/IntersectMBO/plutus
-          // TODO: Instead of cocatenating, extract from POST options (postOptions.body?). Also modify urls.py for this
-          const response = await fetchData('http://127.0.0.1:8000/all/', postOptions);
-          console.log(JSON.stringify(response))
-          // const response = await fetch(url, postOptions);
-          // const json = await response.json();
-          this.githubResponse = '<p><h5>Data from Backend:</h5><br>' + JSON.stringify(response) + '</p>';
-
+          const response = await fetchData('http://127.0.0.1:8000/all/', postOptions); // send repo url to get github information function through 'all' path
       } catch (error) {
           console.error('Error:', error);
       }
     },
 
     async handleDeleteRequest(repo) {
-      //checking for correct repo name in console
-      console.log(repo)
+      const data = {'url': repo}; // define data to be sent in postOptions, repo id in this case
 
-      const data = {'url': repo}; 
-      const postOptions = {
+      const postOptions = { // defines how data is sent to backend, POST request in this case
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
           },
           body: JSON.stringify(data),
       };
-      // send repo name to backend through correct path that still needs to be created
+      
       try {
-        console.log('entered try')
-        const response = await fetchData('http://127.0.0.1:8000/delete/', postOptions);
+          const response = await fetchData('http://127.0.0.1:8000/delete/', postOptions); // send repo name to backend delete function through path 'delete'
       } catch (error) {
           console.error('Error:', error);
       }
-
     },
   }
 };
 </script>
 
-
 <template>
   <header>
-    <div style="font-size: 180%;">
+    <div style="font-size: 180%;  margin-top: 30px;">
       Repository Analysis Tool
     </div>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </header>
 
   <main>
-    <div style="margin-top: 4%; display: flex; justify-content: center;">
+    <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
       <div style="display: flex; flex-direction: column; align-items: flex-start;">
         <label style="display: inline-block; width: 250px;" for="urlTextfield" >Enter GitHub URL:</label>
         <div style="display: flex; align-items: center;">
@@ -137,21 +122,23 @@ export default {
       </div>
     </div> 
 
-    <div v-if="invalidInput" style="color: red; margin-top: 2%; display: flex; justify-content: center;">Invalid input! Please enter a valid GitHub URL.</div>
+    <div v-if="invalidInput" style="color: red; margin-top: 2%; display: flex; justify-content: center; margin-bottom: 5%">Invalid input! Please enter a valid GitHub URL.</div>
 
-    <div style="margin-top: 8%;" v-html="githubResponse" ></div> 
-
-
-    <div class="row" v-for="repo in repoInfo">
-      <router-link :to="{ path: '/repoinfo/' + repo.id }"><button class="button-6" > 
-          <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
-          <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
-      </button></router-link>
-      <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
-        <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.id)">x</div>
-      </button>
-    </div> 
-
+    <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
+      <div style="display: flex; flex-direction: column; align-items: flex-start;">
+        <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
+        <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="repos">Tracked Repositories:</label>
+        <div id="repos"class="row" v-for="repo in repoInfo">
+          <router-link :to="{ path: '/repoinfo/' + repo.id }"><button class="button-6" > 
+              <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
+              <span class="last-accessed">Last Accessed: {{ repo.last_accessed }}</span>
+          </button></router-link>
+          <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
+            <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.id)">x</div>
+          </button>
+        </div> 
+      </div>
+    </div>
   </main>
 </template>
 
@@ -164,6 +151,4 @@ header {
   display: block;
   margin: 0 auto 2rem;
 }
-
 </style>
-

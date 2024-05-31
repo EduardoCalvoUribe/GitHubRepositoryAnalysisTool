@@ -247,6 +247,7 @@ def delete_all_records(request):
         return False, str(e)
 
 # Function to send a package of all repo information to the frontend
+@csrf_exempt
 def repo_frontend_info(request):
     #repo_name = 'PaLM-rlhf-pytorch'
     try:
