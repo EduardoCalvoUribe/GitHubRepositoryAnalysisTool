@@ -8,7 +8,7 @@
 
   <header>
     <div style="font-size: 180%; margin-top: 30px;">
-      Repository Information
+      {{ githubResponse.Repo.name }}
     </div>
   </header>
 
