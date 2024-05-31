@@ -7,7 +7,7 @@
   </header>
 
   <header>
-    <div style="font-size: 180%; margin-top: 30px;">
+    <div v-if="githubResponse" style="font-size: 180%; margin-top: 30px;">
       {{ githubResponse.Repo.name }}
     </div>
   </header>
