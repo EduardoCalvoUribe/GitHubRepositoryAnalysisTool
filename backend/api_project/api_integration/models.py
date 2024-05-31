@@ -9,6 +9,11 @@ class User(models.Model): # user
     name = models.CharField(max_length=100)
     url = models.URLField()
     login = models.CharField(max_length=100, blank=True)
+    repositories = models.JSONField(blank=True, default=list) # list of repos
+    pull_requests = models.JSONField(blank=True, default=list) # list of pull requests
+    comments = models.JSONField(blank=True, default=list) # list of comments
+    commits = models.JSONField(blank=True, default=list) # list of commits
+
 
     def __str__(self):
         return self.name
@@ -16,19 +21,21 @@ class User(models.Model): # user
     @classmethod
     def save_user_to_db(request, json_response):
         try:
-            # Convert API response to JSON format
-            user = User()
+            # # Convert API response to JSON format
+            # user = User()
 
-            for key,value in json_response.items():
-                if key is not None:
-                    if value is not None:
-                        setattr(user, key, value)
-                    else:
-                        setattr(user, key, "")
+            # for key,value in json_response.items():
+            #     if key is not None:
+            #         if value is not None:
+            #             setattr(user, key, value)
+            #         else:
+            #             setattr(user, key, "")
 
-            user.save()
-            data = list(User.objects.values())
-            return JsonResponse({'data': data})
+            # user.save()
+            # data = list(User.objects.values())
+
+
+            return JsonResponse({'data': "1"})
         except Exception as e:
             return JsonResponse({"error": str(e)})
 
