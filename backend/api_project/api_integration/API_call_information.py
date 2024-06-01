@@ -57,12 +57,15 @@ async def get_github_information(response):
 
         
         user, created = await sync_to_async(models.User.objects.update_or_create)(login=owner)
-        list = user.repositories
-        print(type(list), "repo")
-        #list.update({repo_db.name:repo_db.url})
-        list.append(repo_db.url)
-        user.repositories = list 
-        await sync_to_async(user.save)()
+        # list = user.repositories
+        # print(type(list), "repo")
+        # #list.update({repo_db.name:repo_db.url})
+        # list.append(repo_db.url)
+        # user.repositories = list 
+        # await sync_to_async(user.save)()
+        await update_model_data(user, "repositories", repo_db.url)
+        #await sync_to_async(user.save)()
+
 
         # Results is a list of each page of a repo, each page has multiple pull requests and each pull request have multiple commits and comments
         results = await handle_fetch_requests(session, owner, repo)
@@ -88,6 +91,7 @@ async def get_github_information(response):
 
         # This for loop is only for creating displayable text on a website (not important for loop and can be deleted in end)
         for page in results:
+            pulls = []
             for pr in page:
                 # Combine URL and repo checks for update_or_create
                 defaults = {
@@ -102,24 +106,16 @@ async def get_github_information(response):
                 pull_db, created = await sync_to_async(models.PullRequest.objects.update_or_create)(
                     url=pr[0]['url'], repo=repo_db, defaults=defaults
                 )
-
-                # pull_db = models.PullRequest(repo = repo_db,
-                #                              url = pr[0]['url'],
-                #                              updated_at = timezone.now(),
-                #                              date = datetime.strptime(pr[0]['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
-                #                              title = pr[0]['title'],
-                #                              body = pr[0]['body'],
-                #                              user = pr[0]['user']['login'],
-                #                              number = pr[0]['number'])
                 await sync_to_async(pull_db.save)()
 
                 user, created = await sync_to_async(models.User.objects.update_or_create)(login=pull_db.user)
-                list = user.pull_requests
-                print(type(list), "pull")
-                list.append(pull_db.url)
-                #list.update({pull_db.number:pull_db.url})
-                user.pull_requests = list
-                await sync_to_async(user.save)()
+                # list = user.pull_requests
+                # list.append(pull_db.url)
+                # user.pull_requests = list
+                await update_model_data(user, "pull_requests", pull_db.url)
+                await update_model_data(repo_db, "pull_requests_list", pull_db.url)
+                #await sync_to_async(user.save)()
+
 
                 text_to_display = text_to_display + '<p></b>Information from Pull request:</b> #' + str(pr[0]['number']) + '</p>------------------------------'
                 for commit in pr[1]:
@@ -147,12 +143,11 @@ async def get_github_information(response):
                     await sync_to_async(commit_db.save)()
 
                     user, created = await sync_to_async(models.User.objects.update_or_create)(login=commit_db.user)
-                    list = user.commits
-                    print(type(list), "commits")
-                    list.append(commit_db.url)
-                    #list.update({commit_db.name:commit_db.url})
-                    user.commits = list
-                    await sync_to_async(user.save)()
+                    await update_model_data(user, "commits", commit_db.url)
+                    # list = user.commits
+                    # list.append(commit_db.url)
+                    # user.commits = list
+                    #await sync_to_async(user.save)()
 
 
                     text_to_display += f"<p><b>Author</b>: {commit['author']['login'] if commit['author'] else 'Unknown'}</p>"
@@ -180,11 +175,11 @@ async def get_github_information(response):
                     await sync_to_async(comment_db.save)()
 
                     user, created = await sync_to_async(models.User.objects.update_or_create)(login=comment_db.user)
-                    list = user.comments
-                    print(type(list), "comments")
-                    list.append(comment_db.url)
-                    user.comments = list
-                    await sync_to_async(user.save)()
+                    await update_model_data(user, "comments", comment_db.url)
+                    # list = user.comments
+                    # list.append(comment_db.url)
+                    # user.comments = list
+                    #await sync_to_async(user.save)()
 
 
 
@@ -203,6 +198,17 @@ async def get_github_information(response):
 
         # Return JsonResponse to frontend (return can eventually be deleted/reformed)
         return JsonResponse(text_to_display, safe=False)
+
+
+async def update_model_data(model, related_data_field, related_data_url):
+    print(related_data_field)
+    current = getattr(model, related_data_field)
+    current.append(related_data_url)
+    print(current)
+    setattr(model, related_data_field, current)  # Use set union for unique values
+    await sync_to_async(model.save)()
+    #return model
+
 
 
 async def handle_fetch_requests(session, owner, repo):

@@ -251,65 +251,78 @@ def delete_all_records(request):
 # Function to send a package of all repo information to the frontend
 @csrf_exempt
 def repo_frontend_info(request):
-    repo_name = 'PaLM-rlhf-pytorch'
-    #repo_url = process_vue_POST_request(request)
-    #print(repo_url)
+    if request.method == 'POST':
+        # Get the request body as a string
+        request_body = request.body.decode('utf-8')
+        # Try to parse the JSON data
+        try:
+            # Option 1: Using a dictionary (recommended)
+            print(request_body)
+            print("huh")
+            data = json.loads(request_body)
+            #url = data.get('url')  # Use get() for optional retrieval
+            url = data['url']
+        except json.JSONDecodeError:
+            print("Error")
+    print("fetching!")
     try:
-        repositories = Repository.objects.all()
-        info = []
-        for repo in repositories: # we should send info of all stored info
-        #repo = Repository.objects.get(name=repo_name)
-            pull_requests = repo.pull_requests.all()
-            
-            data = {
-                "Repo": {
-                    "name": repo.name,
-                    "url": repo.url,
-                    "updated_at": repo.updated_at,
-                    "pull_requests": []
-                }
+    # Get the repository by URL (using get() for single object retrieval)
+        repo = Repository.objects.get(url=url)
+    except Repository.DoesNotExist:
+    # Handle repository not found (e.g., return a not found response)
+        return JsonResponse({'error': 'Repository not found'}, status=404)
+
+    try:
+            # Prepare the response data with nested pull request details
+        data = {
+            "Repo": {
+            "name": repo.name,
+            "url": repo.url,
+            "updated_at": repo.updated_at,
+            "pull_requests": [],
             }
-            
-            for pr in pull_requests:
-                pr_data = {
-                    "url": pr.url,
-                    "updated_at": pr.updated_at,
-                    "date": pr.date,
-                    "title": pr.title,
-                    "body": pr.body,
-                    "user": pr.user,
-                    "number": pr.number,
-                    "commits": [],
-                    "comments": []
+        }
+
+        pull_requests = repo.pull_requests.all()
+        for pr in pull_requests:
+            pr_data = {
+            "url": pr.url,
+            "updated_at": pr.updated_at,
+            "date": pr.date,
+            "title": pr.title,
+            "body": pr.body,
+            "user": pr.user,
+            "number": pr.number,
+            "commits": [],
+            "comments": [],
+            }
+
+            for commit in pr.commits.all():
+                commit_data = {
+                    "name": commit.name,
+                    "url": commit.url,
+                    "title": commit.title,
+                    "user": commit.user,
+                    "date": commit.date,
+                    "semantic_score": commit.semantic_score,
+                    "updated_at": commit.updated_at,
                 }
-                
-                for commit in pr.commits.all():
-                    commit_data = {
-                        "name": commit.name,
-                        "url": commit.url,
-                        "title": commit.title,
-                        "user": commit.user,
-                        "date": commit.date,
-                        "semantic_score": commit.semantic_score,
-                        "updated_at": commit.updated_at,
-                    }
-                    pr_data["commits"].append(commit_data)
-                
-                for comment in pr.comments.all():
-                    comment_data = {
-                        "url": comment.url,
-                        "date": comment.date,
-                        "body": comment.body,
-                        "user": comment.user,
-                        "semantic_score": comment.semantic_score,
-                        "updated_at": comment.updated_at,
-                    }
-                    pr_data["comments"].append(comment_data)
-                
-                data["Repo"]["pull_requests"].append(pr_data)
-                info.append[data]
-        
-        return JsonResponse(info)
+                pr_data["commits"].append(commit_data)
+
+            for comment in pr.comments.all():
+                comment_data = {
+                    "url": comment.url,
+                    "date": comment.date,
+                    "body": comment.body,
+                    "user": comment.user,
+                    "semantic_score": comment.semantic_score,
+                    "updated_at": comment.updated_at,
+                }
+                pr_data["comments"].append(comment_data)
+
+            data["Repo"]["pull_requests"].append(pr_data)
+        print("sending")
+        return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
     except Exception as e:
@@ -320,6 +333,7 @@ def homepage_datapackage(request):
     try:
         #We import all the repositories from the database
         repos = Repository.objects.all()
+        print(repos)
 
         # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
         unique_repos = list(OrderedDict((repo.id, {
@@ -328,6 +342,7 @@ def homepage_datapackage(request):
             "url": repo.url,
             "updated_at": repo.updated_at,
         }) for repo in repos).values())
+        print(unique_repos)
 
         # The Repos is a list that has name & updated_at as values
         data = {"Repos" : unique_repos}

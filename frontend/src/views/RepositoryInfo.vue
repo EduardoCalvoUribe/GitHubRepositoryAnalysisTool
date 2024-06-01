@@ -1,6 +1,6 @@
 <template>
   <header>
-    <RouterLink to="/repoinfo/${id}">Repository Information</RouterLink>
+    <RouterLink to="/repoinfo/${url}">Repository Information</RouterLink>
     <RouterLink style="margin-left: 2%" to="/prpage">Pull Requests</RouterLink>
     <RouterLink style="margin-left: 2%" to="/commitpage">Commits</RouterLink>
     <RouterLink style="margin-left: 2%" to="/commentpage">Comments</RouterLink>
@@ -111,8 +111,23 @@ export default {
     // SelectButton,
   },
 
+
+
   setup() {
     const route = useRoute(); // allows for passage of variables from homepage to current page
+    //const repoUrl = ({'url': decodeURIComponent(route.params.url)}).url;
+    // console.log(repoUrl, "url?")
+    // const postOptions = { // defines how data is sent to backend, POST request in this case
+    //       method: 'POST',
+    //       headers: {
+    //           'Content-Type': 'application/json',
+    //       },
+    //       body: JSON.stringify(repoUrl),
+    //   };
+    // const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
+    // console.log("received")
+    // githubResponse.value = response;
+
     const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
     const sorts = ref([ // different possible sort options
         // { name: 'Semantic Score Ascending' },
@@ -120,9 +135,11 @@ export default {
         { name: 'Date Oldest to Newest' },
         { name: 'Date Newest to Oldest' },
       ]);
-    
     onMounted(async () => {
-      const data = {'url': route.params.url}; // define data to be sent in postOptions, repo id in this case
+      const data = {'url': decodeURIComponent(route.params.url)}; // define data to be sent in postOptions, repo url in this case
+      console.log(data, "url?");
+      console.log(route)
+      
 
       const postOptions = { // defines how data is sent to backend, POST request in this case
           method: 'POST',
@@ -131,18 +148,16 @@ export default {
           },
           body: JSON.stringify(data),
       };
-
-      try {
+      console.log("in")
+      try {      
           const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
-          console.log(response)
-          // githubResponse.value = JSON.stringify(response, null, 2);
+          console.log("received")
           githubResponse.value = response;
           console.log(githubResponse)
       } catch (error) {
           console.error('Error:', error);
       }
     })
-
     const sortListsDate = (list, choice) => {
       if (choice.name == 'Date Oldest to Newest') {
         const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
@@ -162,7 +177,6 @@ export default {
         return sorted_list;
       }
     };
-
     const sortedPullRequests = computed(() => {
       if (!githubResponse.value) return [];
       else if (selectedSort.value.name.includes('Date')) {
@@ -171,7 +185,7 @@ export default {
         return sortListsScore(githubResponse.value.Repo.pull_requests, selectedSort.value);
       }
     });
-
+    console.log(githubResponse, "hey")
     return {
       githubResponse,
       sortedPullRequests,
@@ -181,7 +195,9 @@ export default {
   },
 
   data() {
+    console.log(githubResponse.value)
     return {
+      githubResponse: null,
       selectedOption: { name: 'Pull Requests'}, // view option user selects from dropdown menu, default set to pull requests
       options: [ // different possible view options
         { name: 'Pull Requests' },
@@ -190,7 +206,7 @@ export default {
       ],
       selectedRange: null, // date range that the user selects in date picker
       items: [ // items are the boxes with content being diplayed on the page§
-        { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_pullrequests, path: '/prpage' },
+        { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_commits, path: '/prpage' },
         { id: 2, text: 'Number of Commits: ' + fakejson.repository.number_of_commits, path: '/commitpage' },
         { id: 3, text: 'Extra Repository Information' },
         // Add more items as needed
@@ -210,7 +226,6 @@ export default {
       }
     }
   },
-
   methods: {
     async handleDateSubmit(range) {
       const data = {'date': range}; // define data to be sent in postOptions, date range in this case

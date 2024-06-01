@@ -49,7 +49,8 @@ class Repository(models.Model): # repository, might have to change this into com
     url = models.URLField() # api url of repository
     updated_at = models.DateTimeField(default=timezone.now) # time of last update in database
     #contributers = models.JSONField(blank=True, default=dict) # list of users
-    #pull_requests = models.JSONField(blank=True, default=dict) # list of pull request in repository (Should be linked to the classes)
+    pull_requests_list = models.JSONField(blank=True, default=list) # list of pull request in repository 
+    commits = models.JSONField(blank=True, default=list) # list of commits in repository 
     token = models.CharField(max_length=100, default = "") # save personal access token
 
     def __str__(self):

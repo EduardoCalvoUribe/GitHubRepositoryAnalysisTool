@@ -66,6 +66,18 @@ a,
   transform: translateY(0);
 }
 
+.column {
+  display: flex; /* Enables flexbox layout */
+  flex-direction: column; /* Stacks elements vertically */
+  align-items: center; /* Horizontally centers content within the column */
+  justify-content: flex-start; /* Vertically aligns content at the top by default (adjustable) */
+  /* Other styles as needed (e.g., width, margin, padding) */
+}
+
+.row:hover {
+  transform: translateY(-1px);
+}
+
 .row {
   display: flex;
   align-items: center;
@@ -78,6 +90,7 @@ a,
 .row:hover {
   transform: translateY(-1px);
 }
+
 
 .last-accessed {
   opacity: 0.7;
