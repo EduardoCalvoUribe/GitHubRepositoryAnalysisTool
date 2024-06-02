@@ -4,7 +4,7 @@ from .views import parse_Github_url_variables
 from django.http import HttpResponse
 from django.http import JsonResponse
 from .nlp_functions import CodeCommitMessageRatio, FleschReadingEase, LexicalDensity
-from .comment_info import list_of_comments
+# from .comment_info import list_of_comments
 import asyncio
 
 # Define and parse URL
@@ -21,9 +21,9 @@ import asyncio
 
 # Comment list from list_of_comments function in comment_info. Used for testing average semantic score
 # NOTE: displaying the list of comments
-async def get_comments():
-   comments = await list_of_comments()
-   return comments
+# async def get_comments():
+#    comments = await list_of_comments()
+#    return comments
 
 # list of all comments, awaits until get_comments() is complete
 #comment_list = asyncio.run(get_comments())
@@ -104,7 +104,8 @@ def calculate_weighted_comment_semantic_score(message, ld_weight, fre_weight):
     # Return -1 if total weight is 0, else return weighted semantic score
     return (weighted_flesch_reading_ease+weighted_lexical_density)/total_weight if total_weight != 0 else -1
    
-
+# Function which calculates the average weighted semantic score for a list of comments.
+# NOTE: this function might be redundant due to database.
 def calculate_average_weighted_comment_semantic_score(message_list, ld_weight, fre_weight):
    total_semantic_score = 0
    for message in message_list:
@@ -112,23 +113,11 @@ def calculate_average_weighted_comment_semantic_score(message_list, ld_weight, f
     
    return total_semantic_score/len(message_list) if len(message_list) != 0 else -1
 
-def displaySemantic(request):
+def display_semantic(request):
 #    return HttpResponse(calculate_weighted_semantic_score(commit,0,100,0))    
 #    return HttpResponse(calculate_weighted_comment_semantic_score(comment_list[0],100,100))  #
    #return HttpResponse(calculate_average_weighted_comment_semantic_score(comment_list[1:10],1,100)) 
    return ""
-
-
-
-# def displaySemantic(request):
-#    return HttpResponse(calculate_semantic_score(commit))
-
-
-# def dumpRatio(request):
-#     commit = CodeCommitMessageRatio.get_Github_commit_object(repository_owner, repository_name, commit_sha, github_token)
-#     commit_message = CodeCommitMessageRatio.get_commit_message(commit)
-#     return HttpResponse(commit_message)
-
 
 
 

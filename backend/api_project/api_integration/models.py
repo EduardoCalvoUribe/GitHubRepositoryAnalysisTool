@@ -5,6 +5,7 @@ from datetime import date
 from . import functions
 from asgiref.sync import sync_to_async
 
+
 class User(models.Model): # user
     name = models.CharField(max_length=100)
     url = models.URLField()
@@ -244,3 +245,4 @@ class Comment(models.Model): # comment
 
     class Meta:
         app_label = 'api_integration'
+

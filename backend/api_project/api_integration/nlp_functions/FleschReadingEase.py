@@ -7,6 +7,9 @@
 import nltk
 
 # download cmudict
+# NOTE: nltk data libraries cannot be downloaded through the requirements.txt file, 
+# thus they must be installed manually. Make sure that there is a list of libraries which must be 
+# manually installed when the end product is provided to Rodrigo. 
 nltk.download('cmudict')
 #import cmudict (pronounciation dictionary) for annotated syllables
 from nltk.corpus import cmudict
@@ -21,25 +24,25 @@ from nltk.tokenize import sent_tokenize
 #Function which calculates the Flesch reading ease metric for a given message.
 #Returns Flesch reading ease as a single numerical value
 # If division by 0 occurs -1 is returned.
-def calculate_flesch_reading_ease(message):
+def calculateFleschReadingEase(message):
     # Count number of words with .split() function. By default the separator character is any whitespace
     wordCount = len(message.split())
     # Count sentences using nltk sent_tokenize
-    sentenceCount = len(sent_tokenize(message))
+    sentence_count = len(sent_tokenize(message))
     # Initialise syllable count for message using syllable_count function.
-    syllableCount = 0
+    syllable_count = 0
 
     # Count total syllable count
     for word in message.split():
-        syllableCount += syllable_count(word)
+        syllable_count += syllableCount(word)
     
 
     # If sentenceCount or wordCount are 0, return -1 to prevent division by 0
-    if sentenceCount == 0 or wordCount == 0:
+    if sentence_count == 0 or wordCount == 0:
         return -1
     
     # Calculate Flesch reading ease score
-    flesch_reading_ease_score = 206.835 - (1.015 * (wordCount / sentenceCount)) - (84.6 * (syllableCount / wordCount))
+    flesch_reading_ease_score = 206.835 - (1.015 * (wordCount / sentence_count)) - (84.6 * (syllable_count / wordCount))
 
     # Bound the Flesch reading ease score between 0 and 100
     flesch_reading_ease_score = max(0, min(flesch_reading_ease_score, 100))
@@ -49,13 +52,13 @@ def calculate_flesch_reading_ease(message):
 
 
 #Helper function which checks if word is in cmudict dictionary.
-def lookup_word(word):
+def lookupWord(word):
     return d.get(word)
 
 # Function which uses cmudict to return number of syllables, if word not in cmudict then number of syllables is counted manually. 
 # Courtesy of https://datascience.stackexchange.com/questions/23376/how-to-get-the-number-of-syllables-in-a-word
-def syllable_count(word):
-    wordCheck = lookup_word(word)
+def syllableCount(word):
+    wordCheck = lookupWord(word)
 
     #if wordCheck is not empty and therefore word is in dictionary
     if wordCheck:
@@ -102,13 +105,13 @@ def otherSyllables(word):
 # This function computes the average flesch reading ease for a list of message strings. messageList must be a list of strings.
 # NOTE: The average flesch reading ease score can also be calculated with aggregate avg() function in sqlite database. 
 # However, this is only possible if we decide to store the flesch reading ease scores in the database. 
-def calculate_average_flesch_reading_ease(messageList):
+def calculateAverageFleschReadingEase(messageList):
   # Initialise total flesch reading ease variable
   total_flesch_reading_ease = 0
   
   # Sum all flesch reading eases for every message in messageList
   for message in messageList:
-    total_flesch_reading_ease += calculate_flesch_reading_ease(message)
+    total_flesch_reading_ease += calculateFleschReadingEase(message)
 
   # Return average flesch reading ease by dividing total flesch reading ease by length of messageList
   return total_flesch_reading_ease/len(messageList)
