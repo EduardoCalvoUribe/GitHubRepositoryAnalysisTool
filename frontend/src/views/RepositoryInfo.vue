@@ -97,7 +97,7 @@ import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import { fetchData } from '../fetchData.js'
 import { useRoute } from 'vue-router';
-import { githubResponse } from '../repoPackage.js';
+// import { githubResponse } from '../repoPackage.js';
 import fakejson from '../test.json';
 import BarChart from '../components/BarChart.vue';
 import Dropdown from 'primevue/dropdown';
@@ -115,6 +115,7 @@ export default {
 
   setup() {
     const route = useRoute(); // allows for passage of variables from homepage to current page
+    const githubResponse = ref(null);
     //const repoUrl = ({'url': decodeURIComponent(route.params.url)}).url;
     // console.log(repoUrl, "url?")
     // const postOptions = { // defines how data is sent to backend, POST request in this case
@@ -135,12 +136,12 @@ export default {
         { name: 'Date Oldest to Newest' },
         { name: 'Date Newest to Oldest' },
       ]);
+      
     onMounted(async () => {
       const data = {'url': decodeURIComponent(route.params.url)}; // define data to be sent in postOptions, repo url in this case
-      console.log(data, "url?");
-      console.log(route)
+      // console.log(data, "url?");
+      // console.log(route)
       
-
       const postOptions = { // defines how data is sent to backend, POST request in this case
           method: 'POST',
           headers: {
@@ -148,10 +149,10 @@ export default {
           },
           body: JSON.stringify(data),
       };
-      console.log("in")
+      // console.log("in")
       try {      
           const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
-          console.log("received")
+          // console.log("received")
           githubResponse.value = response;
           console.log(githubResponse)
       } catch (error) {
@@ -185,7 +186,7 @@ export default {
         return sortListsScore(githubResponse.value.Repo.pull_requests, selectedSort.value);
       }
     });
-    console.log(githubResponse, "hey")
+    // console.log(githubResponse, "hey")
     return {
       githubResponse,
       sortedPullRequests,
@@ -195,9 +196,9 @@ export default {
   },
 
   data() {
-    console.log(githubResponse.value)
+    // console.log(githubResponse.value)
     return {
-      githubResponse: null,
+      // githubResponse: null,
       selectedOption: { name: 'Pull Requests'}, // view option user selects from dropdown menu, default set to pull requests
       options: [ // different possible view options
         { name: 'Pull Requests' },
