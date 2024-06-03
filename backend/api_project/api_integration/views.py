@@ -19,6 +19,44 @@ from .models import Comment
 from datetime import date
 from collections import OrderedDict
 
+# # Helper function which loads in the JSON response from
+# # the github_repo_pull_requests function and counts the number of pull requests for a given repo. 
+# def pull_request_count(request):
+#     url = "https://api.github.com/repos/lucidrains/PaLM-rlhf-pytorch/pulls"
+#     response = github_repo_pull_requests(request, url)
+    
+#     if response.status_code == 200:
+#         # Deserialize the JSON content
+#         pr_data = json.loads(response.content)
+#         pr_count = len(pr_data)
+        
+#         # Create a dictionary containing the PR count
+#         data = {"pr_count": pr_count}
+        
+#         # Return a JSON response with the PR count
+#         return JsonResponse(data)
+#     else:
+#         # Directly return the error response
+#         return response
+
+# # Function which creates a package containing the PR count for the url specified in pull_request_count
+# # NOTE: URL parsing should still be implemented in pull_request_count, but the function does exist somewhere in project already
+# # This function can be used to print pr_count on Django web page
+# def pr_count_JSON(request):
+#     pr_count = pull_request_count(request)
+    
+#     # Create JSON package containing the comment count
+#     try:
+#         # Add comment count to JSON data
+#         data = {
+#             "pr_count": pr_count
+#         } 
+#         # 
+#         return HttpResponse(json.dumps(data), content_type='application/json')
+#     except Exception as e:
+#         error_data = {"error": str(e)}
+#         return HttpResponse(json.dumps(error_data), content_type='application/json', status=500)
+        
 # API call to https://api.github.com/user endpoint
 def github_user_info(request):
     json_response = functions.get_api_reponse('https://api.github.com/user').json()
@@ -72,12 +110,15 @@ def github_repo_pull_requests(request, url):
 
     # Check if the request was successful
     if api_response.status_code == 200:
+        api_data = api_response.json()
         # Return the JSON data as Django JsonResponse.         
-        return JsonResponse(api_response.json(),safe=False)
+        return JsonResponse(api_response,safe=False)
     else:
         # If the request was unsuccessful, print the error message
-        print(f"Failed to fetch data from GitHub API: {api_response.status_code} - {api_response.text}")
-        return None
+        error_data = {
+            "error": f"Failed to fetch data from GitHub API: {api_response.status_code} - {api_response.text}"
+        }
+        return JsonResponse(error_data, status=api_response.status_code)
     
 # This function accepts an API response for a given API endpoint "URL", 
 # and creates a Django HttpResponse (displays key/value pairs)
@@ -327,6 +368,10 @@ def repo_frontend_info(request):
         return JsonResponse({"error": "Repository not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
+
+
+
     
 #Create a data package that is used by the frontend to show on the frontend
 def homepage_datapackage(request):
