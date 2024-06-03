@@ -26,7 +26,8 @@ urlpatterns = [
     path('deleteAll', views.delete_all_records, name = 'deleteAll'),
     path('package', views.repo_frontend_info, name = 'frontend_info'),
     path('home', views.homepage_datapackage, name = 'homepage_datapackage'),
-    path('testCommentJSON/',comment_info.printCommentCountJSON,name = 'testCommentJSON'), #URL handle for printing combined JSON package
-    path('testCommitJSON/',commit_info.printCommitCountJSON, name = 'testCommitJSON')
+    path('testCommentJSON/',comment_info.printCommentCountJSON,name = 'testCommentJSON'), #URL for printing combined JSON (comment) package
+    path('testCommitJSON/',commit_info.printCommitCountJSON, name = 'testCommitJSON'), #URL for printing JSON commit package
+    # path('testPR/',views.pr_count_JSON, name = 'testPR') #URL for printing JSON commit package
 ]
     
