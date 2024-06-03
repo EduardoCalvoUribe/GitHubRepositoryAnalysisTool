@@ -1,16 +1,58 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import requests
 from django.conf import settings
 from datetime import datetime
 from collections import Counter
 from . import functions
-from models import Commit 
+from .models import Commit 
 import aiohttp
 import asyncio
 import time
 import re
 from urllib.parse import urlparse, parse_qs
+import json
+
+# Helper function which uses repo_total_commits function to retrieve number of commits
+async def get_commit_count(request):
+    owner = 'lucidrains'
+    repo = 'PaLM-rlhf-pytorch'
+    pull_number = 52
+    start_date = "2020-01-01"
+    end_date = "2024-06-01"
+    status = "all"
+    set = "all"
+    commit_count = await repo_total_commits(request, owner, repo, pull_number, start_date, end_date, status, set)
+    return commit_count
+
+# Function which creates a package containing the commit count
+async def commit_count_JSON(request):
+    
+    commit_count = await get_commit_count(request)
+    
+    # Create JSON package containing the comment count
+    try:
+        # Add commit count to JSON data
+        data = {
+            "commit_count": commit_count
+        } 
+        # 
+        return HttpResponse(json.dumps(data), content_type='application/json')
+    except Exception as e:
+        error_data = {"error": str(e)}
+        return HttpResponse(json.dumps(error_data), content_type='application/json', status=500)
+
+async def printCommitCountJSON(request):
+    owner = 'lucidrains'
+    repo = 'PaLM-rlhf-pytorch'
+    pull_number = 52
+    
+    commit_JSON_response = await commit_count_JSON(request)
+    # Deserialize JSON from the HttpResponse
+    commit_JSON = json.loads(commit_JSON_response.content)
+    # Return commit_JSON as JsonResponse. 
+    return JsonResponse(commit_JSON)
+
 
 async def repo_total_commits(request, owner, repo, pull_number, start_date, end_date, status, set):
     # TODO: What should the final reponse be to be able to be used by frontend
@@ -66,7 +108,10 @@ async def repo_total_commits(request, owner, repo, pull_number, start_date, end_
     text_to_display_neat = text_to_display_neat + text_to_display
 
     # Return text_to_display in Django HttpResponse format (in order to display on URL)
-    return HttpResponse(text_to_display_neat)
+    # return HttpResponse(text_to_display_neat)
+
+    # Alternative return statement for testing purposes. Returns total_commit_amount for commit count JSON package function.
+    return total_commit_amount
 
 def general_repo_commits(request, owner, repo, start_date, end_date):
     # API call for the commits not associated to a PR
