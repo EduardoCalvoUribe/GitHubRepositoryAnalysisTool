@@ -13,12 +13,38 @@
       {{ pullpackage.title }}
     </div>
   </header>
+  
+  <div v-if="pullpackage">
+    <body>
+      This is a pull request by {{ pullpackage.user }} created on {{ pullpackage.date }}. 
+    <div class="grid-container">
+    <div class ="grid-item">
+      <body>  
+      Commit title: {{ pullpackage.commits[0].title }}
+      <div>
+        User: {{ pullpackage.commits[0].user }}
+      </div>
+      <div>
+        Date: {{ pullpackage.commits[0].date }}
+      </div>
+      <div>
+        Semantic Score: {{ pullpackage.commits[0].semantic_score }}
+      </div>
+      <div>
+        Updated at: {{ pullpackage.commits[0].updated_at }}
+      </div>
+    </body>
+    </div>
+  </div>
+  </body>
+  </div>
 
-  <div class="grid-container" v-for="pullitem in pullitems" :key="pullitem.id">
+
+  <!-- <div class="grid-container" >
     <div class="grid-item" v-for="item in items" :key="item.id">
       {{ item.text }}
     </div>
-  </div>
+  </div> -->
 </template>
 
 <script>
@@ -26,6 +52,7 @@ import { ref, onMounted } from 'vue';
 import fakejson from '../test.json';
 import { useRoute } from 'vue-router';
 import { state } from '../repoPackage.js';
+import CommitPage from './CommitPage.vue';
 
 export default {
   setup() {
@@ -59,19 +86,7 @@ export default {
   },
 
   data() {
-    return {
-      repositoryId: fakejson.repository.pull_requests.id,
-      selectedRange: null,
-      pullitems: [
-        { id: 1, text: 'Pull request ID: ' + fakejson.repository.pull_requests[0].commits[0].id }
-      ],
-      items: [
-        { id: 1, text: 'Date: ' + fakejson.repository.pull_requests[0].commits[0].date },
-        { id: 2, text: 'Author: ' + fakejson.repository.pull_requests[0].commits[0].author },
-        { id: 3, text: 'Message: ' + fakejson.repository.pull_requests[0].commits[0].message },
-        { id: 4, text: 'Semantic Score: ' + fakejson.repository.pull_requests[0].commits[0].semantic_score },
-      ],
-    };
+
   },
 };
 </script>
@@ -91,9 +106,10 @@ export default {
 
   .grid-item {
     background-color: #157eff4d; /* Background color for grid items */
-    padding: 50px; /* Padding inside grid items */
-    text-align: center; /* Centering text inside grid items */
+    padding: 20px; /* Padding inside grid items */
+    text-align: left; /* Centering text inside grid items */
     border: 1px solid #ccc; /* Border for grid items */
+    min-height: 5px;
   }
 
   .box-container {
