@@ -1,12 +1,33 @@
 import numpy as np
 
-from .views import parse_Github_url_variables
+# from .views import parse_Github_url_variables
 from django.http import HttpResponse
 from django.http import JsonResponse
 from .nlp_functions import CodeCommitMessageRatio, FleschReadingEase, LexicalDensity
 # from .comment_info import list_of_comments
 import asyncio
 
+
+
+# Helper function that parses Github URLs into a list of variables
+# Assuming that Github URLs always follow the same pattern, i.e. https://gihtub.com/[username]/[repo_name]/etc...
+# Returns a list of variables if the provided URL was a Github URL
+def parse_Github_url_variables(url):
+  # Indicate empty URL if url is empty
+  if not url:
+    return ['empty URL']
+
+  # Filter out www, http and https from URL
+  filtered_url = re.sub(r'https?://(www\.)?', '', url)
+  parsed_url = filtered_url.split('/')
+
+  return parsed_url
+  
+  if parsed_url[0] != 'github.com':
+    return ['URL is not a Github URL']
+  else:
+    return parsed_url
+  
 # Define and parse URL
 #url = 'https://github.com/lucidrains/PaLM-rlhf-pytorch/pull/52/commits/297ac3e4c65f034de6ff3fa85008d871d6d786b2' #figure out how to set url from frontend
 #url_parsed = parse_Github_url_variables(url)

@@ -16,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 import aiohttp
 import asyncio
 
+
 from django.http import JsonResponse
 from .models import Comment
 from datetime import date
@@ -182,24 +183,6 @@ def load_quantify_users(request):
      data = functions.pull_request_per_user(request) # get amount of pull request per user
      return JsonResponse({'repositories': data})
 
-# Helper function that parses Github URLs into a list of variables
-# Assuming that Github URLs always follow the same pattern, i.e. https://gihtub.com/[username]/[repo_name]/etc...
-# Returns a list of variables if the provided URL was a Github URL
-def parse_Github_url_variables(url):
-  # Indicate empty URL if url is empty
-  if not url:
-    return ['empty URL']
-
-  # Filter out www, http and https from URL
-  filtered_url = re.sub(r'https?://(www\.)?', '', url)
-  parsed_url = filtered_url.split('/')
-
-  return parsed_url
-  
-  if parsed_url[0] != 'github.com':
-    return ['URL is not a Github URL']
-  else:
-    return parsed_url
 
 # Function which accepts list of Github variables and returns a dictionary containing
 # all variables contained in the parsed URL. 
