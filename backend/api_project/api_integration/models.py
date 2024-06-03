@@ -5,10 +5,16 @@ from datetime import date
 from . import functions
 from asgiref.sync import sync_to_async
 
-class Users(models.Model): # user
+
+class User(models.Model): # user
     name = models.CharField(max_length=100)
     url = models.URLField()
     login = models.CharField(max_length=100, blank=True)
+    repositories = models.JSONField(blank=True, default=list) # list of repos
+    pull_requests = models.JSONField(blank=True, default=list) # list of pull requests
+    comments = models.JSONField(blank=True, default=list) # list of comments
+    commits = models.JSONField(blank=True, default=list) # list of commits
+
 
     def __str__(self):
         return self.name
@@ -16,19 +22,21 @@ class Users(models.Model): # user
     @classmethod
     def save_user_to_db(request, json_response):
         try:
-            # Convert API response to JSON format
-            user = Users()
+            # # Convert API response to JSON format
+            # user = User()
 
-            for key,value in json_response.items():
-                if key is not None:
-                    if value is not None:
-                        setattr(user, key, value)
-                    else:
-                        setattr(user, key, "")
+            # for key,value in json_response.items():
+            #     if key is not None:
+            #         if value is not None:
+            #             setattr(user, key, value)
+            #         else:
+            #             setattr(user, key, "")
 
-            user.save()
-            data = list(Users.objects.values())
-            return JsonResponse({'data': data})
+            # user.save()
+            # data = list(User.objects.values())
+
+
+            return JsonResponse({'data': "1"})
         except Exception as e:
             return JsonResponse({"error": str(e)})
 
@@ -36,13 +44,14 @@ class Users(models.Model): # user
         app_label = 'api_integration'
 
 
-class Repos(models.Model): # repository, might have to change this into comment
+class Repository(models.Model): # repository, might have to change this into comment
     name = models.CharField(max_length=100) # name of repository
     owner = models.CharField(max_length=100, default = "") # Ownver of the repository
     url = models.URLField() # api url of repository
     updated_at = models.DateTimeField(default=timezone.now) # time of last update in database
     #contributers = models.JSONField(blank=True, default=dict) # list of users
-    #pull_requests = models.JSONField(blank=True, default=dict) # list of pull request in repository (Should be linked to the classes)
+    pull_requests_list = models.JSONField(blank=True, default=list) # list of pull request in repository 
+    commits = models.JSONField(blank=True, default=list) # list of commits in repository 
     token = models.CharField(max_length=100, default = "") # save personal access token
 
     def __str__(self):
@@ -52,7 +61,7 @@ class Repos(models.Model): # repository, might have to change this into comment
     def save_repo_to_db(self, json_response):
         try:
         # Convert API response to JSON format
-            repo = Repos()
+            repo = Repository()
             for key,value in json_response.items():
                 if key is not None:
                     if value is not None:
@@ -93,7 +102,7 @@ class Repos(models.Model): # repository, might have to change this into comment
         app_label = 'api_integration'
 
 class PullRequest(models.Model): # pull request
-    repo = models.ForeignKey(Repos, related_name="pull_requests", on_delete=models.CASCADE, null=True, blank=True)
+    repo = models.ForeignKey(Repository, related_name="pull_requests", on_delete=models.CASCADE, null=True, blank=True)
     url = models.URLField()
     updated_at = models.DateTimeField(default=timezone.now)
     date = models.DateField(default=date.today)
@@ -236,3 +245,4 @@ class Comment(models.Model): # comment
 
     class Meta:
         app_label = 'api_integration'
+

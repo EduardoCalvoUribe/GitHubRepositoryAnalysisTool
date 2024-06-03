@@ -6,7 +6,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from collections import Counter
 from . import functions, models, views, general_semantic_score
-from .models import Commit, Comment, Users, Repos, PullRequest
+from .models import Commit, Comment, User, Repository, PullRequest
 import aiohttp
 import asyncio
 import time
@@ -33,13 +33,14 @@ async def get_github_information(response):
                   formatted as HTML for display purposes.
     """
     start_time = time.time() # Variable to check the runtime of the function
-    owner = 'lucidrains'
-    repo = 'PaLM-rlhf-pytorch'
+    #owner = 'lucidrains'
+    #repo = 'PaLM-rlhf-pytorch'
     
-    #repo_url = views.process_vue_POST_request(response)
-    #parsed_variables = views.parse_Github_url_variables(url)
-    #owner = parsed_variables[1]
-    #repo = parsed_variables[2]
+    repo_url = views.process_vue_POST_request(response)
+    parsed_variables = views.parse_Github_url_variables(repo_url)
+    print(parsed_variables)
+    owner = parsed_variables[1]
+    repo = parsed_variables[2]
     
     # NOTE: Personal access token with repo permission turned on IS REQUIRED!
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
@@ -47,12 +48,24 @@ async def get_github_information(response):
     headers = {'Authorization': f'token {personal_access_token}'}
 
     async with aiohttp.ClientSession(headers=headers) as session:
-        repo_db = models.Repos(name = repo,
+        repo_db = models.Repository(name = repo,
                                owner = owner,
-                               url = '',
+                               url = repo_url,
                                updated_at = timezone.now(),
                                token = '')#settings.GITHUB_PERSONAL_ACCESS_TOKEN)
         await sync_to_async(repo_db.save)()
+
+        
+        user, created = await sync_to_async(models.User.objects.update_or_create)(login=owner)
+        # list = user.repositories
+        # print(type(list), "repo")
+        # #list.update({repo_db.name:repo_db.url})
+        # list.append(repo_db.url)
+        # user.repositories = list 
+        # await sync_to_async(user.save)()
+        await update_model_data(user, "repositories", repo_db.url)
+        #await sync_to_async(user.save)()
+
 
         # Results is a list of each page of a repo, each page has multiple pull requests and each pull request have multiple commits and comments
         results = await handle_fetch_requests(session, owner, repo)
@@ -78,29 +91,64 @@ async def get_github_information(response):
 
         # This for loop is only for creating displayable text on a website (not important for loop and can be deleted in end)
         for page in results:
+            pulls = []
             for pr in page:
-                pull_db = models.PullRequest(repo = repo_db,
-                                             url = pr[0]['url'],
-                                             updated_at = timezone.now(),
-                                             date = datetime.strptime(pr[0]['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
-                                             title = pr[0]['title'],
-                                             body = pr[0]['body'],
-                                             user = pr[0]['user']['login'],
-                                             number = pr[0]['number'])
+                # Combine URL and repo checks for update_or_create
+                defaults = {
+                    'updated_at': timezone.now(),
+                    'date': datetime.strptime(pr[0]['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                    'title': pr[0]['title'],
+                    'body': pr[0]['body'],
+                    'user': pr[0]['user']['login'],
+                    'number': pr[0]['number'],
+                }
+
+                pull_db, created = await sync_to_async(models.PullRequest.objects.update_or_create)(
+                    url=pr[0]['url'], repo=repo_db, defaults=defaults
+                )
                 await sync_to_async(pull_db.save)()
+
+                user, created = await sync_to_async(models.User.objects.update_or_create)(login=pull_db.user)
+                # list = user.pull_requests
+                # list.append(pull_db.url)
+                # user.pull_requests = list
+                await update_model_data(user, "pull_requests", pull_db.url)
+                await update_model_data(repo_db, "pull_requests_list", pull_db.url)
+                #await sync_to_async(user.save)()
+
 
                 text_to_display = text_to_display + '<p></b>Information from Pull request:</b> #' + str(pr[0]['number']) + '</p>------------------------------'
                 for commit in pr[1]:
                     commit_semantic_score = general_semantic_score.calculate_weighted_commit_semantic_score(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
-                    commit_db = models.Commit(pull_request = pull_db,
-                                            name = commit['commit']['message'],
-                                            url = commit['commit']['url'],
-                                            title = commit['commit']['message'],
-                                            user = commit['author']['login'],
-                                            date = datetime.strptime(commit['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
-                                            semantic_score = commit_semantic_score,
-                                            updated_at = timezone.now())
+
+
+                    defaults = {
+                        "name": commit['commit']['message'],
+                        "title": commit['commit']['message'],
+                        "user": commit['author']['login'],
+                        "date": datetime.strptime(commit['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                        "semantic_score": commit_semantic_score,
+                        "updated_at": timezone.now(),
+                    }
+                    # commit_db = models.Commit(pull_request = pull_db,
+                    #                         name = commit['commit']['message'],
+                    #                         url = commit['commit']['url'],
+                    #                         title = commit['commit']['message'],
+                    #                         user = commit['author']['login'],
+                    #                         date = datetime.strptime(commit['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                    #                         semantic_score = commit_semantic_score,
+                    #                         updated_at = timezone.now())
+                    
+                    commit_db,created = await sync_to_async(models.Commit.objects.update_or_create)(url = commit['commit']['url'], pull_request = pull_db, defaults= defaults )
                     await sync_to_async(commit_db.save)()
+
+                    user, created = await sync_to_async(models.User.objects.update_or_create)(login=commit_db.user)
+                    await update_model_data(user, "commits", commit_db.url)
+                    # list = user.commits
+                    # list.append(commit_db.url)
+                    # user.commits = list
+                    #await sync_to_async(user.save)()
+
 
                     text_to_display += f"<p><b>Author</b>: {commit['author']['login'] if commit['author'] else 'Unknown'}</p>"
                     text_to_display += f"<p><b>Date</b>: {commit['commit']['author']['date']}</p>"
@@ -108,14 +156,32 @@ async def get_github_information(response):
                     text_to_display += '<p>----------------------------</p>'
                 for comment in pr[2]:
                     comment_semantic_score = general_semantic_score.calculate_weighted_comment_semantic_score(comment['body'], 0.5, 0.5)
-                    comment_db = models.Comment(pull_request = pull_db,
-                                                url = comment['url'],
-                                                date = datetime.strptime(comment['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
-                                                updated_at = timezone.now(),
-                                                body = comment['body'],
-                                                user = comment['user']['login'],
-                                                semantic_score = comment_semantic_score)
+
+                    defaults = {
+                        "date": datetime.strptime(comment['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                        "updated_at": timezone.now(),
+                        "body": comment['body'],
+                        "user": comment['user']['login'],
+                        "semantic_score": comment_semantic_score
+                    }
+                    # comment_db = models.Comment(pull_request = pull_db,
+                    #                             url = comment['url'],
+                    #                             date = datetime.strptime(comment['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                    #                             updated_at = timezone.now(),
+                    #                             body = comment['body'],
+                    #                             user = comment['user']['login'],
+                    #                             semantic_score = comment_semantic_score)
+                    comment_db, created = await sync_to_async(models.Comment.objects.update_or_create)(url = comment['url'],pull_request = pull_db, defaults=defaults)
                     await sync_to_async(comment_db.save)()
+
+                    user, created = await sync_to_async(models.User.objects.update_or_create)(login=comment_db.user)
+                    await update_model_data(user, "comments", comment_db.url)
+                    # list = user.comments
+                    # list.append(comment_db.url)
+                    # user.comments = list
+                    #await sync_to_async(user.save)()
+
+
 
                     text_to_display += f"</b>Type of comment:</b> {comment['comment_type']}</p>"
                     if 'body' in comment and comment['body']:  
@@ -132,6 +198,17 @@ async def get_github_information(response):
 
         # Return JsonResponse to frontend (return can eventually be deleted/reformed)
         return JsonResponse(text_to_display, safe=False)
+
+
+async def update_model_data(model, related_data_field, related_data_url):
+    print(related_data_field)
+    current = getattr(model, related_data_field)
+    current.append(related_data_url)
+    print(current)
+    setattr(model, related_data_field, current)  # Use set union for unique values
+    await sync_to_async(model.save)()
+    #return model
+
 
 
 async def handle_fetch_requests(session, owner, repo):
@@ -228,7 +305,9 @@ async def fetch_commits(session, pull_request):
     list: A list of commits for the pull request.
     """
     # Construct the URL to fetch the commit information from GitHub
+    #print(pull_request)
     pull_request_commits_url = pull_request['commits_url'].replace("{/sha}", "")
+    
 
     # Fetch commits asynchronously
     async with session.get(pull_request_commits_url) as response:

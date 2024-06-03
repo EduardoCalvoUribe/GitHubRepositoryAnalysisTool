@@ -1,43 +1,60 @@
 <template>
-  <div>
-    <header>
-      <router-link :to="`/repoinfo/${repositoryId}`">Repository Information</router-link>
-      <router-link style="margin-left: 2%" to="/prpage">Pull Requests</router-link>
-      <router-link style="margin-left: 2%" to="/commitpage">Commits</router-link>
-      <router-link style="margin-left: 2%" to="/commentpage">Comments</router-link>
-    </header>
+  <header>
+    <router-link :to="`/repoinfo/${repositoryId}`">Repository Information</router-link>
+    <router-link style="margin-left: 2%" to="/prpage">Pull Requests</router-link>
+    <router-link style="margin-left: 2%" to="/commitpage">Commits</router-link>
+    <router-link style="margin-left: 2%" to="/commentpage">Comments</router-link>
+  </header>
 
-    <router-view />
+  <router-view />
 
-    <header>
-      <div style="font-size: 180%; margin-top: 30px;">
-        Pull Request Page
-      </div>
-    </header>
-    <div style="font-size: 100%; color: grey; margin-bottom: 20px;">
-      This is the pull request information.
+  <header>
+    <div v-if="pullpackage" style="font-size: 180%; margin-top: 30px;">
+      {{ pullpackage.title }}
     </div>
+  </header>
 
-    <div class="grid-container" v-for="pullitem in pullitems" :key="pullitem.id">
-      <div class="grid-item" v-for="item in items" :key="item.id">
-        {{ item.text }}
-      </div>
+  <div class="grid-container" v-for="pullitem in pullitems" :key="pullitem.id">
+    <div class="grid-item" v-for="item in items" :key="item.id">
+      {{ item.text }}
     </div>
   </div>
 </template>
 
 <script>
+import { ref, onMounted } from 'vue';
 import fakejson from '../test.json';
 import { useRoute } from 'vue-router';
+import { state } from '../repoPackage.js';
 
 export default {
   setup() {
     const route = useRoute();
-    const data = { id: route.params.id };
-    console.log('Route data:', data);
+    const pullpackage = ref(null);
+
+    onMounted(async () => {
+      console.log('onMounted');
+      console.log(state.githubResponse);
+      if (state.githubResponse) {
+        console.log('in if');
+        for (let i=0; i < state.githubResponse.Repo.pull_requests.length - 1; i++) {
+          if (state.githubResponse.Repo.pull_requests[i].number == route.params.id) {
+            pullpackage.value = state.githubResponse.Repo.pull_requests[i];
+          }
+        }
+        console.log(pullpackage.value);
+      }
+      if (pullpackage.value) {
+        console.log(pullpackage.value.title)
+      } else {
+        console.log('failure')
+      }
+    });
 
     return {
-      data,
+
+      state,
+      pullpackage,
     };
   },
 

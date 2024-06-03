@@ -15,16 +15,16 @@ urlpatterns = [
     path('testUser/', views.testUser, name='testUser'), #URL for displaying testUser function. 
     #path('items/', ItemListCreateView.as_view(), name='item-list-create'), #for listing all items we can send to the frontend
     path('postRequest/',views.process_vue_POST_request,name='process-POST-request'), #URL handle for parsing POST request data 
-    path('nlp/',FleschReadingEase.calculate_flesch_reading_ease,name='nlp'), #URL handle for parsing POST request data
+    path('nlp/',FleschReadingEase.calculateFleschReadingEase,name='nlp'), #URL handle for parsing POST request data
     path('comments/', comment_info.comment_visual, name ='comments'),
     path('all/', API_call_information.get_github_information, name = 'all'),
     path('database/', views.frontendInfo, name = 'database'),
     path('delete/', views.delete_entry_db, name = 'delete'),
-    path('semantic',general_semantic_score.displaySemantic, name = 'semantic'),
-    path('commentList',general_semantic_score.get_comments, name = 'commentList'),
+    path('semantic',general_semantic_score.display_semantic, name = 'semantic'), 
     path('databaseprint/', functions.show_database, name = 'datbaseshow'),
     path('help/',views.save_comment_view, name = 'help'),
     path('deleteAll', views.delete_all_records, name = 'deleteAll'),
-    path('package', views.repo_frontend_info, name = 'frontend_info')
+    path('package', views.repo_frontend_info, name = 'frontend_info'),
+    path('home', views.homepage_datapackage, name = 'homepage_datapackage')
 ]
     

@@ -8,8 +8,8 @@ import re
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
-from .models import Users
-from .models import Repos, PullRequest, Commit
+from .models import User
+from .models import Repository, PullRequest, Commit
 from . import functions
 # from .serializers import ItemSerializer
 from django.views.decorators.csrf import csrf_exempt
@@ -17,11 +17,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from .models import Comment
 from datetime import date
+from collections import OrderedDict
 
 # API call to https://api.github.com/user endpoint
 def github_user_info(request):
     json_response = functions.get_api_reponse('https://api.github.com/user').json()
-    Users.save_user_to_db(json_response)
+    User.save_user_to_db(json_response)
     return JsonResponse(json_response)
 
 # API call to https://api.github.com/user endpoint
@@ -31,7 +32,7 @@ def github_repo_info(request):
     try:
         api_response = functions.get_api_reponse(api_url)
         pull_requests = api_response.json()
-        Repos.save_repo_to_db(pull_requests)
+        Repository.save_repo_to_db(pull_requests)
         return JsonResponse({'pull_requests': pull_requests})
 
     except requests.RequestException as e:
@@ -125,12 +126,12 @@ def testUser(request):
     
 # list all save users
 def load_users(request):
-        data = list(Users.objects.values())
+        data = list(User.objects.values())
         return JsonResponse({'users': data})
 
 # list all saved repositories
 def load_repos(request):
-        data = list(Repos.objects.values())
+        data = list(Repository.objects.values())
         return JsonResponse({'repositories': data})
     
 
@@ -150,8 +151,9 @@ def parse_Github_url_variables(url):
   filtered_url = re.sub(r'https?://(www\.)?', '', url)
   parsed_url = filtered_url.split('/')
 
+  return parsed_url
   
-  if parsed_url[0] != 'api.github.com':
+  if parsed_url[0] != 'github.com':
     return ['URL is not a Github URL']
   else:
     return parsed_url
@@ -201,7 +203,10 @@ def delete_entry_db(request):
     # extract id from POST request
     id = process_vue_POST_request(request)
     # delete repodata corresponding to id from database
-    Repos.objects.filter(id=id).delete()
+    repository = Repository.objects.filter(id=id)
+    repository.delete()
+    
+    
     return JsonResponse(id, safe=False)
 
 
@@ -234,8 +239,8 @@ def save_comment_view(request):
 # Function to delete all items from database
 def delete_all_records(request):
     try:
-        Users.objects.all().delete()
-        Repos.objects.all().delete()
+        User.objects.all().delete()
+        Repository.objects.all().delete()
         PullRequest.objects.all().delete()
         Commit.objects.all().delete()
         Comment.objects.all().delete()
@@ -246,33 +251,52 @@ def delete_all_records(request):
 # Function to send a package of all repo information to the frontend
 @csrf_exempt
 def repo_frontend_info(request):
-    repo_name = 'PaLM-rlhf-pytorch'
+    if request.method == 'POST':
+        # Get the request body as a string
+        request_body = request.body.decode('utf-8')
+        # Try to parse the JSON data
+        try:
+            # Option 1: Using a dictionary (recommended)
+            print(request_body)
+            print("huh")
+            data = json.loads(request_body)
+            #url = data.get('url')  # Use get() for optional retrieval
+            url = data['url']
+        except json.JSONDecodeError:
+            print("Error")
+    print("fetching!")
     try:
-        repo = Repos.objects.get(name=repo_name)
-        pull_requests = repo.pull_requests.all()
-        
+    # Get the repository by URL (using get() for single object retrieval)
+        repo = Repository.objects.get(url=url)
+    except Repository.DoesNotExist:
+    # Handle repository not found (e.g., return a not found response)
+        return JsonResponse({'error': 'Repository not found'}, status=404)
+
+    try:
+            # Prepare the response data with nested pull request details
         data = {
             "Repo": {
-                "name": repo.name,
-                "url": repo.url,
-                "updated_at": repo.updated_at,
-                "pull_requests": []
+            "name": repo.name,
+            "url": repo.url,
+            "updated_at": repo.updated_at,
+            "pull_requests": [],
             }
         }
-        
+
+        pull_requests = repo.pull_requests.all()
         for pr in pull_requests:
             pr_data = {
-                "url": pr.url,
-                "updated_at": pr.updated_at,
-                "date": pr.date,
-                "title": pr.title,
-                "body": pr.body,
-                "user": pr.user,
-                "number": pr.number,
-                "commits": [],
-                "comments": []
+            "url": pr.url,
+            "updated_at": pr.updated_at,
+            "date": pr.date,
+            "title": pr.title,
+            "body": pr.body,
+            "user": pr.user,
+            "number": pr.number,
+            "commits": [],
+            "comments": [],
             }
-            
+
             for commit in pr.commits.all():
                 commit_data = {
                     "name": commit.name,
@@ -284,7 +308,7 @@ def repo_frontend_info(request):
                     "updated_at": commit.updated_at,
                 }
                 pr_data["commits"].append(commit_data)
-            
+
             for comment in pr.comments.all():
                 comment_data = {
                     "url": comment.url,
@@ -295,11 +319,33 @@ def repo_frontend_info(request):
                     "updated_at": comment.updated_at,
                 }
                 pr_data["comments"].append(comment_data)
-            
+
             data["Repo"]["pull_requests"].append(pr_data)
-        
+        print("sending")
         return JsonResponse(data)
-    except Repos.DoesNotExist:
+    except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
+#Create a data package that is used by the frontend to show on the frontend
+def homepage_datapackage(request):
+    try:
+        #We import all the repositories from the database
+        repos = Repository.objects.all()
+        print(repos)
+
+        # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
+        unique_repos = list(OrderedDict((repo.id, {
+            "name": repo.name,
+            "id": repo.id,
+            "url": repo.url,
+            "updated_at": repo.updated_at,
+        }) for repo in repos).values())
+        print(unique_repos)
+
+        # The Repos is a list that has name & updated_at as values
+        data = {"Repos" : unique_repos}
+        return JsonResponse(data)
+    except Repository.DoesNotExist:
+        return JsonResponse({"error": "Repository not found"}, status=404)
