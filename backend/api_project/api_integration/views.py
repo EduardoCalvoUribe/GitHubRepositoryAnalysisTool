@@ -10,9 +10,11 @@ from django.http import JsonResponse
 from rest_framework import generics
 from .models import User
 from .models import Repository, PullRequest, Commit
-from . import functions
+from . import functions, API_call_information
 # from .serializers import ItemSerializer
 from django.views.decorators.csrf import csrf_exempt
+import aiohttp
+import asyncio
 
 from django.http import JsonResponse
 from .models import Comment
@@ -349,3 +351,23 @@ def homepage_datapackage(request):
         return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
+    
+async def comment_test(request):
+    owner = "IntersectMBO"
+    repo = "plutus"
+    pull_number = "4733"
+
+    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
+    # Headers for the API request
+    headers = {'Authorization': f'token {personal_access_token}'}
+    async with aiohttp.ClientSession(headers=headers) as session:
+        pr_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}"
+        async with session.get(pr_url) as response:
+            # Convert the response in a JSON response
+            pull_request = await response.json()
+            comments = await API_call_information.fetch_comments(session, pull_request)
+            comment_counter = 0
+            for comment in comments:
+                comment_counter += 1
+        
+        return JsonResponse(str(comment_counter), safe=False)
