@@ -1,3 +1,5 @@
-import { ref } from 'vue';
+import { reactive } from 'vue';
 
-export const githubResponse = ref(null);
+export const state = reactive({
+  githubResponse: null,
+});

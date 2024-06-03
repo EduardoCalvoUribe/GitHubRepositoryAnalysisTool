@@ -9,12 +9,6 @@
   <router-view />
 
   <header>
-    <div style="font-size: 180%; margin-top: 30px;">
-      Pull Request Information
-    </div>
-  </header>
-
-  <header>
     <div v-if="pullpackage" style="font-size: 180%; margin-top: 30px;">
       {{ pullpackage.title }}
     </div>
@@ -31,36 +25,35 @@
 import { ref, onMounted } from 'vue';
 import fakejson from '../test.json';
 import { useRoute } from 'vue-router';
-import { githubResponse } from '../repoPackage.js';
+import { state } from '../repoPackage.js';
 
 export default {
   setup() {
     const route = useRoute();
-    const data = {'id': route.params.id};
     const pullpackage = ref(null);
 
     onMounted(async () => {
-    if (githubResponse.value) {
-      for (let i=0; i < githubResponse.value.Repo.pull_requests.length - 1; i++) {
-        if (githubResponse.value.Repo.pull_requests[i].number == data) {
-          pullpackage.value = githubResponse.value.Repo.pull_requests[i];
+      console.log('onMounted');
+      console.log(state.githubResponse);
+      if (state.githubResponse) {
+        console.log('in if');
+        for (let i=0; i < state.githubResponse.Repo.pull_requests.length - 1; i++) {
+          if (state.githubResponse.Repo.pull_requests[i].number == route.params.id) {
+            pullpackage.value = state.githubResponse.Repo.pull_requests[i];
+          }
         }
+        console.log(pullpackage.value);
       }
-    }
-    if (pullpackage.value) {
-      console.log(pullpackage.value.title)
-    } else {
-      console.log('failure')
-    }
-    
-
-
+      if (pullpackage.value) {
+        console.log(pullpackage.value.title)
+      } else {
+        console.log('failure')
+      }
     });
-
 
     return {
       data,
-      githubResponse,
+      state,
       pullpackage,
     };
   },

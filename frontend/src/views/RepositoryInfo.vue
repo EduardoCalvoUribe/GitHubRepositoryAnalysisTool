@@ -7,8 +7,8 @@
   </header>
 
   <header>
-    <div v-if="githubResponse" style="font-size: 180%; margin-top: 30px;">
-      {{ githubResponse.Repo.name }}
+    <div v-if="state.githubResponse" style="font-size: 180%; margin-top: 30px;">
+      {{ state.githubResponse.Repo.name }}
     </div>
   </header>
 
@@ -34,19 +34,19 @@
     <pre v-if="githubResponse">{{ githubResponse }}</pre>
   </div> -->
 
-  <div v-if="githubResponse">
+  <div v-if="state.githubResponse">
     <!-- Display repository name -->
-    <div>Repository Name: {{ githubResponse.Repo.name }}</div>
+    <div>Repository Name: {{ state.githubResponse.Repo.name }}</div>
 
     <!-- Display URL -->
-    <div>URL: {{ githubResponse.Repo.url }}</div>
+    <div>URL: {{ state.githubResponse.Repo.url }}</div>
 
     <!-- Display last updated time -->
-    <div>Last Updated: {{ githubResponse.Repo.updated_at }}</div>
+    <div>Last Updated: {{ state.githubResponse.Repo.updated_at }}</div>
 
     <!-- Display pull requests -->
-    <div v-if="githubResponse.Repo.pull_requests.length > 0">
-      <div v-for="pullRequest in githubResponse.Repo.pull_requests" :key="pullRequest.number">
+    <div v-if="state.githubResponse.Repo.pull_requests.length > 0">
+      <div v-for="pullRequest in state.githubResponse.Repo.pull_requests" :key="pullRequest.number">
         <div>Pull Request Title: {{ pullRequest.title }}</div>
         <div>Author: {{ pullRequest.user }}</div>
         <!-- Add more properties as needed -->
@@ -60,7 +60,7 @@
         <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
         <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
       </div>
-      <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && githubResponse" style=" display: flex; justify-content: center;">
+      <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && state.githubResponse" style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
           <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
@@ -72,10 +72,10 @@
           </div>
         </div>
       </div>
-      <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && githubResponse" style=" display: flex; justify-content: center;">
+      <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse" style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
           <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
-          <div id="users" class="row" v-for="pullrequest in githubResponse.Repo.pull_requests">
+          <div id="users" class="row" v-for="pullrequest in state.githubResponse.Repo.pull_requests">
             <router-link :to="{ path: '/userpage' }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
                 <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
@@ -97,7 +97,7 @@ import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import { fetchData } from '../fetchData.js'
 import { useRoute } from 'vue-router';
-// import { githubResponse } from '../repoPackage.js';
+import { state } from '../repoPackage.js';
 import fakejson from '../test.json';
 import BarChart from '../components/BarChart.vue';
 import Dropdown from 'primevue/dropdown';
@@ -115,7 +115,7 @@ export default {
 
   setup() {
     const route = useRoute(); // allows for passage of variables from homepage to current page
-    const githubResponse = ref(null);
+    // const githubResponse = ref(null);
     //const repoUrl = ({'url': decodeURIComponent(route.params.url)}).url;
     // console.log(repoUrl, "url?")
     // const postOptions = { // defines how data is sent to backend, POST request in this case
@@ -153,8 +153,8 @@ export default {
       try {      
           const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
           // console.log("received")
-          githubResponse.value = response;
-          console.log(githubResponse)
+          state.githubResponse = response;
+          console.log(state.githubResponse);
       } catch (error) {
           console.error('Error:', error);
       }
@@ -162,9 +162,11 @@ export default {
     const sortListsDate = (list, choice) => {
       if (choice.name == 'Date Oldest to Newest') {
         const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
+        console.log(list);
         return sorted_list;
       } else {
         const sorted_list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
+        console.log(list);
         return sorted_list;
       }
     };
@@ -179,16 +181,16 @@ export default {
       }
     };
     const sortedPullRequests = computed(() => {
-      if (!githubResponse.value) return [];
+      if (!state.githubResponse) return [];
       else if (selectedSort.value.name.includes('Date')) {
-        return sortListsDate(githubResponse.value.Repo.pull_requests, selectedSort.value);
+        return sortListsDate(state.githubResponse.Repo.pull_requests, selectedSort.value);
       } else {
-        return sortListsScore(githubResponse.value.Repo.pull_requests, selectedSort.value);
+        return sortListsScore(state.githubResponse.Repo.pull_requests, selectedSort.value);
       }
     });
     // console.log(githubResponse, "hey")
     return {
-      githubResponse,
+      state,
       sortedPullRequests,
       selectedSort,
       sorts,
