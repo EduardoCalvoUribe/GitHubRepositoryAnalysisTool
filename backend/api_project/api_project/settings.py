@@ -43,7 +43,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crontab',
     'corsheaders',
+]
+
+CRONJOBS = [
+('*/5 * * * *', 'your_app_name.your_cron_job_function'),
+#Add other cron jobs as needed  
 ]
 
 MIDDLEWARE = [
