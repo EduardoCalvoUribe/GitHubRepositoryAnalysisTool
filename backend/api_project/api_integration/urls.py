@@ -1,5 +1,5 @@
 from django.urls import path, include
-from . import views, comment_info, API_call_information, functions, general_semantic_score
+from . import views, comment_info, API_call_information, functions, general_semantic_score, commit_info
 
 
 # importing nlp_functions to test function output on webpage. 
@@ -25,6 +25,8 @@ urlpatterns = [
     path('help/',views.save_comment_view, name = 'help'),
     path('deleteAll', views.delete_all_records, name = 'deleteAll'),
     path('package', views.repo_frontend_info, name = 'frontend_info'),
-    path('home', views.homepage_datapackage, name = 'homepage_datapackage')
+    path('home', views.homepage_datapackage, name = 'homepage_datapackage'),
+    path('testCommentJSON/',comment_info.printCommentCountJSON,name = 'testCommentJSON'), #URL handle for printing combined JSON package
+    path('testCommitJSON/',commit_info.printCommitCountJSON, name = 'testCommitJSON')
 ]
     
