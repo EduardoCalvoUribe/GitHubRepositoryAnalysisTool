@@ -13,30 +13,43 @@
       {{ pullpackage.title }}
     </div>
   </header>
+
+  <div v-if="pullpackage" style=" display: flex; justify-content: center;">
+    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+      <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="commits">Commits:</label>
+      <div id="commits" class="row" v-for="commit in pullpackage.commits">
+        <router-link :to="{ path: '/commitpage' }"><button class="button-6">
+            <span><h2 style="margin-left: 0.3rem;">{{ commit.title }}</h2></span>
+            <span class="last-accessed">Author: {{ commit.user }}</span>
+            <span class="last-accessed">Date: {{ commit.date }}</span>
+        </button></router-link>
+      </div>
+    </div>
+  </div>
   
   <div v-if="pullpackage">
     <body>
       This is a pull request by {{ pullpackage.user }} created on {{ pullpackage.date }}. 
-    <div class="grid-container">
-    <div class ="grid-item">
-      <body>  
-      Commit title: {{ pullpackage.commits[0].title }}
-      <div>
-        User: {{ pullpackage.commits[0].user }}
+      <div class="grid-container">
+      <div class="grid-item">
+        <body>  
+        Commit title: {{ pullpackage.commits[0].title }}
+        <div>
+          User: {{ pullpackage.commits[0].user }}
+        </div>
+        <div>
+          Date: {{ pullpackage.commits[0].date }}
+        </div>
+        <div>
+          Semantic Score: {{ pullpackage.commits[0].semantic_score }}
+        </div>
+        <div>
+          Updated at: {{ pullpackage.commits[0].updated_at }}
+        </div>
+      </body>
       </div>
-      <div>
-        Date: {{ pullpackage.commits[0].date }}
-      </div>
-      <div>
-        Semantic Score: {{ pullpackage.commits[0].semantic_score }}
-      </div>
-      <div>
-        Updated at: {{ pullpackage.commits[0].updated_at }}
       </div>
     </body>
-    </div>
-  </div>
-  </body>
   </div>
 
 
@@ -79,7 +92,6 @@ export default {
     });
 
     return {
-
       state,
       pullpackage,
     };
