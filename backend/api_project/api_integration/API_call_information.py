@@ -121,7 +121,6 @@ async def get_github_information(response):
                 for commit in pr[1]:
                     commit_semantic_score = general_semantic_score.calculate_weighted_commit_semantic_score(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
 
-
                     defaults = {
                         "name": commit['commit']['message'],
                         "title": commit['commit']['message'],
@@ -371,7 +370,8 @@ async def fetch_comments(session, pull_request):
         """
         # Get all pagination urls to be able to get all comments
         comment_page_urls = await get_all_page_urls(session, comment_url)
-
+        print("helloooo")
+        print(comment_page_urls)
         # Create tasks to process each comment page concurrently
         comment_tasks = [asyncio.create_task(fetch_comment_page(session, url)) for url in comment_page_urls]
         # Wait until all tasks are complete
@@ -382,7 +382,7 @@ async def fetch_comments(session, pull_request):
             for comment in page:
                 comment['comment_type'] = type
                 all_comments.append(comment)
-
+                print("doeii")
                 if type == 'review API':
                     pr_nested_comment_url = pr_comments_reviews_url + f"/{comment['id']}/comments"
                     task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, type, session))
@@ -411,9 +411,13 @@ async def fetch_comment_page(session, url):
     try:
         async with session.get(url) as response:
             # Ensure that the response is succesful
+            print("helppp")
+            print(response)
             response.raise_for_status()
+            print(response)
             # Create json object from response
             comments = await response.json()
+            print(comments)
             # Return all comments on a single page
             return comments
     except aiohttp.ClientError as e:
@@ -452,7 +456,7 @@ async def get_all_page_urls(session, pr_url):
                 total_pages = get_page_number_from_url(last_page_url)
 
     # Construct all page URLs concurrently by appending page numbers to the API call URL
-    all_page_urls = [f'{pr_url}&page={page}' for page in range(1, total_pages + 1)]
+    all_page_urls = [f'{pr_url}?page={page}' for page in range(1, total_pages + 1)]
     return all_page_urls
 
 def get_page_number_from_url(url):

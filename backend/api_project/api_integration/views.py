@@ -399,3 +399,22 @@ async def comment_test(request):
                 comment_counter += 1
         
         return JsonResponse(str(comment_counter), safe=False)
+    
+# Helper function that parses Github URLs into a list of variables
+# Assuming that Github URLs always follow the same pattern, i.e. https://gihtub.com/[username]/[repo_name]/etc...
+# Returns a list of variables if the provided URL was a Github URL
+def parse_Github_url_variables(url):
+  # Indicate empty URL if url is empty
+  if not url:
+    return ['empty URL']
+
+  # Filter out www, http and https from URL
+  filtered_url = re.sub(r'https?://(www\.)?', '', url)
+  parsed_url = filtered_url.split('/')
+
+  return parsed_url
+  
+  if parsed_url[0] != 'github.com':
+    return ['URL is not a Github URL']
+  else:
+    return parsed_url
