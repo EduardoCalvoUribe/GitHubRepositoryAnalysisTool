@@ -307,7 +307,6 @@ async def fetch_commits(session, pull_request):
     # Construct the URL to fetch the commit information from GitHub
     #print(pull_request)
     pull_request_commits_url = pull_request['commits_url'].replace("{/sha}", "")
-    
 
     # Fetch commits asynchronously
     async with session.get(pull_request_commits_url) as response:
