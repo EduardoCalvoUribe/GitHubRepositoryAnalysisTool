@@ -1,5 +1,5 @@
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { fetchData } from '../fetchData.js'
 
 export default {
@@ -30,6 +30,12 @@ export default {
     //     },
     // ]);
 
+    const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
+    const sorts = [ // different possible sort options
+        { name: 'Date Oldest to Newest' },
+        { name: 'Date Newest to Oldest' },
+    ];
+
     onMounted(async () => {
       try {
         const info = await fetchData('http://127.0.0.1:8000/home'); // Insert correct endpoint here.
@@ -41,16 +47,34 @@ export default {
       }
     });
 
-    return { repoInfo }; // allows for repoInfo to be used in the template of this file
+    const sortListsDate = (list, choice) => {
+      if (choice.name == 'Date Oldest to Newest') {
+        // const sorted_list = list.sort((a,b) => new Date(a.updated_at) - new Date(b.updated_at));
+        const sorted_list = Object.fromEntries(Object.entries(list).sort(([,a],[,b]) => a - b));
+        console.log(sorted_list);
+        return sorted_list;
+      } else {
+        // const sorted_list = list.sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at));
+        const sorted_list = Object.fromEntries(Object.entries(list).sort(([,a],[,b]) => b - a));
+        return sorted_list;
+      }
+    };
+
+    const sortedRepos = computed(() => {
+      if (!repoInfo.value) return [];
+      else return sortListsDate(repoInfo.value, selectedSort.value);
+    });
+
+    return { 
+      repoInfo, // allows for repoInfo to be used in the template of this file
+      sortedRepos,
+      selectedSort,
+      sorts
+    }; 
   },
   data() {
     return {
       invalidInput: false, // set to false by default so false message is not displayed constantly
-      selectedSort: null, // sort option user selects from dropdown menu, default set to newest to oldest?
-      sorts: [ // different possible sort options
-        { name: 'Date Oldest to Newest' },
-        { name: 'Date Newest to Oldest' },
-      ],
     }
   },
   methods: {
@@ -61,6 +85,7 @@ export default {
     },
 
     async handleGithubURLSubmit(inputUrl) {
+      console.log('entered function');
       this.invalidInput = false; // sets variable invalidInput to false so that false message is not displayed
       if (!(await this.checkInput(inputUrl))) { // checks if input url from user is valid Github repo url
         this.invalidInput = true; // if input is not valid invalidInput is set to false so false message can be displayed
@@ -78,11 +103,17 @@ export default {
       };
 
       try {
+          console.log('entered try');
           const response = await fetchData('http://127.0.0.1:8000/all/', postOptions); // send repo url to get github information function through 'all' path
-          window.location.reload(); // reload page
+          if (response) {
+            console.log('reload')
+            location.reload();
+          }
       } catch (error) {
           console.error('Error:', error);
       }
+      // window.location.reload();
+      // this.$router.push({ path: this.$route.path })
     },
 
     async handleDeleteRequest(repo) {

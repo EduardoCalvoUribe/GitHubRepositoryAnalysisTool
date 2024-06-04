@@ -305,16 +305,40 @@ async def fetch_commits(session, pull_request):
     list: A list of commits for the pull request.
     """
     # Construct the URL to fetch the commit information from GitHub
-    #print(pull_request)
     pull_request_commits_url = pull_request['commits_url'].replace("{/sha}", "")
 
-    # Fetch commits asynchronously
-    async with session.get(pull_request_commits_url) as response:
-        # Convert the response in a JSON response
-        pr_commits = await response.json()
+    # Get all pagination urls to be able to get all commits
+    all_commit_urls = await get_all_page_urls(session, pull_request_commits_url)
 
-        # Return the list of commits  
-        return pr_commits
+    # Create tasks to process each page concurrently
+    tasks = [asyncio.create_task(fetch_commit_page(session, url)) for url in all_commit_urls]
+    
+    # Wait until all tasks are complete
+    commit_pages = await asyncio.gather(*tasks)
+
+    # Flatten the results list to get a list with all commits
+    pr_commits = [commit for page in commit_pages for commit in page]
+
+    # Return the list of commits
+    return pr_commits
+    
+async def fetch_commit_page(session, url):
+    """
+    Fetches a single page of commits asynchronously.
+
+    Parameters:
+    session (aiohttp.ClientSession): The asynchronous session with the authentication headers included.
+    url (str): The URL to fetch commits from.
+
+    Returns:
+    list: A list of commits for the given page.
+    """
+    async with session.get(url) as response:
+        # Convert the response to a JSON object
+        commits = await response.json()
+
+        # Return the commits on one page
+        return commits
 
 async def fetch_comments(session, pull_request):
     """
@@ -345,25 +369,24 @@ async def fetch_comments(session, pull_request):
         type (str): The type of the comment (review, comment, or issue).
         session (aiohttp.ClientSession): The asynchronous session with the authentication headers included.
         """
-        # Make API request to specified url
-        async with session.get(comment_url) as response:
-            # Because of recursion, check if API request actually gets a correct response
-            if response.status == 200:
-                # Format response to JSON
-                comments = await response.json()
-                # Loop through all comments in JSON response
-                for comment in comments:
-                    # Actually do not know whether the type of the comment is still important. Used it once but changes some things
-                    comment['comment_type'] = type
-                    if 'body' in comment and comment['body']:
-                        all_comments.append(comment)
-                    
-                    if type == 'review API':
-                        # Creating a new link to get comments of a review (nested comments)
-                        pr_nested_comment_url = pr_comments_reviews_url + f"/{comment['id']}/comments"
-                        # Create tasks to get nested comments concurrently
-                        task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, type, session))
-                        tasks.append(task)
+        # Get all pagination urls to be able to get all comments
+        comment_page_urls = await get_all_page_urls(session, comment_url)
+
+        # Create tasks to process each comment page concurrently
+        comment_tasks = [asyncio.create_task(fetch_comment_page(session, url)) for url in comment_page_urls]
+        # Wait until all tasks are complete
+        comment_pages = await asyncio.gather(*comment_tasks)
+
+        # Iterate over each response and add comments to the list
+        for page in comment_pages:
+            for comment in page:
+                comment['comment_type'] = type
+                all_comments.append(comment)
+
+                if type == 'review API':
+                    pr_nested_comment_url = pr_comments_reviews_url + f"/{comment['id']}/comments"
+                    task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, type, session))
+                    tasks.append(task)
 
     # Retrieve comments from the reviews URL
     # This ensures that all review comments are added to all_comments.
@@ -372,6 +395,30 @@ async def fetch_comments(session, pull_request):
 
     # Return list containing all comments
     return all_comments
+
+async def fetch_comment_page(session, url):
+    """
+    Fetches a page of comments for a given URL.
+
+    Parameters:
+    session (aiohttp.ClientSession): The asynchronous session with the authentication headers included.
+    url (str): The URL to fetch comments from.
+
+    Returns:
+    dict: JSON response containing comments.
+    """
+    # Make a GET request to the provided URL to fetch comments
+    try:
+        async with session.get(url) as response:
+            # Ensure that the response is succesful
+            response.raise_for_status()
+            # Create json object from response
+            comments = await response.json()
+            # Return all comments on a single page
+            return comments
+    except aiohttp.ClientError as e:
+        return []
+
 
 
 
