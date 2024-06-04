@@ -82,13 +82,7 @@ async def comment_visual(response):
                 created_at = datetime.strptime(comment.get('created_at', ''), '%Y-%m-%dT%H:%M:%SZ').date() if comment.get('created_at') else date.today()
                 updated_at = datetime.strptime(comment.get('updated_at', ''), '%Y-%m-%dT%H:%M:%SZ') if comment.get('updated_at') else timezone.now()
 
-                comment_type=None
-                if 'comment_type' in comment:
-                    cmnt_type=comment.get('comment_type','')
-                cmt_id=None
-                if comment_type is 'review comment':
-                    cmt_id=comment.get('commit_id', '')
-
+                
                 try:
                         # Save comment to database asynchronously with database transaction
                         await sync_to_async(transaction.atomic)()
@@ -101,9 +95,7 @@ async def comment_visual(response):
                             updated_at=updated_at, # Date at which comment has been updated
                             body=comment_text_body, # Text content of comment
                             user=comment.get('user', {}).get('login', ''), # User associated with comment
-                            semantic_score=semantic_score, # Semantic score associated with comment
-                            comment_type=cmnt_type,
-                            commit_id=cmt_id
+                            semantic_score=semantic_score # Semantic score associated with comment
                         )
 
                         # Save comment along with relevant metadata to the database

@@ -19,7 +19,7 @@ import asyncio
 
 from django.http import JsonResponse
 from .models import Comment
-from datetime import date, datetime
+from datetime import date
 from collections import OrderedDict
 
 # # Helper function which loads in the JSON response from
@@ -288,8 +288,6 @@ def repo_frontend_info(request):
             data = json.loads(request_body)
             #url = data.get('url')  # Use get() for optional retrieval
             url = data['url']
-            dates = data['date']
-            begin_date, end_date = date_range(dates)
         except json.JSONDecodeError:
             print("Error")
     print("fetching!")
@@ -311,7 +309,7 @@ def repo_frontend_info(request):
             }
         }
 
-        pull_requests = repo.pull_requests.filter(date__lte=end_date, closed_at__gte=begin_date)
+        pull_requests = repo.pull_requests.all()
         for pr in pull_requests:
             pr_data = {
             "url": pr.url,
@@ -321,7 +319,6 @@ def repo_frontend_info(request):
             "body": pr.body,
             "user": pr.user,
             "number": pr.number,
-            "closed_at": pr.closed_at,
             "commits": [],
             "comments": [],
             }
@@ -356,20 +353,11 @@ def repo_frontend_info(request):
         return JsonResponse({"error": "Repository not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
 
-def date_range(data):
-    try:
-        begin_date_str = data.get('0')
-        end_date_str = data.get('1')
 
-        date_format = '%a %b %d %Y %H:%M:%S GMT%z (%Z)'
 
-        begin_date_obj = datetime.strptime(begin_date_str, date_format)
-        end_date_obj = datetime.strptime(end_date_str, date_format)
-    except:
-        return ""
-    return begin_date_obj, end_date_obj
-
+    
 #Create a data package that is used by the frontend to show on the frontend
 def homepage_datapackage(request):
     try:
@@ -392,25 +380,6 @@ def homepage_datapackage(request):
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
     
-def engagement_score(request):
-    # The calculation is based on the type(s) of object(s) you'd like to calculate the engagement score of
-    user, repository = process_vue_POST_request(request)['user'], process_vue_POST_request(request)['repository']
-    if user is User & repository is Repository:
-        # User for specific repo
-        total_comments, total, commits, total_pull_request = 
-        print("User engagement score for specific repo")
-    elif user is User:
-        # user specific score
-        total_comments, total, commits, total_pull_request = user.comments., User.commits.all(), User.pull_requests.all()
-
-        print("User engagement score for all repo's")
-    elif repository is Repository:
-        total_comments, total, commits, total_pull_request = 
-        print("Repository engagement score")
-
-
-    return total_comments, total, commits, total_pull_request, engagement_score
-
 async def comment_test(request):
     owner = "IntersectMBO"
     repo = "plutus"

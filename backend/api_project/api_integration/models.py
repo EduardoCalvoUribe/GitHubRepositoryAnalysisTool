@@ -14,7 +14,6 @@ class User(models.Model): # user
     pull_requests = models.JSONField(blank=True, default=list) # list of pull requests
     comments = models.JSONField(blank=True, default=list) # list of comments
     commits = models.JSONField(blank=True, default=list) # list of commits
-    engagement = models.IntegerField(blank=True, default=0)
 
 
     def __str__(self):
@@ -50,7 +49,7 @@ class Repository(models.Model): # repository, might have to change this into com
     owner = models.CharField(max_length=100, default = "") # Ownver of the repository
     url = models.URLField() # api url of repository
     updated_at = models.DateTimeField(default=timezone.now) # time of last update in database
-    contributers = models.JSONField(blank=True, default=dict) # list of users
+    #contributers = models.JSONField(blank=True, default=dict) # list of users
     pull_requests_list = models.JSONField(blank=True, default=list) # list of pull request in repository 
     commits = models.JSONField(blank=True, default=list) # list of commits in repository 
     token = models.CharField(max_length=100, default = "") # save personal access token
@@ -106,7 +105,6 @@ class PullRequest(models.Model): # pull request
     repo = models.ForeignKey(Repository, related_name="pull_requests", on_delete=models.CASCADE, null=True, blank=True)
     url = models.URLField()
     updated_at = models.DateTimeField(default=timezone.now)
-    closed_at = models.DateField(default=date.today)
     date = models.DateField(default=date.today)
     title = models.CharField(max_length=100)
     body = models.TextField(null=True, blank=True)
@@ -136,7 +134,6 @@ class PullRequest(models.Model): # pull request
             setattr(pull_request, "body", pull_response['body'])
             setattr(pull_request, "user", pull_response['user']['login'])
             setattr(pull_request, "number", pull_response['number'])
-            setattr(pull_request, "closed_at", pull_response['closed_at'])
 
             pull_request.save()
             data = list(pull_request.objects.values())
@@ -215,8 +212,6 @@ class Comment(models.Model): # comment
     body = models.CharField(max_length=500) # Body of comment
     user = models.CharField(max_length=100) # User that posted the comment
     semantic_score = models.FloatField(default=0.0)
-    comment_type = models.CharField(max_length=200)
-    commit_id = models.CharField(max_length=200)
 
     def __str__(self):
         return self.name
