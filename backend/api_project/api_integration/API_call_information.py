@@ -155,13 +155,17 @@ async def get_github_information(response):
                     text_to_display += '<p>----------------------------</p>'
                 for comment in pr[2]:
                     comment_semantic_score = general_semantic_score.calculate_weighted_comment_semantic_score(comment['body'], 0.5, 0.5)
-
+                    commit_id = ''
+                    if comment['comment_type'] is 'review comment':
+                        commit_id = comment['commit_id']
                     defaults = {
                         "date": datetime.strptime(comment['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
                         "updated_at": timezone.now(),
                         "body": comment['body'],
                         "user": comment['user']['login'],
-                        "semantic_score": comment_semantic_score
+                        "semantic_score": comment_semantic_score,
+                        "comment_type": comment['comment_type'],
+                        "commit_id": commit_id
                     }
                     # comment_db = models.Comment(pull_request = pull_db,
                     #                             url = comment['url'],
