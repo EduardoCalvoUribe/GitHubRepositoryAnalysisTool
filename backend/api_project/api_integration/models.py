@@ -215,6 +215,8 @@ class Comment(models.Model): # comment
     body = models.CharField(max_length=500) # Body of comment
     user = models.CharField(max_length=100) # User that posted the comment
     semantic_score = models.FloatField(default=0.0)
+    comment_type = models.CharField(max_length=200)
+    commit_id = models.CharField(max_length=200)
 
     def __str__(self):
         return self.name
