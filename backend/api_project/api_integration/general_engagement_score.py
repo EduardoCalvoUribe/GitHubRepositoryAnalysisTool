@@ -7,7 +7,7 @@ def logistic_conversion(x, k=10):
     return 100 / (1 + np.exp(-k * (x - 1)))
 
 def week_range():
-
+    return None
 
 
 # Function to calculate decay for each week
@@ -20,20 +20,20 @@ def calculate_decay_scores(weeks=8, decay_rate=float, k=int):
         end_date = datetime.today() - timedelta(weeks=week)
         
         # Filter data for the specific week
-        user_week_ccp = sum(ccp for date, ccp in user_ccp if start_date <= date < end_date)
-        avg_week_ccp = sum(ccp for date, ccp in avg_ccp if start_date <= date < end_date) / len(avg_ccp) if avg_ccp else 1
+        #user_week_ccp = sum(ccp for date, ccp in user_ccp if start_date <= date < end_date)
+        #avg_week_ccp = sum(ccp for date, ccp in avg_ccp if start_date <= date < end_date) / len(avg_ccp) if avg_ccp else 1
         
         if avg_week_ccp == 0:  # Avoid division by zero
             avg_week_ccp = 1
         
         # Calculate the activity ratio and apply logistic conversion
-        ratio = user_week_ccp / avg_week_ccp
-        score = logistic_conversion(ratio, k)
+        #ratio = user_week_ccp / avg_week_ccp
+        #score = logistic_conversion(ratio, k)
         
         # Apply decay to the score
         decay_weight = decay_rate ** week
-        decayed_score = score * decay_weight
-        scores.append(decayed_score)
+        #decayed_score = score * decay_weight
+        #scores.append(decayed_score)
         total_weight += decay_weight
     
     # Sum the decayed scores
@@ -50,7 +50,7 @@ def calculate_engagement_score(decay_rate=0.85, k=10):
     decayed_logistic_score = calculate_decay_scores(decay_rate=decay_rate, k=k)
     
     # Calculate the average semantic score
-    average_semantic_score = sum(comment_scores) / len(comment_scores) if comment_scores else 0
+    #average_semantic_score = sum(comment_scores) / len(comment_scores) if comment_scores else 0
     average_semantic_score = min(max(average_semantic_score, 0), 100)  # Ensure the score is between 0 and 100
     
     # Final score formula

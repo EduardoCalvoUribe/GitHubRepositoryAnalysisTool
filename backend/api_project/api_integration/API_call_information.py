@@ -38,7 +38,6 @@ async def get_github_information(response):
     
     repo_url = views.process_vue_POST_request(response)
     parsed_variables = views.parse_Github_url_variables(repo_url)
-    print(parsed_variables)
     owner = parsed_variables[1]
     repo = parsed_variables[2]
     
@@ -129,7 +128,8 @@ async def get_github_information(response):
                     comment_semantic_score = general_semantic_score.calculate_weighted_comment_semantic_score(comment['body'], 0.5, 0.5)
                     commit_id = ''
                     comment_date = None
-                    commit_url = None
+                    comment_url = None
+                    print(comment['comment_type'])
                     if comment['comment_type'] == 'review':
                         commit_id = comment['commit_id']
                         comment_date = comment['submitted_at']
@@ -137,8 +137,8 @@ async def get_github_information(response):
                     else:
                         comment_date = comment['created_at']
                         comment_url = comment['url']
+
                     defaults = {
-                        "url": comment_url,
                         "date": datetime.strptime(comment_date, '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
                         "updated_at": timezone.now(),
                         "body": comment['body'],
@@ -148,7 +148,7 @@ async def get_github_information(response):
                         "commit_id": commit_id
                     }
 
-                    comment_db, created = await sync_to_async(models.Comment.objects.update_or_create)(pull_request = pull_db, defaults=defaults)
+                    comment_db, created = await sync_to_async(models.Comment.objects.update_or_create)(url = comment_url, pull_request = pull_db, defaults=defaults)
                     await sync_to_async(comment_db.save)()
 
                     user, created = await sync_to_async(models.User.objects.update_or_create)(login=comment_db.user)
@@ -163,10 +163,10 @@ async def get_github_information(response):
 
 
 async def update_model_data(model, related_data_field, related_data_url):
-    print(related_data_field)
+    #print(related_data_field)
     current = getattr(model, related_data_field)
     current.append(related_data_url)
-    print(current)
+    #print(current)
     setattr(model, related_data_field, current)  # Use set union for unique values
     await sync_to_async(model.save)()
     #return model
@@ -234,7 +234,6 @@ async def process_page(session, pr_url):
 async def process_pull_request(session, pull_request):
     """
     Processes a singular pull request by fetching all comments and commits on that pull request
-    TODO: Might want to add creation of pull request instance for database
 
     Parameters:
     session (aiohttp.ClientSession): The asynchronous session with the authentication headers included.
@@ -255,7 +254,6 @@ async def process_pull_request(session, pull_request):
 async def fetch_commits(session, pull_request):
     """
     Function that retrieves all commits of a pull request
-    # TODO: Unsure if pages are also a thing here that need to be taken into account
 
     Parameters:
     session (aiohttp.ClientSession): The asynchronous session with the authentication headers included.
@@ -303,7 +301,6 @@ async def fetch_commit_page(session, url):
 async def fetch_comments(session, pull_request):
     """
     Function that retrieves all comments of a pull request
-    # TODO: Unsure if pages are also a thing here that need to be taken into account
 
     Parameters:
     session: the asynchronous session with the authentication headers included
@@ -331,7 +328,6 @@ async def fetch_comments(session, pull_request):
         """
         # Get all pagination urls to be able to get all comments
         comment_page_urls = await get_all_page_urls(session, comment_url)
-        print(comment_page_urls)
         # Create tasks to process each comment page concurrently
         comment_tasks = [asyncio.create_task(fetch_comment_page(session, url)) for url in comment_page_urls]
         # Wait until all tasks are complete

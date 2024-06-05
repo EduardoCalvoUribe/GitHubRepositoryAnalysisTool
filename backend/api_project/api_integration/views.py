@@ -214,13 +214,11 @@ def assign_Github_variables(parsed_url):
 def frontendInfo(request):
     # Retrieve all instances of PullRequest model
     pull_requests = Commit.objects.all()
-    print(pull_requests)
 
     # Extract names from each instance
     names = [pull_request.title for pull_request in pull_requests]
 
     # Print or use the names as needed
-    print(names)
     names = ["test1", "test2"]
     return JsonResponse({'names': names}, safe=False)
 
@@ -283,8 +281,6 @@ def repo_frontend_info(request):
         # Try to parse the JSON data
         try:
             # Option 1: Using a dictionary (recommended)
-            print(request_body)
-            print("huh")
             data = json.loads(request_body)
             #url = data.get('url')  # Use get() for optional retrieval
             url = data['url']
@@ -292,7 +288,6 @@ def repo_frontend_info(request):
             # begin_date, end_date = date_range(dates)
         except json.JSONDecodeError:
             print("Error")
-    print("fetching!")
     try:
     # Get the repository by URL (using get() for single object retrieval)
         repo = Repository.objects.get(url=url)
@@ -352,7 +347,6 @@ def repo_frontend_info(request):
                 pr_data["comments"].append(comment_data)
 
             data["Repo"]["pull_requests"].append(pr_data)
-        print("sending")
         return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
@@ -377,7 +371,6 @@ def homepage_datapackage(request):
     try:
         #We import all the repositories from the database
         repos = Repository.objects.all()
-        print(repos)
 
         # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
         unique_repos = list(OrderedDict((repo.id, {
@@ -386,7 +379,6 @@ def homepage_datapackage(request):
             "url": repo.url,
             "updated_at": repo.updated_at,
         }) for repo in repos).values())
-        print(unique_repos)
 
         # The Repos is a list that has name & updated_at as values
         data = {"Repos" : unique_repos}

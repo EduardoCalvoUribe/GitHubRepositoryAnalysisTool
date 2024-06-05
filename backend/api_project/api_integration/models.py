@@ -173,7 +173,6 @@ class Commit(models.Model): # commit
                 semantic_score = commit_semantic_score
             )
             await sync_to_async(commit.save)()
-            print("YES")
 
             #for key,value in commit_response.items():
                 #if key is not None:
@@ -191,12 +190,7 @@ class Commit(models.Model): # commit
             #setattr(commit, "comments", '')
            # setattr(commit, "semantic_score", commit_semantic_score)
 
-            print(commit.name)
-            print(commit.url)
-            print(commit.semantic_score)
             #commit.asave()
-            print("HELPPPPPP")
-            print(Commit.objects.all())
             data = list(commit.objects.values())
             return JsonResponse({'data': data})
         except Exception as e:
@@ -238,10 +232,7 @@ class Comment(models.Model): # comment
             #setattr(comment, "user", comment_response['user']['login'])
             #setattr(comment, "semantic", semantic_score)
 
-            print(comment)
-            print("SUUUUUUUUUPEEEER")
             await sync_to_async(comment.save)()
-            print(Comment.objects.all)
             data = list(comment.objects.values())
             return JsonResponse({'data': data})
         except Exception as e:
