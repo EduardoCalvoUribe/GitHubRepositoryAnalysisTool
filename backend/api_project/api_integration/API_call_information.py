@@ -108,6 +108,7 @@ async def get_github_information(response):
                 await update_model_data(repo_db, "pull_requests_list", pull_db.url)
 
                 for commit in pr[1]:
+                    print(commit['commit']['url'])
                     commit_semantic_score = general_semantic_score.calculate_weighted_commit_semantic_score(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
                     defaults = {
                         "name": commit['commit']['message'],
@@ -129,7 +130,7 @@ async def get_github_information(response):
                     commit_id = ''
                     comment_date = None
                     comment_url = None
-                    print(comment['comment_type'])
+                    #print(str(comment['comment_type']) + ' ' + str(comment['body']))
                     if comment['comment_type'] == 'review':
                         commit_id = comment['commit_id']
                         comment_date = comment['submitted_at']
