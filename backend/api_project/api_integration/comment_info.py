@@ -86,7 +86,7 @@ async def comment_visual(response):
                 if 'comment_type' in comment:
                     cmnt_type=comment.get('comment_type','')
                 cmt_id=''
-                if comment_type is 'review comment':
+                if comment_type == 'review comment':
                     cmt_id=comment.get('commit_id', '')
 
                 try:

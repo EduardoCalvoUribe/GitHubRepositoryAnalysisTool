@@ -83,11 +83,14 @@ async def get_github_information(response):
 
         # This for loop is only for creating displayable text on a website (not important for loop and can be deleted in end)
         for page in results:
-            pulls = []
             for pr in page:
                 # Combine URL and repo checks for update_or_create
+                pr_closed_at = timezone.now()
+                if pr[0]['state'] == 'closed':
+                    pr_closed_at = datetime.strptime(pr[0]['closed_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d')
                 defaults = {
                     'updated_at': timezone.now(),
+                    'closed_at': pr_closed_at,
                     'date': datetime.strptime(pr[0]['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
                     'title': pr[0]['title'],
                     'body': pr[0]['body'],
@@ -125,17 +128,17 @@ async def get_github_information(response):
                 for comment in pr[2]:
                     comment_semantic_score = general_semantic_score.calculate_weighted_comment_semantic_score(comment['body'], 0.5, 0.5)
                     commit_id = ''
-                    commit_date = None
+                    comment_date = None
                     commit_url = None
                     if comment['comment_type'] == 'review':
                         commit_id = comment['commit_id']
                         comment_date = comment['submitted_at']
-                        commit_url = comment['html_url']
+                        comment_url = comment['html_url']
                     else:
                         comment_date = comment['created_at']
-                        commit_url = comment['url']
+                        comment_url = comment['url']
                     defaults = {
-                        "url": commit_url,
+                        "url": comment_url,
                         "date": datetime.strptime(comment_date, '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
                         "updated_at": timezone.now(),
                         "body": comment['body'],
@@ -405,8 +408,11 @@ async def get_all_page_urls(session, pr_url):
                 # If 'last' page URL exists, extract total number of pages from it
                 total_pages = get_page_number_from_url(last_page_url)
 
+    # Determine if the pr_url already contains a query parameter
+    separator = '&' if '?' in pr_url else '?'
+
     # Construct all page URLs concurrently by appending page numbers to the API call URL
-    all_page_urls = [f'{pr_url}?page={page}' for page in range(1, total_pages + 1)]
+    all_page_urls = [f'{pr_url}{separator}page={page}' for page in range(1, total_pages + 1)]
     return all_page_urls
 
 def get_page_number_from_url(url):
