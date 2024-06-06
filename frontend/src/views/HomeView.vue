@@ -124,6 +124,8 @@ export default {
       
       try {
           const response = await fetchData('http://127.0.0.1:8000/delete/', postOptions); // send repo name to backend delete function through path 'delete'
+          console.log('delete reload')
+          location.reload();
       } catch (error) {
           console.error('Error:', error);
       }
