@@ -25,7 +25,7 @@ const router = createRouter({
       component: () => import("../views/PullRequestPage.vue"),
     },
     {
-      path: "/commitpage",
+      path: "/commitpage:id",
       name: "commits",
       component: () => import("../views/CommitPage.vue"),
     },
