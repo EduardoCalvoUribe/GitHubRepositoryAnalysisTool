@@ -22,7 +22,7 @@
       <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date range:</label>
       <div id="datePicker" style="display: flex; align-items: flex-start;">
         <VueDatePicker v-model="selectedRange" range style="width: 500px; height: 50px;"></VueDatePicker>
-        <button class="button-6" style="width: 57px; height: 38px; margin-left: 3px; font-size: smaller;" @click="handleDateSubmit(selectedRange)">Reload</button>
+        <button class="button-6" style="width: 57px; height: 38px; margin-left: 3px; font-size: smaller;" @click="getPackage(selectedRange)">Reload</button>
       </div>
     </div>
   </div>
@@ -122,8 +122,11 @@ export default {
         { name: 'Date Newest to Oldest' },
       ]);
       
-    onMounted(async () => {
-      const data = {'url': decodeURIComponent(route.params.url)}; // define data to be sent in postOptions, repo url in this case
+    const getPackage = async (date) => {
+      const data = {
+        'url': decodeURIComponent(route.params.url),
+        'date': date
+      }; // define data to be sent in postOptions, repo url in this case
       // console.log(data, "url?");
       // console.log(route)
       
@@ -143,7 +146,8 @@ export default {
       } catch (error) {
           console.error('Error:', error);
       }
-    })
+    }
+
     const sortListsDate = (list, choice) => {
       if (choice.name == 'Date Oldest to Newest') {
         const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
@@ -165,6 +169,7 @@ export default {
         return sorted_list;
       }
     };
+
     const sortedPullRequests = computed(() => {
       if (!state.githubResponse) return [];
       else if (selectedSort.value.name.includes('Date')) {
@@ -174,11 +179,18 @@ export default {
       }
     });
     // console.log(githubResponse, "hey")
+
+    onMounted(async () => {
+      await getPackage('');
+    });
+
     return {
+      getPackage,
       state,
       sortedPullRequests,
       selectedSort,
       sorts,
+      route,
     }
   },
 
@@ -213,25 +225,6 @@ export default {
         maintainAspectRatio: false
       }
     }
-  },
-  methods: {
-    async handleDateSubmit(range) {
-      const data = {'date': range}; // define data to be sent in postOptions, date range in this case
-
-      const postOptions = { // defines how data is sent to backend, POST request in this case
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-      };
-     
-      try {
-        const response = await fetchData('', postOptions);  // send date range to backend through correct path that still needs to be created
-      } catch (error) {
-          console.error('Error:', error);
-      }
-    },
   },
 }
 </script>
