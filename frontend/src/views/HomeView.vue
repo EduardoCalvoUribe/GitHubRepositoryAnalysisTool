@@ -156,8 +156,8 @@ export default {
 
     <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
       <div style="display: flex; flex-direction: column; align-items: flex-start;">
+        <h2 style="justify-content: center; display: inline-block; width: 250px; margin-bottom: 3%" for="repos">Tracked Repositories:</h2> 
         <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
-        <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="repos">Tracked Repositories:</label>
         <div id="repos" class="row" v-for="repo in sortedRepos" >
           <router-link :to="{ path: '/repoinfo/' + encodeURIComponent(repo.url) }"><button class="button-6" > 
               <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
