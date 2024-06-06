@@ -7,10 +7,13 @@
   </header>
 
   <header>
-    <div v-if="state.githubResponse" style="font-size: 180%; margin-top: 30px;">
-      {{ state.githubResponse.Repo.name }}
+
+    <div v-if="state.githubResponse" style="margin-top: 50px">
+      <div style="font-size: 180%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
+      <div style="margin-bottom: 5px"> URL: {{ state.githubResponse.Repo.url }} </div>
+      <div> Last Updated: {{ state.githubResponse.Repo.updated_at }} </div>
     </div>
-    The repository URL is {{ state.githubResponse.Repo.url }} and it was last updated on {{ state.githubResponse.Repo.updated_at }}.
+    
     
   </header>
 

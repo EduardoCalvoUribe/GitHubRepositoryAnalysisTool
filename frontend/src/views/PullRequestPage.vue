@@ -9,10 +9,11 @@
   <router-view />
 
   <header>
-    <div v-if="pullpackage" style="font-size: 180%; margin-top: 30px;">
-      {{ pullpackage.title }}
+    <div v-if="pullpackage" style="margin-top: 50px">
+      <div style="font-size: 180%; margin-bottom: 20px;"> {{ pullpackage.title }} </div>
+      <div style="margin-bottom: 5px"> User: {{ pullpackage.user }} </div>
+      <div> Created: {{ pullpackage.date }} </div>
     </div>
-    This is a pull request by {{ pullpackage.user }} created on {{ pullpackage.date }}. 
   </header>
 
   <div v-if="pullpackage" style=" display: flex; justify-content: center;">
