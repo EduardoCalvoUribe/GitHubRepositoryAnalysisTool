@@ -18,7 +18,7 @@
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="commits">Commits:</label>
       <div id="commits" class="row" v-for="commit in pullpackage.commits">
-        <router-link :to="{ path: '/commitpage' }"><button class="button-6">
+        <router-link :to="{ path: '/commitpage/' + encodeURIComponent(commit.url) }"><button class="button-6">
             <span><h2 style="margin-left: 0.3rem;">{{ commit.title }}</h2></span>
             <span class="last-accessed">Author: {{ commit.user }}</span>
             <span class="last-accessed">Date: {{ commit.date }}</span>
@@ -78,7 +78,7 @@ export default {
       if (state.githubResponse) {
         console.log('in if');
         for (let i=0; i < state.githubResponse.Repo.pull_requests.length - 1; i++) {
-          if (state.githubResponse.Repo.pull_requests[i].number == route.params.id) {
+          if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
             pullpackage.value = state.githubResponse.Repo.pull_requests[i];
           }
         }
