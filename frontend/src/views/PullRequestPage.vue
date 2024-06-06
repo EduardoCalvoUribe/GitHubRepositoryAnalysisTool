@@ -30,34 +30,28 @@
   <div v-if="pullpackage">
     <body>
       This is a pull request by {{ pullpackage.user }} created on {{ pullpackage.date }}. 
+
       <div class="grid-container">
-      <div class="grid-item">
-        <body>  
-        Commit title: {{ pullpackage.commits[0].title }}
-        <div>
-          User: {{ pullpackage.commits[0].user }}
+        <div id="commits" class="row" v-for="commit in pullpackage.commits">
+          <div class="grid-item">
+          {{ commit.title }}
+          <body>
+            Date: {{ commit.date }}
+            <div>
+              User: {{ commit.user }}
+            </div>
+            <div>
+              Semantic Score {{ commit.semantic_score }}
+            </div>
+            <div>
+              Updated At: {{ commit.updated_at }}
+            </div>
+          </body>
+          </div>
         </div>
-        <div>
-          Date: {{ pullpackage.commits[0].date }}
-        </div>
-        <div>
-          Semantic Score: {{ pullpackage.commits[0].semantic_score }}
-        </div>
-        <div>
-          Updated at: {{ pullpackage.commits[0].updated_at }}
-        </div>
-      </body>
-      </div>
       </div>
     </body>
-  </div>
-
-
-  <!-- <div class="grid-container" >
-    <div class="grid-item" v-for="item in items" :key="item.id">
-      {{ item.text }}
     </div>
-  </div> -->
 </template>
 
 <script>
@@ -114,14 +108,17 @@ export default {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* Adjust the number of columns as needed */
     gap: 10px; /* Spacing between grid items */
+    height: auto;
+    padding: 10px;
   }
 
   .grid-item {
     background-color: #157eff4d; /* Background color for grid items */
-    padding: 20px; /* Padding inside grid items */
+    padding: 10px; /* Padding inside grid items */
     text-align: left; /* Centering text inside grid items */
     border: 1px solid #ccc; /* Border for grid items */
-    min-height: 5px;
+    min-height: 50px;
+    height: auto;
   }
 
   .box-container {

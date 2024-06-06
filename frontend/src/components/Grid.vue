@@ -96,12 +96,12 @@ export default {
     left: 0;
     right: 0;
     margin: auto;
-    height: 100%;
+    height: auto;
     width: 100%;
 }
 
 .vue-grid-item .no-drag {
-    height: 100%;
+    height: auto;
     width: 100%;
 }
 
