@@ -64,7 +64,7 @@
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
           <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
-            <router-link :to="{ path: '/prpage/' + pullrequest.number }"><button class="button-6">
+            <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
                 <span class="last-accessed">Author: {{ pullrequest.user }}</span>
                 <span class="last-accessed">Date {{ pullrequest.date }}</span>
