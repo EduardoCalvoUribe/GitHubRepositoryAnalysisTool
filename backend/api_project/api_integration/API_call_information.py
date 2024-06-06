@@ -38,7 +38,6 @@ async def get_github_information(response):
     
     repo_url = views.process_vue_POST_request(response)
     parsed_variables = views.parse_Github_url_variables(repo_url)
-    print(parsed_variables)
     owner = parsed_variables[1]
     repo = parsed_variables[2]
     
@@ -57,15 +56,7 @@ async def get_github_information(response):
 
         
         user, created = await sync_to_async(models.User.objects.update_or_create)(login=owner)
-        # list = user.repositories
-        # print(type(list), "repo")
-        # #list.update({repo_db.name:repo_db.url})
-        # list.append(repo_db.url)
-        # user.repositories = list 
-        # await sync_to_async(user.save)()
         await update_model_data(user, "repositories", repo_db.url)
-        #await sync_to_async(user.save)()
-
 
         # Results is a list of each page of a repo, each page has multiple pull requests and each pull request have multiple commits and comments
         results = await handle_fetch_requests(session, owner, repo)
@@ -91,11 +82,14 @@ async def get_github_information(response):
 
         # This for loop is only for creating displayable text on a website (not important for loop and can be deleted in end)
         for page in results:
-            pulls = []
             for pr in page:
                 # Combine URL and repo checks for update_or_create
+                pr_closed_at = timezone.now()
+                if pr[0]['state'] == 'closed':
+                    pr_closed_at = datetime.strptime(pr[0]['closed_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d')
                 defaults = {
                     'updated_at': timezone.now(),
+                    'closed_at': pr_closed_at,
                     'date': datetime.strptime(pr[0]['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
                     'title': pr[0]['title'],
                     'body': pr[0]['body'],
@@ -109,19 +103,13 @@ async def get_github_information(response):
                 await sync_to_async(pull_db.save)()
 
                 user, created = await sync_to_async(models.User.objects.update_or_create)(login=pull_db.user)
-                # list = user.pull_requests
-                # list.append(pull_db.url)
-                # user.pull_requests = list
+                
                 await update_model_data(user, "pull_requests", pull_db.url)
                 await update_model_data(repo_db, "pull_requests_list", pull_db.url)
-                #await sync_to_async(user.save)()
 
-
-                text_to_display = text_to_display + '<p></b>Information from Pull request:</b> #' + str(pr[0]['number']) + '</p>------------------------------'
                 for commit in pr[1]:
+                    print(commit['commit']['url'])
                     commit_semantic_score = general_semantic_score.calculate_weighted_commit_semantic_score(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
-
-
                     defaults = {
                         "name": commit['commit']['message'],
                         "title": commit['commit']['message'],
@@ -130,67 +118,42 @@ async def get_github_information(response):
                         "semantic_score": commit_semantic_score,
                         "updated_at": timezone.now(),
                     }
-                    # commit_db = models.Commit(pull_request = pull_db,
-                    #                         name = commit['commit']['message'],
-                    #                         url = commit['commit']['url'],
-                    #                         title = commit['commit']['message'],
-                    #                         user = commit['author']['login'],
-                    #                         date = datetime.strptime(commit['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
-                    #                         semantic_score = commit_semantic_score,
-                    #                         updated_at = timezone.now())
                     
-                    commit_db,created = await sync_to_async(models.Commit.objects.update_or_create)(url = commit['commit']['url'], pull_request = pull_db, defaults= defaults )
+                    commit_db,created = await sync_to_async(models.Commit.objects.update_or_create)(url = commit['url'], pull_request = pull_db, defaults= defaults )
                     await sync_to_async(commit_db.save)()
 
                     user, created = await sync_to_async(models.User.objects.update_or_create)(login=commit_db.user)
                     await update_model_data(user, "commits", commit_db.url)
-                    # list = user.commits
-                    # list.append(commit_db.url)
-                    # user.commits = list
-                    #await sync_to_async(user.save)()
 
-
-                    text_to_display += f"<p><b>Author</b>: {commit['author']['login'] if commit['author'] else 'Unknown'}</p>"
-                    text_to_display += f"<p><b>Date</b>: {commit['commit']['author']['date']}</p>"
-                    text_to_display += f"<p><b>Message</b>: {commit['commit']['message']}</p>"
-                    text_to_display += '<p>----------------------------</p>'
                 for comment in pr[2]:
                     comment_semantic_score = general_semantic_score.calculate_weighted_comment_semantic_score(comment['body'], 0.5, 0.5)
+                    commit_id = ''
+                    comment_date = None
+                    comment_url = None
+                    #print(str(comment['comment_type']) + ' ' + str(comment['body']))
+                    if comment['comment_type'] == 'review':
+                        commit_id = comment['commit_id']
+                        comment_date = comment['submitted_at']
+                        comment_url = comment['html_url']
+                    else:
+                        comment_date = comment['created_at']
+                        comment_url = comment['url']
 
                     defaults = {
-                        "date": datetime.strptime(comment['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                        "date": datetime.strptime(comment_date, '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
                         "updated_at": timezone.now(),
                         "body": comment['body'],
                         "user": comment['user']['login'],
-                        "semantic_score": comment_semantic_score
+                        "semantic_score": comment_semantic_score,
+                        "comment_type": comment['comment_type'],
+                        "commit_id": commit_id
                     }
-                    # comment_db = models.Comment(pull_request = pull_db,
-                    #                             url = comment['url'],
-                    #                             date = datetime.strptime(comment['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
-                    #                             updated_at = timezone.now(),
-                    #                             body = comment['body'],
-                    #                             user = comment['user']['login'],
-                    #                             semantic_score = comment_semantic_score)
-                    comment_db, created = await sync_to_async(models.Comment.objects.update_or_create)(url = comment['url'],pull_request = pull_db, defaults=defaults)
+
+                    comment_db, created = await sync_to_async(models.Comment.objects.update_or_create)(url = comment_url, pull_request = pull_db, defaults=defaults)
                     await sync_to_async(comment_db.save)()
 
                     user, created = await sync_to_async(models.User.objects.update_or_create)(login=comment_db.user)
                     await update_model_data(user, "comments", comment_db.url)
-                    # list = user.comments
-                    # list.append(comment_db.url)
-                    # user.comments = list
-                    #await sync_to_async(user.save)()
-
-
-
-                    text_to_display += f"</b>Type of comment:</b> {comment['comment_type']}</p>"
-                    if 'body' in comment and comment['body']:  
-                        text_to_display += f"<p></b>Author</b>: {comment['user']['login']}"
-                        text_to_display += f"<p></b>Message</b>: {comment['body']}</p>"
-                    else:
-                        text_to_display += 'No body'
-                    text_to_display += '<p>----------------------------</p>'
-                text_to_display += '<p></b>------------------------------------------------------------------------</b></p>'
 
         end_time = time.time() # Variable to check the total runtime of the function
         duration = end_time - start_time # Total runtime of the function
@@ -201,15 +164,13 @@ async def get_github_information(response):
 
 
 async def update_model_data(model, related_data_field, related_data_url):
-    print(related_data_field)
+    #print(related_data_field)
     current = getattr(model, related_data_field)
     current.append(related_data_url)
-    print(current)
+    #print(current)
     setattr(model, related_data_field, current)  # Use set union for unique values
     await sync_to_async(model.save)()
     #return model
-
-
 
 async def handle_fetch_requests(session, owner, repo):
     """
@@ -274,7 +235,6 @@ async def process_page(session, pr_url):
 async def process_pull_request(session, pull_request):
     """
     Processes a singular pull request by fetching all comments and commits on that pull request
-    TODO: Might want to add creation of pull request instance for database
 
     Parameters:
     session (aiohttp.ClientSession): The asynchronous session with the authentication headers included.
@@ -295,7 +255,6 @@ async def process_pull_request(session, pull_request):
 async def fetch_commits(session, pull_request):
     """
     Function that retrieves all commits of a pull request
-    # TODO: Unsure if pages are also a thing here that need to be taken into account
 
     Parameters:
     session (aiohttp.ClientSession): The asynchronous session with the authentication headers included.
@@ -305,22 +264,44 @@ async def fetch_commits(session, pull_request):
     list: A list of commits for the pull request.
     """
     # Construct the URL to fetch the commit information from GitHub
-    #print(pull_request)
     pull_request_commits_url = pull_request['commits_url'].replace("{/sha}", "")
+
+    # Get all pagination urls to be able to get all commits
+    all_commit_urls = await get_all_page_urls(session, pull_request_commits_url)
+
+    # Create tasks to process each page concurrently
+    tasks = [asyncio.create_task(fetch_commit_page(session, url)) for url in all_commit_urls]
     
+    # Wait until all tasks are complete
+    commit_pages = await asyncio.gather(*tasks)
 
-    # Fetch commits asynchronously
-    async with session.get(pull_request_commits_url) as response:
-        # Convert the response in a JSON response
-        pr_commits = await response.json()
+    # Flatten the results list to get a list with all commits
+    pr_commits = [commit for page in commit_pages for commit in page]
 
-        # Return the list of commits  
-        return pr_commits
+    # Return the list of commits
+    return pr_commits
+    
+async def fetch_commit_page(session, url):
+    """
+    Fetches a single page of commits asynchronously.
+
+    Parameters:
+    session (aiohttp.ClientSession): The asynchronous session with the authentication headers included.
+    url (str): The URL to fetch commits from.
+
+    Returns:
+    list: A list of commits for the given page.
+    """
+    async with session.get(url) as response:
+        # Convert the response to a JSON object
+        commits = await response.json()
+
+        # Return the commits on one page
+        return commits
 
 async def fetch_comments(session, pull_request):
     """
     Function that retrieves all comments of a pull request
-    # TODO: Unsure if pages are also a thing here that need to be taken into account
 
     Parameters:
     session: the asynchronous session with the authentication headers included
@@ -346,34 +327,53 @@ async def fetch_comments(session, pull_request):
         type (str): The type of the comment (review, comment, or issue).
         session (aiohttp.ClientSession): The asynchronous session with the authentication headers included.
         """
-        # Make API request to specified url
-        async with session.get(comment_url) as response:
-            # Because of recursion, check if API request actually gets a correct response
-            if response.status == 200:
-                # Format response to JSON
-                comments = await response.json()
-                # Loop through all comments in JSON response
-                for comment in comments:
-                    # Actually do not know whether the type of the comment is still important. Used it once but changes some things
-                    comment['comment_type'] = type
-                    if 'body' in comment and comment['body']:
-                        all_comments.append(comment)
-                    
-                    if type == 'review API':
-                        # Creating a new link to get comments of a review (nested comments)
-                        pr_nested_comment_url = pr_comments_reviews_url + f"/{comment['id']}/comments"
-                        # Create tasks to get nested comments concurrently
-                        task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, type, session))
-                        tasks.append(task)
+        # Get all pagination urls to be able to get all comments
+        comment_page_urls = await get_all_page_urls(session, comment_url)
+        # Create tasks to process each comment page concurrently
+        comment_tasks = [asyncio.create_task(fetch_comment_page(session, url)) for url in comment_page_urls]
+        # Wait until all tasks are complete
+        comment_pages = await asyncio.gather(*comment_tasks)
+
+        # Iterate over each response and add comments to the list
+        for page in comment_pages:
+            for comment in page:
+                comment['comment_type'] = type
+                all_comments.append(comment)
+                if type == 'review':
+                    pr_nested_comment_url = pr_comments_reviews_url + f"/{comment['id']}/comments"
+                    task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, 'comment', session))
+                    tasks.append(task)
 
     # Retrieve comments from the reviews URL
     # This ensures that all review comments are added to all_comments.
-    await retrieve_comments(pr_comments_reviews_url, 'review API', session),
+    await retrieve_comments(pr_comments_reviews_url, 'review', session),
     await asyncio.gather(*tasks)  # Await nested comment tasks
 
     # Return list containing all comments
     return all_comments
 
+async def fetch_comment_page(session, url):
+    """
+    Fetches a page of comments for a given URL.
+
+    Parameters:
+    session (aiohttp.ClientSession): The asynchronous session with the authentication headers included.
+    url (str): The URL to fetch comments from.
+
+    Returns:
+    dict: JSON response containing comments.
+    """
+    # Make a GET request to the provided URL to fetch comments
+    try:
+        async with session.get(url) as response:
+            # Ensure that the response is succesful
+            response.raise_for_status()
+            # Create json object from response
+            comments = await response.json()
+            # Return all comments on a single page
+            return comments
+    except aiohttp.ClientError as e:
+        return []
 
 
 async def get_all_page_urls(session, pr_url):
@@ -405,8 +405,11 @@ async def get_all_page_urls(session, pr_url):
                 # If 'last' page URL exists, extract total number of pages from it
                 total_pages = get_page_number_from_url(last_page_url)
 
+    # Determine if the pr_url already contains a query parameter
+    separator = '&' if '?' in pr_url else '?'
+
     # Construct all page URLs concurrently by appending page numbers to the API call URL
-    all_page_urls = [f'{pr_url}&page={page}' for page in range(1, total_pages + 1)]
+    all_page_urls = [f'{pr_url}{separator}page={page}' for page in range(1, total_pages + 1)]
     return all_page_urls
 
 def get_page_number_from_url(url):

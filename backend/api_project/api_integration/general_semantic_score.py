@@ -1,12 +1,13 @@
 import numpy as np
 
-from .views import parse_Github_url_variables
+from . import views
 from django.http import HttpResponse
 from django.http import JsonResponse
 from .nlp_functions import CodeCommitMessageRatio, FleschReadingEase, LexicalDensity
 # from .comment_info import list_of_comments
 import asyncio
 
+  
 # Define and parse URL
 #url = 'https://github.com/lucidrains/PaLM-rlhf-pytorch/pull/52/commits/297ac3e4c65f034de6ff3fa85008d871d6d786b2' #figure out how to set url from frontend
 #url_parsed = parse_Github_url_variables(url)
@@ -53,7 +54,7 @@ def calculate_semantic_score(commit):
     bounded_ratio = sigmoid(CodeCommitMessageRatio.compute_code_commit_ratio(commit))
 
     # Get Flesch reading ease value for commit message
-    flesch_reading_ease = FleschReadingEase.calculate_flesch_reading_ease(commit_message)
+    flesch_reading_ease = FleschReadingEase.calculateFleschReadingEase(commit_message)
 
     # Get lexical density value for commit message
     lexical_density = LexicalDensity.single_message_lexical_density(commit_message)
@@ -67,7 +68,7 @@ def calculate_semantic_score(commit):
 def calculate_weighted_commit_semantic_score(commitJSON, ld_weight, fre_weight, cmcl_weight, commit_url):
     # Get commit message in string form
     commit_message = commitJSON["commit"]["message"]
-    parsed_commit_url = parse_Github_url_variables(commit_url)
+    parsed_commit_url = views.parse_Github_url_variables(commit_url)
     commit = CodeCommitMessageRatio.get_Github_commit_object(parsed_commit_url[2], parsed_commit_url[3], parsed_commit_url[-1])
     
     # Get commit message/code length ratio, bounded between 0 and 1 by sigmoid function
@@ -75,7 +76,7 @@ def calculate_weighted_commit_semantic_score(commitJSON, ld_weight, fre_weight, 
     weighted_bounded_ratio = cmcl_weight * bounded_ratio
 
     # Get Flesch reading ease value for commit message
-    flesch_reading_ease = FleschReadingEase.calculate_flesch_reading_ease(commit_message)
+    flesch_reading_ease = FleschReadingEase.calculateFleschReadingEase(commit_message)
     weighted_flesch_reading_ease = fre_weight * flesch_reading_ease
 
     # Get lexical density value for commit message
@@ -92,7 +93,7 @@ def calculate_weighted_commit_semantic_score(commitJSON, ld_weight, fre_weight, 
 # Separate function because commit/code ratio cannot be computed for comments.  
 def calculate_weighted_comment_semantic_score(message, ld_weight, fre_weight):
    # Get Flesch reading ease value for message
-    flesch_reading_ease = FleschReadingEase.calculate_flesch_reading_ease(message)
+    flesch_reading_ease = FleschReadingEase.calculateFleschReadingEase(message)
     weighted_flesch_reading_ease = fre_weight * flesch_reading_ease
 
     # Get lexical density value for message

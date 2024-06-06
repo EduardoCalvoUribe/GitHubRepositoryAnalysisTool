@@ -105,6 +105,7 @@ class PullRequest(models.Model): # pull request
     repo = models.ForeignKey(Repository, related_name="pull_requests", on_delete=models.CASCADE, null=True, blank=True)
     url = models.URLField()
     updated_at = models.DateTimeField(default=timezone.now)
+    closed_at = models.DateField(default=date.today)
     date = models.DateField(default=date.today)
     title = models.CharField(max_length=100)
     body = models.TextField(null=True, blank=True)
@@ -134,6 +135,7 @@ class PullRequest(models.Model): # pull request
             setattr(pull_request, "body", pull_response['body'])
             setattr(pull_request, "user", pull_response['user']['login'])
             setattr(pull_request, "number", pull_response['number'])
+            setattr(pull_request, "closed_at", pull_response['closed_at'])
 
             pull_request.save()
             data = list(pull_request.objects.values())
@@ -171,7 +173,6 @@ class Commit(models.Model): # commit
                 semantic_score = commit_semantic_score
             )
             await sync_to_async(commit.save)()
-            print("YES")
 
             #for key,value in commit_response.items():
                 #if key is not None:
@@ -189,12 +190,7 @@ class Commit(models.Model): # commit
             #setattr(commit, "comments", '')
            # setattr(commit, "semantic_score", commit_semantic_score)
 
-            print(commit.name)
-            print(commit.url)
-            print(commit.semantic_score)
             #commit.asave()
-            print("HELPPPPPP")
-            print(Commit.objects.all())
             data = list(commit.objects.values())
             return JsonResponse({'data': data})
         except Exception as e:
@@ -212,6 +208,8 @@ class Comment(models.Model): # comment
     body = models.CharField(max_length=500) # Body of comment
     user = models.CharField(max_length=100) # User that posted the comment
     semantic_score = models.FloatField(default=0.0)
+    comment_type = models.CharField(max_length=200, default= "")
+    commit_id = models.CharField(max_length=200, default = "")
 
     def __str__(self):
         return self.name
@@ -234,10 +232,7 @@ class Comment(models.Model): # comment
             #setattr(comment, "user", comment_response['user']['login'])
             #setattr(comment, "semantic", semantic_score)
 
-            print(comment)
-            print("SUUUUUUUUUPEEEER")
             await sync_to_async(comment.save)()
-            print(Comment.objects.all)
             data = list(comment.objects.values())
             return JsonResponse({'data': data})
         except Exception as e:

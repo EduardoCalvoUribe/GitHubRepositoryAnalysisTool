@@ -14,6 +14,7 @@ from datetime import datetime
 from datetime import date
 from django.utils import timezone
 from django.db import IntegrityError, transaction
+import json
 
 async def comment_visual(response):
     # NOTE: Personal access token with repo permission turned on IS REQUIRED!
@@ -81,7 +82,13 @@ async def comment_visual(response):
                 created_at = datetime.strptime(comment.get('created_at', ''), '%Y-%m-%dT%H:%M:%SZ').date() if comment.get('created_at') else date.today()
                 updated_at = datetime.strptime(comment.get('updated_at', ''), '%Y-%m-%dT%H:%M:%SZ') if comment.get('updated_at') else timezone.now()
 
-                
+                comment_type=''
+                if 'comment_type' in comment:
+                    cmnt_type=comment.get('comment_type','')
+                cmt_id=''
+                if comment_type == 'review comment':
+                    cmt_id=comment.get('commit_id', '')
+
                 try:
                         # Save comment to database asynchronously with database transaction
                         await sync_to_async(transaction.atomic)()
@@ -94,7 +101,9 @@ async def comment_visual(response):
                             updated_at=updated_at, # Date at which comment has been updated
                             body=comment_text_body, # Text content of comment
                             user=comment.get('user', {}).get('login', ''), # User associated with comment
-                            semantic_score=semantic_score # Semantic score associated with comment
+                            semantic_score=semantic_score, # Semantic score associated with comment
+                            comment_type=cmnt_type,
+                            commit_id=cmt_id
                         )
 
                         # Save comment along with relevant metadata to the database
@@ -112,7 +121,51 @@ async def comment_visual(response):
         text_to_display = f'</b> Total amount of comments on Pull Request #{pull_number}:</b> {total_amount_comments}</p>' + text_to_display 
 
         return HttpResponse(text_to_display)
+    
+# Helper function which uses get_pull_request_comments function to retrieve number of comments
+async def get_comment_count(owner,repo,pull_number,headers):
+    comment_list = await get_pull_request_comments(owner,repo,pull_number,headers)
+    # Return length of comment_list, which corresponds to number of comments
+    return len(comment_list)
 
+# Function which creates a package containing the comment count for a given repo, owner, pull_number
+# (API) Headers for get_comment_count are defined inside the function
+async def comment_count_JSON(owner,repo,pull_number):
+    # Token retrieved from settings.py file
+    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
+    # Headers for the API request
+    headers = {'Authorization': f'token {personal_access_token}'}
+
+    comment_count = await get_comment_count(owner,repo,pull_number,headers)
+    
+    # Create JSON package containing the comment count
+    try:
+        # Add comment count to JSON data
+        data = {
+            "comment_count": comment_count          
+        } 
+        # 
+        return HttpResponse(json.dumps(data), content_type='application/json')
+    except Exception as e:
+        error_data = {"error": str(e)}
+        return HttpResponse(json.dumps(error_data), content_type='application/json', status=500)
+
+async def printCommentCountJSON(request):
+    owner = 'lucidrains'
+    repo = 'PaLM-rlhf-pytorch'
+    pull_number = 52
+    
+    comment_JSON_response = await comment_count_JSON(owner,repo,pull_number)
+    # Deserialize JSON from the HttpResponse
+    comment_JSON = json.loads(comment_JSON_response.content)
+    # Now test python object can be appended
+    y = {"year":2024}
+    comment_JSON.update(y)
+
+    # Return updated object as JsonResponse. 
+    return JsonResponse(comment_JSON)
+
+    
 # Function which makes API calls to retrieve all comments for some pull request.
 async def get_pull_request_comments(owner, repo, pull_number, headers):
     # List of Github API endpoints which are accessed for retrieving all comments associated with a pull request.

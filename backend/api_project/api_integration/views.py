@@ -10,15 +10,56 @@ from django.http import JsonResponse
 from rest_framework import generics
 from .models import User
 from .models import Repository, PullRequest, Commit
-from . import functions
+from . import functions, API_call_information
 # from .serializers import ItemSerializer
 from django.views.decorators.csrf import csrf_exempt
+import aiohttp
+import asyncio
+
 
 from django.http import JsonResponse
 from .models import Comment
-from datetime import date
+from datetime import date, datetime
 from collections import OrderedDict
 
+# # Helper function which loads in the JSON response from
+# # the github_repo_pull_requests function and counts the number of pull requests for a given repo. 
+# def pull_request_count(request):
+#     url = "https://api.github.com/repos/lucidrains/PaLM-rlhf-pytorch/pulls"
+#     response = github_repo_pull_requests(request, url)
+    
+#     if response.status_code == 200:
+#         # Deserialize the JSON content
+#         pr_data = json.loads(response.content)
+#         pr_count = len(pr_data)
+        
+#         # Create a dictionary containing the PR count
+#         data = {"pr_count": pr_count}
+        
+#         # Return a JSON response with the PR count
+#         return JsonResponse(data)
+#     else:
+#         # Directly return the error response
+#         return response
+
+# # Function which creates a package containing the PR count for the url specified in pull_request_count
+# # NOTE: URL parsing should still be implemented in pull_request_count, but the function does exist somewhere in project already
+# # This function can be used to print pr_count on Django web page
+# def pr_count_JSON(request):
+#     pr_count = pull_request_count(request)
+    
+#     # Create JSON package containing the comment count
+#     try:
+#         # Add comment count to JSON data
+#         data = {
+#             "pr_count": pr_count
+#         } 
+#         # 
+#         return HttpResponse(json.dumps(data), content_type='application/json')
+#     except Exception as e:
+#         error_data = {"error": str(e)}
+#         return HttpResponse(json.dumps(error_data), content_type='application/json', status=500)
+        
 # API call to https://api.github.com/user endpoint
 def github_user_info(request):
     json_response = functions.get_api_reponse('https://api.github.com/user').json()
@@ -72,12 +113,15 @@ def github_repo_pull_requests(request, url):
 
     # Check if the request was successful
     if api_response.status_code == 200:
+        api_data = api_response.json()
         # Return the JSON data as Django JsonResponse.         
-        return JsonResponse(api_response.json(),safe=False)
+        return JsonResponse(api_response,safe=False)
     else:
         # If the request was unsuccessful, print the error message
-        print(f"Failed to fetch data from GitHub API: {api_response.status_code} - {api_response.text}")
-        return None
+        error_data = {
+            "error": f"Failed to fetch data from GitHub API: {api_response.status_code} - {api_response.text}"
+        }
+        return JsonResponse(error_data, status=api_response.status_code)
     
 # This function accepts an API response for a given API endpoint "URL", 
 # and creates a Django HttpResponse (displays key/value pairs)
@@ -139,24 +183,6 @@ def load_quantify_users(request):
      data = functions.pull_request_per_user(request) # get amount of pull request per user
      return JsonResponse({'repositories': data})
 
-# Helper function that parses Github URLs into a list of variables
-# Assuming that Github URLs always follow the same pattern, i.e. https://gihtub.com/[username]/[repo_name]/etc...
-# Returns a list of variables if the provided URL was a Github URL
-def parse_Github_url_variables(url):
-  # Indicate empty URL if url is empty
-  if not url:
-    return ['empty URL']
-
-  # Filter out www, http and https from URL
-  filtered_url = re.sub(r'https?://(www\.)?', '', url)
-  parsed_url = filtered_url.split('/')
-
-  return parsed_url
-  
-  if parsed_url[0] != 'github.com':
-    return ['URL is not a Github URL']
-  else:
-    return parsed_url
 
 # Function which accepts list of Github variables and returns a dictionary containing
 # all variables contained in the parsed URL. 
@@ -188,13 +214,11 @@ def assign_Github_variables(parsed_url):
 def frontendInfo(request):
     # Retrieve all instances of PullRequest model
     pull_requests = Commit.objects.all()
-    print(pull_requests)
 
     # Extract names from each instance
     names = [pull_request.title for pull_request in pull_requests]
 
     # Print or use the names as needed
-    print(names)
     names = ["test1", "test2"]
     return JsonResponse({'names': names}, safe=False)
 
@@ -257,14 +281,13 @@ def repo_frontend_info(request):
         # Try to parse the JSON data
         try:
             # Option 1: Using a dictionary (recommended)
-            print(request_body)
-            print("huh")
             data = json.loads(request_body)
             #url = data.get('url')  # Use get() for optional retrieval
             url = data['url']
+            # dates = data['date']
+            # begin_date, end_date = date_range(dates)
         except json.JSONDecodeError:
             print("Error")
-    print("fetching!")
     try:
     # Get the repository by URL (using get() for single object retrieval)
         repo = Repository.objects.get(url=url)
@@ -293,6 +316,7 @@ def repo_frontend_info(request):
             "body": pr.body,
             "user": pr.user,
             "number": pr.number,
+            "closed_at": pr.closed_at,
             "commits": [],
             "comments": [],
             }
@@ -317,23 +341,36 @@ def repo_frontend_info(request):
                     "user": comment.user,
                     "semantic_score": comment.semantic_score,
                     "updated_at": comment.updated_at,
+                    "comment_type": comment.comment_type,
+                    "commit_id": comment.commit_id,
                 }
                 pr_data["comments"].append(comment_data)
 
             data["Repo"]["pull_requests"].append(pr_data)
-        print("sending")
         return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+def date_range(data):
+    try:
+        begin_date_str = data.get('0')
+        end_date_str = data.get('1')
+
+        date_format = '%a %b %d %Y %H:%M:%S GMT%z (%Z)'
+
+        begin_date_obj = datetime.strptime(begin_date_str, date_format)
+        end_date_obj = datetime.strptime(end_date_str, date_format)
+    except:
+        return ""
+    return begin_date_obj, end_date_obj
+
 #Create a data package that is used by the frontend to show on the frontend
 def homepage_datapackage(request):
     try:
         #We import all the repositories from the database
         repos = Repository.objects.all()
-        print(repos)
 
         # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
         unique_repos = list(OrderedDict((repo.id, {
@@ -342,10 +379,66 @@ def homepage_datapackage(request):
             "url": repo.url,
             "updated_at": repo.updated_at,
         }) for repo in repos).values())
-        print(unique_repos)
 
         # The Repos is a list that has name & updated_at as values
         data = {"Repos" : unique_repos}
         return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
+    
+# def engagement_score(request):
+#     # The calculation is based on the type(s) of object(s) you'd like to calculate the engagement score of
+#     user, repository = process_vue_POST_request(request)['user'], process_vue_POST_request(request)['repository']
+#     if user is User & repository is Repository:
+#         # User for specific repo
+#         total_comments, total, commits, total_pull_request = 
+#         print("User engagement score for specific repo")
+#     elif user is User:
+#         # user specific score
+#         total_comments, total, commits, total_pull_request = user.comments., User.commits.all(), User.pull_requests.all()
+
+#         print("User engagement score for all repo's")
+#     elif repository is Repository:
+#         total_comments, total, commits, total_pull_request = 
+#         print("Repository engagement score")
+
+    # return total_comments, total, commits, total_pull_request, engagement_score
+
+async def comment_test(request):
+    owner = "IntersectMBO"
+    repo = "plutus"
+    pull_number = "4733"
+
+    personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
+    # Headers for the API request
+    headers = {'Authorization': f'token {personal_access_token}'}
+    async with aiohttp.ClientSession(headers=headers) as session:
+        pr_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}"
+        async with session.get(pr_url) as response:
+            # Convert the response in a JSON response
+            pull_request = await response.json()
+            comments = await API_call_information.fetch_comments(session, pull_request)
+            comment_counter = 0
+            for comment in comments:
+                comment_counter += 1
+        
+        return JsonResponse(str(comment_counter), safe=False)
+    
+# Helper function that parses Github URLs into a list of variables
+# Assuming that Github URLs always follow the same pattern, i.e. https://gihtub.com/[username]/[repo_name]/etc...
+# Returns a list of variables if the provided URL was a Github URL
+def parse_Github_url_variables(url):
+  # Indicate empty URL if url is empty
+  if not url:
+    return ['empty URL']
+
+  # Filter out www, http and https from URL
+  filtered_url = re.sub(r'https?://(www\.)?', '', url)
+  parsed_url = filtered_url.split('/')
+
+  return parsed_url
+  
+  if parsed_url[0] != 'github.com':
+    return ['URL is not a Github URL']
+  else:
+    return parsed_url
