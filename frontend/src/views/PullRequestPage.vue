@@ -12,6 +12,7 @@
     <div v-if="pullpackage" style="font-size: 180%; margin-top: 30px;">
       {{ pullpackage.title }}
     </div>
+    This is a pull request by {{ pullpackage.user }} created on {{ pullpackage.date }}. 
   </header>
 
   <div v-if="pullpackage" style=" display: flex; justify-content: center;">
@@ -29,7 +30,7 @@
   
   <div v-if="pullpackage">
     <body>
-      This is a pull request by {{ pullpackage.user }} created on {{ pullpackage.date }}. 
+      
 
       <div class="grid-container">
         <div id="commits" class="row" v-for="commit in pullpackage.commits">

@@ -10,6 +10,8 @@
     <div v-if="state.githubResponse" style="font-size: 180%; margin-top: 30px;">
       {{ state.githubResponse.Repo.name }}
     </div>
+    The repository URL is {{ state.githubResponse.Repo.url }} and it was last updated on {{ state.githubResponse.Repo.updated_at }}.
+    
   </header>
 
   <div style="margin-top: 4%; display: flex; justify-content: center;">
@@ -33,26 +35,9 @@
   <!-- <div>
     <pre v-if="githubResponse">{{ githubResponse }}</pre>
   </div> -->
-
+<!-- 
   <div v-if="state.githubResponse">
-    <!-- Display repository name -->
-    <div>Repository Name: {{ state.githubResponse.Repo.name }}</div>
-
-    <!-- Display URL -->
-    <div>URL: {{ state.githubResponse.Repo.url }}</div>
-
-    <!-- Display last updated time -->
-    <div>Last Updated: {{ state.githubResponse.Repo.updated_at }}</div>
-
-    <!-- Display pull requests -->
-    <div v-if="state.githubResponse.Repo.pull_requests.length > 0">
-      <div v-for="pullRequest in state.githubResponse.Repo.pull_requests" :key="pullRequest.number">
-        <div>Pull Request Title: {{ pullRequest.title }}</div>
-        <div>Author: {{ pullRequest.user }}</div>
-        <!-- Add more properties as needed -->
-      </div>
-    </div>
-  </div>
+    Display repository name -->
 
   <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
