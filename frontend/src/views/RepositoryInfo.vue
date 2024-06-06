@@ -1,81 +1,3 @@
-<template>
-  <header>
-    <RouterLink to="/repoinfo/${url}">Repository Information</RouterLink>
-    <RouterLink style="margin-left: 2%" to="/prpage">Pull Requests</RouterLink>
-    <RouterLink style="margin-left: 2%" to="/commitpage">Commits</RouterLink>
-    <RouterLink style="margin-left: 2%" to="/commentpage">Comments</RouterLink>
-  </header>
-
-  <header>
-
-    <div v-if="state.githubResponse" style="margin-top: 50px">
-      <div style="font-size: 180%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
-      <div style="margin-bottom: 5px"> URL: {{ state.githubResponse.Repo.url }} </div>
-      <div> Last Updated: {{ state.githubResponse.Repo.updated_at }} </div>
-    </div>
-    
-    
-  </header>
-
-  <div style="margin-top: 4%; display: flex; justify-content: center;">
-    <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date range:</label>
-      <div id="datePicker" style="display: flex; align-items: flex-start;">
-        <VueDatePicker v-model="selectedRange" range style="width: 500px; height: 50px;"></VueDatePicker>
-        <button class="button-6" style="width: 57px; height: 38px; margin-left: 3px; font-size: smaller;" @click="getPackage(selectedRange)">Reload</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="box-container">
-    <div class="box" v-for="item in items" :key="item.id">
-      <router-link :to="item.path">
-        <button class="button-6" style="width: 150px; height: 100px; font-size: 100%;">{{item.text}}</button>
-      </router-link>
-    </div>
-  </div>
-
-  <!-- <div>
-    <pre v-if="githubResponse">{{ githubResponse }}</pre>
-  </div> -->
-
-  <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
-    <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <div>
-        <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
-        <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
-      </div>
-      <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && state.githubResponse" style=" display: flex; justify-content: center;">
-        <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
-          <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
-            <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
-                <span class="last-accessed">Author: {{ pullrequest.user }}</span>
-                <span class="last-accessed">Date {{ pullrequest.date }}</span>
-            </button></router-link>
-          </div>
-        </div>
-      </div>
-      <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse" style=" display: flex; justify-content: center;">
-        <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
-          <div id="users" class="row" v-for="pullrequest in state.githubResponse.Repo.pull_requests">
-            <router-link :to="{ path: '/userpage' }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
-                <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
-            </button></router-link>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div style="display: flex; justify-content: center; margin-top: 4%; height: 400px;">
-    <BarChart :chartData="chartData" :chartOptions="chartOptions" />
-  </div>
-</template>
-
 <script>
 import { ref, onMounted, computed } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
@@ -228,6 +150,84 @@ export default {
   },
 }
 </script>
+
+<template>
+  <header>
+    <RouterLink to="/repoinfo/${url}">Repository Information</RouterLink>
+    <RouterLink style="margin-left: 2%" to="/prpage">Pull Requests</RouterLink>
+    <RouterLink style="margin-left: 2%" to="/commitpage">Commits</RouterLink>
+    <RouterLink style="margin-left: 2%" to="/commentpage">Comments</RouterLink>
+  </header>
+
+  <header>
+
+    <div v-if="state.githubResponse" style="margin-top: 50px">
+      <div style="font-size: 180%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
+      <div style="margin-bottom: 5px"> URL: {{ state.githubResponse.Repo.url }} </div>
+      <div> Last Updated: {{ state.githubResponse.Repo.updated_at }} </div>
+    </div>
+    
+    
+  </header>
+
+  <div style="margin-top: 4%; display: flex; justify-content: center;">
+    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+      <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date range:</label>
+      <div id="datePicker" style="display: flex; align-items: flex-start;">
+        <VueDatePicker v-model="selectedRange" range style="width: 500px; height: 50px;"></VueDatePicker>
+        <button class="button-6" style="width: 57px; height: 38px; margin-left: 3px; font-size: smaller;" @click="getPackage(selectedRange)">Reload</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="box-container">
+    <div class="box" v-for="item in items" :key="item.id">
+      <router-link :to="item.path">
+        <button class="button-6" style="width: 150px; height: 100px; font-size: 100%;">{{item.text}}</button>
+      </router-link>
+    </div>
+  </div>
+
+  <!-- <div>
+    <pre v-if="githubResponse">{{ githubResponse }}</pre>
+  </div> -->
+
+  <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
+    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+      <div>
+        <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
+        <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
+      </div>
+      <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && state.githubResponse" style=" display: flex; justify-content: center;">
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
+          <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
+            <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
+                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
+                <span class="last-accessed">Author: {{ pullrequest.user }}</span>
+                <span class="last-accessed">Date {{ pullrequest.date }}</span>
+            </button></router-link>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse" style=" display: flex; justify-content: center;">
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
+          <div id="users" class="row" v-for="pullrequest in state.githubResponse.Repo.pull_requests">
+            <router-link :to="{ path: '/userpage' }"><button class="button-6">
+                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
+                <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
+            </button></router-link>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; justify-content: center; margin-top: 4%; height: 400px;">
+    <BarChart :chartData="chartData" :chartOptions="chartOptions" />
+  </div>
+</template>
 
 <style scoped>
 .grid-container {
