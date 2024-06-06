@@ -44,7 +44,7 @@ def compute_code_commit_ratio(commit):
         patch = file.patch
 
         # Split code on newline symbol
-        patch_lines = patch.split('\n')
+        patch_lines = patch.split('\n') if patch else []
 
         # Initialise lists which store added and removed code lines in commit file
         added_lines = []
