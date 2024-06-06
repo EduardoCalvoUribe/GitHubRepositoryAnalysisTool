@@ -223,24 +223,6 @@ export default {
           console.error('Error:', error);
       }
     },
-
-    async handleDateSubmit(range) {
-      const data = {'date': range}; // define data to be sent in postOptions, date range in this case
-
-      const postOptions = { // defines how data is sent to backend, POST request in this case
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-      };
-     
-      try {
-        const response = await fetchData('', postOptions);  // send date range to backend through correct path that still needs to be created
-      } catch (error) {
-          console.error('Error:', error);
-      }
-    },
   },
 }
 </script>
