@@ -28,7 +28,8 @@ urlpatterns = [
     path('home', views.homepage_datapackage, name = 'homepage_datapackage'),
     path('testCommentJSON/',comment_info.printCommentCountJSON,name = 'testCommentJSON'), #URL for printing combined JSON (comment) package
     path('testCommitJSON/',commit_info.printCommitCountJSON, name = 'testCommitJSON'), #URL for printing JSON commit package
-    path('commentTest', views.comment_test, name = 'commentTest')
+    path('commentTest', views.comment_test, name = 'commentTest'),
+    path('testfro', views.send_post_request_to_repo_frontend_info, name = 'testfro'),
     # path('testPR/',views.pr_count_JSON, name = 'testPR') #URL for printing JSON commit package
 ]
     
