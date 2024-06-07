@@ -43,7 +43,7 @@ export default {
         { name: 'Date Oldest to Newest' },
         { name: 'Date Newest to Oldest' },
       ]);
-      
+
     const getPackage = async (date) => {
       const data = {
         'url': decodeURIComponent(route.params.url),

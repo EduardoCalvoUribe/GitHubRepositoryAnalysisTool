@@ -69,11 +69,11 @@ def calculate_weighted_commit_semantic_score(commitJSON, ld_weight, fre_weight, 
     # Get commit message in string form
     commit_message = commitJSON["commit"]["message"]
     parsed_commit_url = views.parse_Github_url_variables(commit_url)
-    commit = CodeCommitMessageRatio.get_Github_commit_object(parsed_commit_url[2], parsed_commit_url[3], parsed_commit_url[-1])
+    #commit = CodeCommitMessageRatio.get_Github_commit_object(parsed_commit_url[2], parsed_commit_url[3], parsed_commit_url[-1])
     
     # Get commit message/code length ratio, bounded between 0 and 1 by sigmoid function
-    bounded_ratio = sigmoid(CodeCommitMessageRatio.compute_code_commit_ratio(commit))
-    weighted_bounded_ratio = cmcl_weight * bounded_ratio
+    #bounded_ratio = sigmoid(CodeCommitMessageRatio.compute_code_commit_ratio(commit))
+    #weighted_bounded_ratio = cmcl_weight * bounded_ratio
 
     # Get Flesch reading ease value for commit message
     flesch_reading_ease = FleschReadingEase.calculateFleschReadingEase(commit_message)
@@ -86,7 +86,7 @@ def calculate_weighted_commit_semantic_score(commitJSON, ld_weight, fre_weight, 
     total_weight = ld_weight + fre_weight + cmcl_weight
 
     # Return -1 if total weight is 0, else return weighted semantic score
-    return (weighted_bounded_ratio+weighted_flesch_reading_ease+weighted_lexical_density)/total_weight if total_weight != 0 else -1
+    return (weighted_flesch_reading_ease+weighted_lexical_density)/total_weight if total_weight != 0 else -1
 
 
 # Function which calculates the weighted semantic score for comments.

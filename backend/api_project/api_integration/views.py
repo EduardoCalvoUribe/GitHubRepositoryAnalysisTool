@@ -303,6 +303,8 @@ def repo_frontend_info(request):
             "url": repo.url,
             "updated_at": repo.updated_at,
             "pull_requests": [],
+            "number_pulls": 0,
+            "average_semantic": 0,
             }
         }
 
@@ -319,6 +321,9 @@ def repo_frontend_info(request):
             "closed_at": pr.closed_at,
             "commits": [],
             "comments": [],
+            "number_commits": 0,
+            "number_comments": 0,
+            "average_semantic": 0,
             }
 
             for commit in pr.commits.all():
@@ -332,6 +337,8 @@ def repo_frontend_info(request):
                     "updated_at": commit.updated_at,
                 }
                 pr_data["commits"].append(commit_data)
+            
+            pr_data["number_commits"] = len(pr_data["commits"])
 
             for comment in pr.comments.all():
                 comment_data = {
@@ -345,8 +352,12 @@ def repo_frontend_info(request):
                     "commit_id": comment.commit_id,
                 }
                 pr_data["comments"].append(comment_data)
-
+            
+            pr_data["number_comments"] = len(pr_data["comments"])
+            pr_data["average_semantic"] = calculate_average_semantic_pull(pr_data)
             data["Repo"]["pull_requests"].append(pr_data)
+        data["Repo"]["number_pulls"] = len(data["Repo"]["pull_requests"])
+        data["Repo"]["average_semantic"] = calculate_average_semantic_repo(data["Repo"]) 
         return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
@@ -442,3 +453,25 @@ def parse_Github_url_variables(url):
     return ['URL is not a Github URL']
   else:
     return parsed_url
+  
+def calculate_average_semantic_pull(pr_data):
+    total_semantic = 0
+    for commit in pr_data["commits"]:
+        total_semantic += commit['semantic_score']
+    comment_count = 0
+    for comment in pr_data["comments"]:
+        if comment["comment_type"] == "comment":
+            total_semantic += commit['semantic_score']
+            comment_count += 1
+
+    return total_semantic / (len(pr_data["commits"])+comment_count)
+
+def calculate_average_semantic_repo(repo_data):
+    total_semantic = 0
+    for pr in repo_data["pull_requests"]:
+        total_semantic += pr['semantic_score']
+
+    return total_semantic / len(repo_data["pull_requests"])
+        
+    
+    
