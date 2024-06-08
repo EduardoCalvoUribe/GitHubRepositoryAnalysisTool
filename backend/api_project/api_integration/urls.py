@@ -31,5 +31,8 @@ urlpatterns = [
     path('commentTest', views.comment_test, name = 'commentTest'),
     path('testfro', views.send_post_request_to_repo_frontend_info, name = 'testfro'),
     # path('testPR/',views.pr_count_JSON, name = 'testPR') #URL for printing JSON commit package
+    path('login/', views.login_view, name='login'),
+    # Optional logout URL pattern
+    path('logout/', views.logout_view, name='logout'),
 ]
     

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "api_integration.apps.ApiIntegrationConfig",
     'django.contrib.admin',
     'django.contrib.auth',
+    'rest_framework.authtoken',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -63,12 +64,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+LOGIN_URL = '/login/'
+LOGOUT_REDIRECT_URL = '/login/'
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
+    'http://localhost:5173/login',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True  # Do not use this in production!

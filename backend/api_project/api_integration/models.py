@@ -4,6 +4,8 @@ from django.db import models
 from datetime import date
 from . import functions
 from asgiref.sync import sync_to_async
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AbstractUser
 
 
 class User(models.Model): # user
@@ -242,4 +244,3 @@ class Comment(models.Model): # comment
 
     class Meta:
         app_label = 'api_integration'
-

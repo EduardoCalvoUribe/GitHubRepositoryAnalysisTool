@@ -8,8 +8,7 @@ import re
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
-from .models import User
-from .models import Repository, PullRequest, Commit
+from .models import Repository, PullRequest, Commit, User
 from . import functions, API_call_information
 # from .serializers import ItemSerializer
 from django.views.decorators.csrf import csrf_exempt
@@ -17,6 +16,11 @@ import aiohttp
 import asyncio
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render, redirect
+from django.contrib.auth import logout
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate, login
+
 
 
 from django.http import JsonResponse
@@ -226,26 +230,32 @@ def frontendInfo(request):
 
 @csrf_exempt
 def delete_entry_db(request):
-    print("Delete entry")
-    # extract id from POST request
-    id = process_vue_POST_request(request)
-    # delete repodata corresponding to id from database
-    repository = Repository.objects.get(id=id)
-    delete_repository_references(request, repository)
-    repository.delete()
-    return JsonResponse(id, safe=False)
+    try:
+        print("Delete entry")
+        # extract id from POST request
+        id = process_vue_POST_request(request)
+        # delete repodata corresponding to id from database
+        repository = Repository.objects.get(id=id)
+        delete_repository_references(request, repository)
+        repository.delete()
+        return JsonResponse(id, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 def delete_repository_references(request, repository):
-    for pull in repository.pull_requests_list:
-       PullRequest.objects.filter(url=pull).delete()
-    for commit in repository.commits_list:
-       Commit.objects.filter(url=commit).delete()
-    for comment in repository.comments_list:
-        Comment.objects.filter(url=comment).delete()
-    for user in repository.users_list:
-        User.objects.filter(login=user).delete()
-    return True
+    try:
+        for pull in repository.pull_requests_list:
+            PullRequest.objects.filter(url=pull).delete()
+        for commit in repository.commits_list:
+            Commit.objects.filter(url=commit).delete()
+        for comment in repository.comments_list:
+            Comment.objects.filter(url=comment).delete()
+        for user in repository.users_list:
+            User.objects.filter(login=user).delete()
+        return True
+    except Exception as e:
+        return False
 
 def save_comment_view(request):
     # Example data for creating a Comment instance
@@ -534,4 +544,24 @@ def calculate_average_semantic_repo(repo_data):
     return total_semantic / len(repo_data["pull_requests"]) if len(repo_data["pull_requests"]) > 0 else 0  # Prevent division by zero
         
     
-    
+
+@csrf_exempt
+def login_view(request):
+    print("received login request")
+    data = json.loads(request.body)
+    username =  data.get("username")
+    password = data.get("password")
+    email = data.get("email")
+    user = authenticate(username=username, password=password)
+    if user:
+        token, created = Token.objects.get_or_create(user=user)
+        response = JsonResponse({'token': token.key})
+        response.set_cookie('auth_token', token, httponly=True)
+        return response
+    else:
+        return JsonResponse({'error': False}, status=400)
+
+@csrf_exempt
+def logout_view(request):
+    logout(request)
+    return redirect('/login/')  # Redirect to login page after logout
