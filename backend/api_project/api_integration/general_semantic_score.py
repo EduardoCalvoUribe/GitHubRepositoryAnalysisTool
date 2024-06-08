@@ -3,7 +3,7 @@ import numpy as np
 from . import views
 from django.http import HttpResponse
 from django.http import JsonResponse
-from .nlp_functions import CodeCommitMessageRatio, FleschReadingEase, LexicalDensity
+from .nlp_functions import CodeCommitMessageRatio, FleschReadingEase, LexicalDensity, AsyncCodeCommitMessageRatio
 # from .comment_info import list_of_comments
 import asyncio
 
@@ -32,10 +32,21 @@ def calculateSemanticScore(commit):
 # Accepts additional parameters ld_weight, fre_weight and cmcl_weight, representing the weights
 # for lexical density, Flesch reading ease and commit message length/code length ratio respectively.
 # In order to retrieve message from commit object, let commit_message = commit.commit.message
-def calculateWeightedCommitSemanticScore(commitJSON, ld_weight, fre_weight, cmcl_weight, commit_url):
+async def calculateWeightedCommitSemanticScore(commitJSON, ld_weight, fre_weight, cmcl_weight, commit_url, pr_num):
     # Get commit message in string form
     commit_message = commitJSON["commit"]["message"]
+
+    # Parse relevant variables for code/commit message ratio function
     parsed_commit_url = views.parse_Github_url_variables(commit_url)
+    owner = parsed_commit_url[2]
+    repo = parsed_commit_url[3]
+    commit_SHA = parsed_commit_url[-1]
+    
+    awaited_bounded_ratio = await AsyncCodeCommitMessageRatio.compute_code_commit_ratio(owner,repo,pr_num,commit_SHA)
+    bounded_ratio = sigmoid(awaited_bounded_ratio)
+    weighted_bounded_ratio = cmcl_weight * bounded_ratio
+
+
     #commit = CodeCommitMessageRatio.getGithubCommitObject(parsed_commit_url[2], parsed_commit_url[3], parsed_commit_url[-1])
     
     # Get commit message/code length ratio, bounded between 0 and 1 by sigmoid function
@@ -53,9 +64,9 @@ def calculateWeightedCommitSemanticScore(commitJSON, ld_weight, fre_weight, cmcl
     total_weight = ld_weight + fre_weight + cmcl_weight
 
     # Return -1 if total weight is 0, else return weighted semantic score
-    return (weighted_flesch_reading_ease+weighted_lexical_density)/total_weight if total_weight != 0 else -1
+   #  return (weighted_flesch_reading_ease+weighted_lexical_density)/total_weight if total_weight != 0 else -1
 
-   #  return (weighted_bounded_ratio+weighted_flesch_reading_ease+weighted_lexical_density)/total_weight if total_weight != 0 else -1
+    return (weighted_bounded_ratio+weighted_flesch_reading_ease+weighted_lexical_density)/total_weight if total_weight != 0 else -1
 
 
 # Function which calculates the weighted semantic score for comments.

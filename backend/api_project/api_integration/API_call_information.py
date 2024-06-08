@@ -129,7 +129,7 @@ async def pull_request_task(pr, data_list):
 
     commit_tasks = []
     for commit in pr[1]:
-        commit_tasks.append(asyncio.create_task(commit_task(commit, data_list)))
+        commit_tasks.append(asyncio.create_task(commit_task(commit, data_list, pr[0]['number'])))
 
     comment_tasks = []
     for comment in pr[2]:
@@ -138,7 +138,7 @@ async def pull_request_task(pr, data_list):
     await asyncio.gather(*commit_tasks)
     await asyncio.gather(*comment_tasks)
 
-async def commit_task(commit, data_list):
+async def commit_task(commit, data_list, pr_num):
     """
     Process a commit and add it to the data list.
 
@@ -150,8 +150,8 @@ async def commit_task(commit, data_list):
         list: The updated data list.
     """
     
-    commit_semantic_score = general_semantic_score.calculateWeightedCommitSemanticScore(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
-
+    # commit_semantic_score = general_semantic_score.calculateWeightedCommitSemanticScore(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
+    commit_semantic_score = await general_semantic_score.calculateWeightedCommitSemanticScore(commit, 0.33, 0.33, 0.34, commit['commit']['url'],pr_num)
     defaults = {
         "url": commit['commit']['url'],
         "pull_request": data_list[1][-1],
