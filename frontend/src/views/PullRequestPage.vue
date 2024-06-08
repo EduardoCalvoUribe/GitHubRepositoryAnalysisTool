@@ -1,3 +1,46 @@
+<script>
+import { ref, onMounted } from 'vue';
+import fakejson from '../test.json';
+import { useRoute } from 'vue-router';
+import { state } from '../repoPackage.js';
+import CommitPage from './CommitPage.vue';
+
+export default {
+  setup() {
+    const route = useRoute();
+    const pullpackage = ref(null);
+
+    onMounted(async () => {
+      console.log('onMounted');
+      console.log(state.githubResponse);
+      if (state.githubResponse) {
+        console.log('in if');
+        for (let i=0; i < state.githubResponse.Repo.pull_requests.length - 1; i++) {
+          if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
+            pullpackage.value = state.githubResponse.Repo.pull_requests[i];
+          }
+        }
+        console.log(pullpackage.value);
+      }
+      if (pullpackage.value) {
+        console.log(pullpackage.value.title)
+      } else {
+        console.log('failure')
+      }
+    });
+
+    return {
+      state,
+      pullpackage,
+    };
+  },
+
+  data() {
+
+  },
+};
+</script>
+
 <template>
   <header>
     <router-link :to="`/repoinfo/${repositoryId}`">Repository Information</router-link>
@@ -9,79 +52,52 @@
   <router-view />
 
   <header>
-    <div style="font-size: 180%; margin-top: 30px;">
-      Pull Request Information
+    <div v-if="pullpackage" style="margin-top: 50px">
+      <div style="font-size: 180%; margin-bottom: 20px;"> {{ pullpackage.title }} </div>
+      <div style="margin-bottom: 5px"> User: {{ pullpackage.user }} </div>
+      <div> Created: {{ pullpackage.date }} </div>
     </div>
   </header>
 
-  <header>
-    <div v-if="pullpackage" style="font-size: 180%; margin-top: 30px;">
-      {{ pullpackage.title }}
-    </div>
-  </header>
-
-  <div class="grid-container" v-for="pullitem in pullitems" :key="pullitem.id">
-    <div class="grid-item" v-for="item in items" :key="item.id">
-      {{ item.text }}
+  <div v-if="pullpackage" style=" display: flex; justify-content: center;">
+    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+      <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="commits">Commits:</label>
+      <div id="commits" class="row" v-for="commit in pullpackage.commits">
+        <router-link :to="{ path: '/commitpage/' + encodeURIComponent(commit.url) }"><button class="button-6">
+            <span><h2 style="margin-left: 0.3rem;">{{ commit.title }}</h2></span>
+            <span class="last-accessed">Author: {{ commit.user }}</span>
+            <span class="last-accessed">Date: {{ commit.date }}</span>
+        </button></router-link>
+      </div>
     </div>
   </div>
+  
+  <div v-if="pullpackage">
+    <body>
+      
+
+      <div class="grid-container">
+        <div id="commits" class="row" v-for="commit in pullpackage.commits">
+          <div class="grid-item">
+          {{ commit.title }}
+          <body>
+            Date: {{ commit.date }}
+            <div>
+              User: {{ commit.user }}
+            </div>
+            <div>
+              Semantic Score {{ commit.semantic_score }}
+            </div>
+            <div>
+              Updated At: {{ commit.updated_at }}
+            </div>
+          </body>
+          </div>
+        </div>
+      </div>
+    </body>
+    </div>
 </template>
-
-<script>
-import { ref, onMounted } from 'vue';
-import fakejson from '../test.json';
-import { useRoute } from 'vue-router';
-import { githubResponse } from '../repoPackage.js';
-
-export default {
-  setup() {
-    const route = useRoute();
-    const data = {'id': route.params.id};
-    const pullpackage = ref(null);
-
-    onMounted(async () => {
-    if (githubResponse.value) {
-      for (let i=0; i < githubResponse.value.Repo.pull_requests.length - 1; i++) {
-        if (githubResponse.value.Repo.pull_requests[i].number == data) {
-          pullpackage.value = githubResponse.value.Repo.pull_requests[i];
-        }
-      }
-    }
-    if (pullpackage.value) {
-      console.log(pullpackage.value.title)
-    } else {
-      console.log('failure')
-    }
-    
-
-
-    });
-
-
-    return {
-      data,
-      githubResponse,
-      pullpackage,
-    };
-  },
-
-  data() {
-    return {
-      repositoryId: fakejson.repository.pull_requests.id,
-      selectedRange: null,
-      pullitems: [
-        { id: 1, text: 'Pull request ID: ' + fakejson.repository.pull_requests[0].commits[0].id }
-      ],
-      items: [
-        { id: 1, text: 'Date: ' + fakejson.repository.pull_requests[0].commits[0].date },
-        { id: 2, text: 'Author: ' + fakejson.repository.pull_requests[0].commits[0].author },
-        { id: 3, text: 'Message: ' + fakejson.repository.pull_requests[0].commits[0].message },
-        { id: 4, text: 'Semantic Score: ' + fakejson.repository.pull_requests[0].commits[0].semantic_score },
-      ],
-    };
-  },
-};
-</script>
 
 <style scoped>
 @media (min-width: 1024px) {
@@ -94,13 +110,17 @@ export default {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* Adjust the number of columns as needed */
     gap: 10px; /* Spacing between grid items */
+    height: auto;
+    padding: 10px;
   }
 
   .grid-item {
     background-color: #157eff4d; /* Background color for grid items */
-    padding: 50px; /* Padding inside grid items */
-    text-align: center; /* Centering text inside grid items */
+    padding: 10px; /* Padding inside grid items */
+    text-align: left; /* Centering text inside grid items */
     border: 1px solid #ccc; /* Border for grid items */
+    min-height: 50px;
+    height: auto;
   }
 
   .box-container {

@@ -49,20 +49,15 @@ export default {
 
     const sortListsDate = (list, choice) => {
       if (choice.name == 'Date Oldest to Newest') {
-        // const sorted_list = list.sort((a,b) => new Date(a.updated_at) - new Date(b.updated_at));
-        const sorted_list = Object.fromEntries(Object.entries(list).sort(([,a],[,b]) => a - b));
-        console.log(sorted_list);
-        return sorted_list;
+        return list.sort((a,b) => new Date(a.updated_at) - new Date(b.updated_at));
       } else {
-        // const sorted_list = list.sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at));
-        const sorted_list = Object.fromEntries(Object.entries(list).sort(([,a],[,b]) => b - a));
-        return sorted_list;
+        return list.sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at));
       }
     };
 
     const sortedRepos = computed(() => {
       if (!repoInfo.value) return [];
-      else return sortListsDate(repoInfo.value, selectedSort.value);
+      else return sortListsDate(repoInfo.value.Repos, selectedSort.value);
     });
 
     return { 
@@ -129,6 +124,8 @@ export default {
       
       try {
           const response = await fetchData('http://127.0.0.1:8000/delete/', postOptions); // send repo name to backend delete function through path 'delete'
+          console.log('delete reload')
+          location.reload();
       } catch (error) {
           console.error('Error:', error);
       }
@@ -159,10 +156,9 @@ export default {
 
     <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
       <div style="display: flex; flex-direction: column; align-items: flex-start;">
+        <h2 style="justify-content: center; display: inline-block; width: 250px; margin-bottom: 3%" for="repos">Tracked Repositories:</h2> 
         <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
-        <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="repos">Tracked Repositories:</label>
-        <div id="repos" v-for="x in repoInfo" >
-          <template v-for="repo in x" class="column">
+        <div id="repos" class="row" v-for="repo in sortedRepos" >
           <router-link :to="{ path: '/repoinfo/' + encodeURIComponent(repo.url) }"><button class="button-6" > 
               <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
               <span class="last-accessed">Last Accessed: {{ repo.updated_at }}</span>
@@ -170,8 +166,6 @@ export default {
           <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
             <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.id)">x</div>
           </button>
-          <br>  
-        </template>
         </div> 
       </div>
     </div>

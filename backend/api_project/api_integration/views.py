@@ -15,6 +15,8 @@ from . import functions, API_call_information
 from django.views.decorators.csrf import csrf_exempt
 import aiohttp
 import asyncio
+from django.http import HttpRequest, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 
 from django.http import JsonResponse
@@ -283,6 +285,34 @@ def delete_all_records(request):
     except Exception as e:
         return False, str(e)
 
+
+
+@csrf_exempt
+def send_post_request_to_repo_frontend_info(request):
+    # Define the URL for repo_frontend_info endpoint
+    url = '/your-endpoint-url/'
+
+    # Define the payload for the POST request
+    payload = {
+        "url": "github.com/LucaAmbrogioni/CalculusTeachingMaterial"
+    }
+
+    try:
+        # Create a mock request object
+        mock_request = HttpRequest()
+        mock_request.method = 'POST'
+        mock_request._body = json.dumps(payload).encode('utf-8')
+        
+        # Call the repo_frontend_info function with the mock request object
+        response = repo_frontend_info(mock_request)
+        
+        # Return the response
+        return response
+
+    except Exception as e:
+        # If an exception occurs, return an error response
+        return JsonResponse({"error": str(e)}, status=500)
+
 # Function to send a package of all repo information to the frontend
 @csrf_exempt
 def repo_frontend_info(request):
@@ -293,76 +323,103 @@ def repo_frontend_info(request):
         try:
             # Option 1: Using a dictionary (recommended)
             data = json.loads(request_body)
-            #url = data.get('url')  # Use get() for optional retrieval
-            url = data['url']
+            # url = data.get('url')  # Use get() for optional retrieval
+            url = data.get('url', "github.com/LucaAmbrogioni/CalculusTeachingMaterial")
             # dates = data['date']
             # begin_date, end_date = date_range(dates)
         except json.JSONDecodeError:
-            print("Error")
-    try:
-    # Get the repository by URL (using get() for single object retrieval)
-        repo = Repository.objects.get(url=url)
-    except Repository.DoesNotExist:
-    # Handle repository not found (e.g., return a not found response)
-        return JsonResponse({'error': 'Repository not found'}, status=404)
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        
+        try:
+            # Get the repository by URL (using get() for single object retrieval)
+            repo = Repository.objects.get(url=url)
+        except Repository.DoesNotExist:
+            # Handle repository not found (e.g., return a not found response)
+            return JsonResponse({'error': 'Repository not found'}, status=404)
 
-    try:
+        try:
+            # Initialize total commit and comment counts
+            total_commit_count = 0
+            total_comment_count = 0
+
             # Prepare the response data with nested pull request details
-        data = {
-            "Repo": {
-            "name": repo.name,
-            "url": repo.url,
-            "updated_at": repo.updated_at,
-            "pull_requests": [],
-            }
-        }
-
-        pull_requests = repo.pull_requests.all()
-        for pr in pull_requests:
-            pr_data = {
-            "url": pr.url,
-            "updated_at": pr.updated_at,
-            "date": pr.date,
-            "title": pr.title,
-            "body": pr.body,
-            "user": pr.user,
-            "number": pr.number,
-            "closed_at": pr.closed_at,
-            "commits": [],
-            "comments": [],
+            data = {
+                "Repo": {
+                    "name": repo.name,
+                    "url": repo.url,
+                    "updated_at": repo.updated_at,
+                    "pull_requests": [],
+                    "number_pulls": 0,
+                    "total_commit_count": 0,
+                    "total_comment_count": 0,
+                    "average_semantic": 0,
+                }
             }
 
-            for commit in pr.commits.all():
-                commit_data = {
-                    "name": commit.name,
-                    "url": commit.url,
-                    "title": commit.title,
-                    "user": commit.user,
-                    "date": commit.date,
-                    "semantic_score": commit.semantic_score,
-                    "updated_at": commit.updated_at,
+            pull_requests = repo.pull_requests.all()
+            for pr in pull_requests:
+                pr_data = {
+                    "url": pr.url,
+                    "updated_at": pr.updated_at,
+                    "date": pr.date,
+                    "title": pr.title,
+                    "body": pr.body,
+                    "user": pr.user,
+                    "number": pr.number,
+                    "closed_at": pr.closed_at,
+                    "commits": [],
+                    "comments": [],
+                    "number_commits": 0,
+                    "number_comments": 0,
+                    "average_semantic": 0,
                 }
-                pr_data["commits"].append(commit_data)
 
-            for comment in pr.comments.all():
-                comment_data = {
-                    "url": comment.url,
-                    "date": comment.date,
-                    "body": comment.body,
-                    "user": comment.user,
-                    "semantic_score": comment.semantic_score,
-                    "updated_at": comment.updated_at,
-                    "comment_type": comment.comment_type,
-                    "commit_id": comment.commit_id,
-                }
-                pr_data["comments"].append(comment_data)
+                for commit in pr.commits.all():
+                    commit_data = {
+                        "name": commit.name,
+                        "url": commit.url,
+                        "title": commit.title,
+                        "user": commit.user,
+                        "date": commit.date,
+                        "semantic_score": commit.semantic_score,
+                        "updated_at": commit.updated_at,
+                    }
+                    pr_data["commits"].append(commit_data)
+                    total_commit_count += 1
+                
+                pr_data["number_commits"] = len(pr_data["commits"])
 
-            data["Repo"]["pull_requests"].append(pr_data)
-        return JsonResponse(data)
-    except Repository.DoesNotExist:
-        return JsonResponse({"error": "Repository not found"}, status=404)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+                for comment in pr.comments.all():
+                    comment_data = {
+                        "url": comment.url,
+                        "date": comment.date,
+                        "body": comment.body,
+                        "user": comment.user,
+                        "semantic_score": comment.semantic_score,
+                        "updated_at": comment.updated_at,
+                        "comment_type": comment.comment_type,
+                        "commit_id": comment.commit_id,
+                    }
+                    pr_data["comments"].append(comment_data)
+                    total_comment_count += 1
+                
+                pr_data["number_comments"] = len(pr_data["comments"])
+                pr_data["average_semantic"] = calculate_average_semantic_pull(pr_data)
+                data["Repo"]["pull_requests"].append(pr_data)
+
+            data["Repo"]["number_pulls"] = len(data["Repo"]["pull_requests"])
+            data["Repo"]["total_commit_count"] = total_commit_count
+            data["Repo"]["total_comment_count"] = total_comment_count
+            data["Repo"]["average_semantic"] = calculate_average_semantic_repo(data["Repo"])
+
+            return JsonResponse(data)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    # If the request method is not POST
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
 
 def date_range(data):
     try:
@@ -453,3 +510,28 @@ def parse_Github_url_variables(url):
     return ['URL is not a Github URL']
   else:
     return parsed_url
+  
+def calculate_average_semantic_pull(pr_data):
+    total_semantic = 0
+    comment_count = 0
+    for commit in pr_data["commits"]:
+        total_semantic += commit['semantic_score']
+    for comment in pr_data["comments"]:
+        if comment["comment_type"] == "comment":
+            total_semantic += comment['semantic_score']
+            comment_count += 1
+
+    total_count = len(pr_data["commits"]) + comment_count
+    # Divison by 0 handled 
+    return total_semantic / total_count if total_count > 0 else 0 
+
+def calculate_average_semantic_repo(repo_data):
+    total_semantic = 0
+    for pr in repo_data["pull_requests"]:
+        total_semantic += pr['average_semantic']
+
+    # Divison by 0 handled
+    return total_semantic / len(repo_data["pull_requests"]) if len(repo_data["pull_requests"]) > 0 else 0  # Prevent division by zero
+        
+    
+    
