@@ -224,15 +224,26 @@ def frontendInfo(request):
 
 @csrf_exempt
 def delete_entry_db(request):
+    print("Delete entry")
     # extract id from POST request
     id = process_vue_POST_request(request)
     # delete repodata corresponding to id from database
-    repository = Repository.objects.filter(id=id)
+    repository = Repository.objects.get(id=id)
+    delete_repository_references(request, repository)
     repository.delete()
-    
-    
     return JsonResponse(id, safe=False)
 
+
+def delete_repository_references(request, repository):
+    for pull in repository.pull_requests_list:
+       PullRequest.objects.filter(url=pull).delete()
+    for commit in repository.commits_list:
+       Commit.objects.filter(url=commit).delete()
+    for comment in repository.comments_list:
+        Comment.objects.filter(url=comment).delete()
+    for user in repository.users_list:
+        User.objects.filter(login=user).delete()
+    return True
 
 def save_comment_view(request):
     # Example data for creating a Comment instance

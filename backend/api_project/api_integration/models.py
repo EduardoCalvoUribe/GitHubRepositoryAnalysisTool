@@ -17,7 +17,7 @@ class User(models.Model): # user
 
 
     def __str__(self):
-        return self.name
+        return self.login
     
     @classmethod
     def save_user_to_db(request, json_response):
@@ -51,7 +51,9 @@ class Repository(models.Model): # repository, might have to change this into com
     updated_at = models.DateTimeField(default=timezone.now) # time of last update in database
     #contributers = models.JSONField(blank=True, default=dict) # list of users
     pull_requests_list = models.JSONField(blank=True, default=list) # list of pull request in repository 
-    commits = models.JSONField(blank=True, default=list) # list of commits in repository 
+    commits_list = models.JSONField(blank=True, default=list) # list of commits in repository
+    comments_list = models.JSONField(blank=True, default=list) # list of comments in repository
+    users_list = models.JSONField(blank=True, default=list) # list of users in repository 
     token = models.CharField(max_length=100, default = "") # save personal access token
 
     def __str__(self):
@@ -113,7 +115,7 @@ class PullRequest(models.Model): # pull request
     number = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.name
+        return self.url
     
     @classmethod
     def save_pull_to_db(request, pull_response):
@@ -212,7 +214,7 @@ class Comment(models.Model): # comment
     commit_id = models.CharField(max_length=200, default = "")
 
     def __str__(self):
-        return self.name
+        return self.url
     
     @classmethod
     async def save_comment_to_db(request, comment_response, semantic_score):
