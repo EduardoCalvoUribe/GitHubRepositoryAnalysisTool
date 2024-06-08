@@ -4,7 +4,7 @@ from github import Github
 from django.conf import settings
 
 # Returns PyGithub commit object for a provided repository_owner, repository_name, commit_sha, github_token
-def get_Github_commit_object(repository_owner, repository_name, commit_sha):
+def getGithubCommitObject(repository_owner, repository_name, commit_sha):
     # Initialize PyGithub with token
     g = Github(settings.GITHUB_PERSONAL_ACCESS_TOKEN)
     # Get the repository object
@@ -15,12 +15,12 @@ def get_Github_commit_object(repository_owner, repository_name, commit_sha):
     return commit
 
 # Accepts PyGithub commit object and returns message in string-form associated with commit
-def get_commit_message(commit):
+def getCommitMessage(commit):
     commit_message = commit.commit.message
     return commit_message
 
 # Accepts PyGithub commit object and returns commit message/code length ratio
-def compute_code_commit_ratio(commit):
+def computeCodeCommitRatio(commit):
     # Get the files changed in the commit
     commit_files = commit.files
 

@@ -150,7 +150,7 @@ async def commit_task(commit, data_list):
         list: The updated data list.
     """
     
-    commit_semantic_score = general_semantic_score.calculate_weighted_commit_semantic_score(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
+    commit_semantic_score = general_semantic_score.calculateWeightedCommitSemanticScore(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
 
     defaults = {
         "url": commit['commit']['url'],
@@ -182,7 +182,7 @@ async def comment_task(comment, data_list):
     Returns:
         list: The updated data list.
     """
-    comment_semantic_score = general_semantic_score.calculate_weighted_comment_semantic_score(comment['body'], 0.5, 0.5)
+    comment_semantic_score = general_semantic_score.calculateWeightedCommentSemanticScore(comment['body'], 0.5, 0.5)
     commit_id = ''
     comment_date = None
     comment_url = None

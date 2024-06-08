@@ -8,7 +8,7 @@ nltk.download('averaged_perceptron_tagger')
 
 # This function computes the lexical density for a message string using NLTK
 # POS (part of speech) tagging.
-def single_message_lexical_density(message):
+def singleMessageLexicalDensity(message):
   # Split message string into separate word tokens (i.e. substrings)
   tokens = word_tokenize(message)
 
@@ -43,13 +43,13 @@ def single_message_lexical_density(message):
 
 # This function computes the average lexical density for a list of message strings.
 # messageList must be a list of strings.
-def average_message_lexical_density(messageList):
+def averageMessageLexicalDensity(messageList):
   # Initialise total lexical density variable
   total_lexical_density = 0
   
   # Sum all lexical densities for every message in messageList
   for message in messageList:
-    total_lexical_density += single_message_lexical_density(message)
+    total_lexical_density += singleMessageLexicalDensity(message)
 
   # Return average lexical density by dividing total lexical density by length of messageList
   return total_lexical_density/len(messageList)
