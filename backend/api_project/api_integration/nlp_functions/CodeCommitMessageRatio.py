@@ -5,20 +5,23 @@ from django.conf import settings
 
 # Returns PyGithub commit object for a provided repository_owner, repository_name, commit_sha, github_token
 def getGithubCommitObject(repository_owner, repository_name, commit_sha):
-    # Initialize PyGithub with token
-    g = Github(settings.GITHUB_PERSONAL_ACCESS_TOKEN)
-    # Get the repository object
-    repo = g.get_repo(f"{repository_owner}/{repository_name}")
+    # Try retrieving the PyGithub commit object
+    try:
+        # Initialize PyGithub with token
+        g = Github(settings.GITHUB_PERSONAL_ACCESS_TOKEN)
 
-    # Get the commit object for specified SHA
-    commit = repo.get_commit(sha=commit_sha)
-    return commit
+        # Get the repository object
+        repo = g.get_repo(f"{repository_owner}/{repository_name}")
 
-# Accepts PyGithub commit object and returns message in string-form associated with commit
-def getCommitMessage(commit):
-    commit_message = commit.commit.message
-    return commit_message
-
+        # Get the commit object for specified SHA
+        commit = repo.get_commit(sha=commit_sha)
+        return commit
+    
+    # Return error message if PytGithub commit object retrieval unsuccessful
+    except Exception as e:
+        print(f"Error retrieving commit in getGithubCommitObject: {e}")
+        return None
+        
 # Accepts PyGithub commit object and returns commit message/code length ratio
 def computeCodeCommitRatio(commit):
     # Get the files changed in the commit

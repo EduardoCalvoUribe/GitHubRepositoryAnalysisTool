@@ -27,6 +27,7 @@ from django.http import JsonResponse
 from .models import Comment
 from datetime import date, datetime
 from collections import OrderedDict
+from .nlp_functions.AsyncCodeCommitMessageRatio import compute_code_commit_ratio
 
 # # Helper function which loads in the JSON response from
 # # the github_repo_pull_requests function and counts the number of pull requests for a given repo. 
@@ -565,3 +566,11 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('/login/')  # Redirect to login page after logout
+def testAsyncCodeCommit(request):
+    repo_owner = "IntersectMBO"
+    repo_name = "plutus"
+    pull_number = 4733  # Replace with actual pull request number
+    commit_sha = "62ca6b263be829817b841f26c6ed25e323720b04"  # Replace with actual commit SHA
+
+    ratio = asyncio.run(compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_sha))
+    return JsonResponse(str(ratio), safe=False)
