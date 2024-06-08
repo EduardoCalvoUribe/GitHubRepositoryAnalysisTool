@@ -20,7 +20,6 @@ urlpatterns = [
     path('all/', API_call_information.get_github_information, name = 'all'),
     path('database/', views.frontendInfo, name = 'database'),
     path('delete/', views.delete_entry_db, name = 'delete'),
-    path('semantic',general_semantic_score.display_semantic, name = 'semantic'), 
     path('databaseprint/', functions.show_database, name = 'datbaseshow'),
     path('help/',views.save_comment_view, name = 'help'),
     path('deleteAll', views.delete_all_records, name = 'deleteAll'),

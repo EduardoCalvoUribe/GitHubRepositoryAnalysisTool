@@ -238,7 +238,7 @@ def delete_entry_db(request):
         repository = Repository.objects.get(id=id)
         delete_repository_references(request, repository)
         repository.delete()
-        return JsonResponse(id, safe=False)
+        return homepage_datapackage(request)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 

@@ -44,7 +44,7 @@ async def get_github_information(response):
     headers = {'Authorization': f'token {personal_access_token}'}
 
     async with aiohttp.ClientSession(headers=headers) as session:
-        try: 
+        # try: 
             data_list = [[] for i in range(5)] # for all data types
 
             defaults = {
@@ -58,7 +58,6 @@ async def get_github_information(response):
 
             # Results is a list of each page of a repo, each page has multiple pull requests and each pull request have multiple commits and comments
             results = await handle_fetch_requests(session, owner, repo)
-
             # Text to display that everything went correctly
             text_to_display = 'It Worked!'
 
@@ -77,24 +76,25 @@ async def get_github_information(response):
                 print(f"Reset time (GMT+2): {reset_time_gmt2.strftime('%Y-%m-%d %H:%M:%S')} GMT+2")
             else:
                 print("Failed to fetch rate limit information")
-
             # This for loop is only for creating displayable text on a website (not important for loop and can be deleted in end)
             pull_request_tasks = []
             for page in results:
                 for pr in page:
                     pull_request_tasks.append(asyncio.create_task(pull_request_task(pr, data_list)))
                     
-            await asyncio.gather(*pull_request_tasks)        
+            await asyncio.gather(*pull_request_tasks) 
+            print(time.time() - start_time, "before bulk create")     
             await bulk_create_objects(data_list)
             end_time = time.time() # Variable to check the total runtime of the function
             duration = end_time - start_time # Total runtime of the function
             print(duration) # Printing the duration to compare different functions' speed  
 
             # Return JsonResponse to frontend (return can eventually be deleted/reformed)
-            return JsonResponse(text_to_display, safe=False)
-        except Exception as e:
-            print(e)
-            return JsonResponse('Error', safe=False)
+            response = await sync_to_async(views.homepage_datapackage)(response)
+            return response
+        # except Exception as e:
+        #     print(e)
+        #     return JsonResponse('Error', safe=False)
 
 async def pull_request_task(pr, data_list):
     """
@@ -224,9 +224,17 @@ async def bulk_create_objects(data_list):
     """
     repo = data_list[0][0]
     repo_db, created = await sync_to_async(models.Repository.objects.update_or_create)(url=repo.url, defaults={'name': repo.name, 'owner': repo.owner, 'updated_at': repo.updated_at})
-    await sync_to_async(create_pull_requests)(data_list, repo_db)
-    await sync_to_async(create_commits_and_comments)(data_list, repo_db)
-    await create_and_update_user_data(data_list[4], repo_db) 
+    tasks = []
+    tasks.append(asyncio.create_task(sync_to_async(create_pull_requests)(data_list, repo_db)))
+    tasks.append(asyncio.create_task(sync_to_async(create_comments)(data_list, repo_db)))
+    tasks.append(asyncio.create_task(sync_to_async(create_commits)(data_list, repo_db)))
+    tasks.append(asyncio.create_task(create_and_update_user_data(data_list[4], repo_db)))
+    await asyncio.gather(*tasks)
+
+    # await sync_to_async(create_pull_requests)(data_list, repo_db)
+    # await sync_to_async(create_comments)(data_list, repo_db)
+    # await sync_to_async(create_commits)(data_list, repo_db)
+    # await create_and_update_user_data(data_list[4], repo_db)
 
 
 def create_pull_requests(data_list, repo_db):
@@ -240,11 +248,14 @@ def create_pull_requests(data_list, repo_db):
     Returns:
         None
     """
+    pull_set = set()
     for pull in data_list[1]:
         models.PullRequest.objects.update_or_create(url=pull.url, defaults={'repo': repo_db, 'updated_at': pull.updated_at, 'closed_at': pull.closed_at, 'date': pull.date, 'title': pull.title, 'body': pull.body, 'user': pull.user, 'number': pull.number})
-        update_model_data(repo_db, "pull_requests_list", pull.url) # add pull request to list of pull requests in repo
+        #update_model_data(repo_db, "pull_requests_list", pull.url) # add pull request to list of pull requests in repo
+        pull_set.add(pull.url)
+    update_model_data(repo_db, "pull_requests_list", list(pull_set)) # add pull request to list of pull requests in repo
 
-def create_commits_and_comments(data_list, repo_db):
+def create_comments(data_list, repo_db):
     """
     Create commits and comments in the database based on the provided data list.
 
@@ -255,13 +266,20 @@ def create_commits_and_comments(data_list, repo_db):
     Returns:
         None
     """
+    commit_set = set()
     for commit in data_list[2]:
         models.Commit.objects.update_or_create(url=commit.url, defaults={'pull_request': PullRequest.objects.get(url=commit.pull_request.url), 'name': commit.name, 'title': commit.title, 'user': commit.user, 'date': commit.date, 'semantic_score': commit.semantic_score, 'updated_at': commit.updated_at})
-        update_model_data(repo_db, "commits_list", commit.url) # add commit to list of commits in repo
+        #update_model_data(repo_db, "commits_list", commit.url) # add commit to list of commits in repo
+        commit_set.add(commit.url)
+    update_model_data(repo_db, "commits_list", list(commit_set)) # add commit to list of commits in repo
 
+def create_commits(data_list, repo_db):
+    comment_set = set()
     for comment in data_list[3]:
         models.Comment.objects.update_or_create(url=comment.url, defaults={'pull_request': PullRequest.objects.get(url=comment.pull_request.url), 'date': comment.date, 'updated_at': comment.updated_at, 'body': comment.body, 'user': comment.user, 'semantic_score': comment.semantic_score, 'comment_type': comment.comment_type, 'commit_id': comment.commit_id})
-        update_model_data(repo_db, "comments_list", comment.url) # add comment to list of comments in repo
+        #update_model_data(repo_db, "comments_list", comment.url) # add comment to list of comments in repo
+        comment_set.add(comment.url)
+    update_model_data(repo_db, "comments_list", list(comment_set)) # add comment to list of comments in repo
 
 
 async def create_and_update_user_data(all_users, repo_db):
@@ -275,12 +293,21 @@ async def create_and_update_user_data(all_users, repo_db):
     Returns:
         None
     """
+    users_set = set()
+    comment_set = set()
+    commit_set = set()
     for user in all_users:
-        print(user)
         user_db, created = await sync_to_async(models.User.objects.update_or_create)(login=user[0].login)
-        await sync_to_async(update_model_data)(user_db, user[1], user[2]) # add comment/commit/pull request to user
-        await sync_to_async(update_model_data)(repo_db, "users_list", user_db.login) # add user to list of users in repo
+        if(user[1] == "comments"):
+            comment_set.add(user[2])
+        else:
+            commit_set.add(user[2])
+        users_set.add(user[0].login)
+    await sync_to_async(update_model_data)(user_db, "comments", list(comment_set)) # add comment to list of comments in repo
+    await sync_to_async(update_model_data)(user_db, "commits", list(commit_set)) # add commit to list of commits in repo
+    await sync_to_async(update_model_data)(repo_db, "users_list", list(users_set)) # add user to list of users in repo
 
+from django.db.models import F
 
 def update_model_data(model, related_data_field, related_data_url):
     """
@@ -294,8 +321,9 @@ def update_model_data(model, related_data_field, related_data_url):
     Returns:
         None
     """
+    # model.__class__.objects.filter(pk=model.pk).update(**{related_data_field: F(related_data_field=F(related_data_field) + [related_data_url])})
     current = getattr(model, related_data_field)
-    current.append(related_data_url)
+    current.extend(related_data_url)
     setattr(model, related_data_field, current)  # Use set union for unique values
     model.save()
 
@@ -356,7 +384,6 @@ async def process_page(session, pr_url):
 
         # Gather the results and wait until all tasks are complete
         pull_results = await asyncio.gather(*tasks)
-
         return pull_results #[[[pr, [commits], [comments]], [pr, [commits], [comments]]] for each pr
 
 async def process_pull_request(session, pull_request):
@@ -372,7 +399,7 @@ async def process_pull_request(session, pull_request):
     """
     commits_task = asyncio.create_task(fetch_commits(session, pull_request))
     comments_task = asyncio.create_task(fetch_comments(session, pull_request))
-  
+    
     all_commits = await commits_task
     all_comments = await comments_task
 
@@ -498,16 +525,16 @@ async def fetch_comment_page(session, url):
     dict: JSON response containing comments.
     """
     # Make a GET request to the provided URL to fetch comments
-    try:
-        async with session.get(url) as response:
+    # try:
+    async with session.get(url) as response:
             # Ensure that the response is succesful
             response.raise_for_status()
             # Create json object from response
             comments = await response.json()
             # Return all comments on a single page
             return comments
-    except aiohttp.ClientError as e:
-        return []
+    # except aiohttp.ClientError as e:
+    #     return []
 
 
 async def get_all_page_urls(session, pr_url):

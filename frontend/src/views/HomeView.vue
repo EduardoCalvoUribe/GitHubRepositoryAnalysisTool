@@ -1,5 +1,5 @@
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed} from 'vue';
 import { fetchData } from '../fetchData.js'
 
 export default {
@@ -72,6 +72,11 @@ export default {
       invalidInput: false, // set to false by default so false message is not displayed constantly
     }
   },
+  computed: {
+  currentUrl() {
+    return this.inputUrl;
+  }
+},
   methods: {
    
     async checkInput(str) {
@@ -101,9 +106,12 @@ export default {
           console.log('entered try');
           const response = await fetchData('http://127.0.0.1:8000/all/', postOptions); // send repo url to get github information function through 'all' path
           if (response) {
+            // inject('repoInfo', response); // update repoInfo with the fetched backend db data
+            this.repoInfo = response;
             console.log('reload')
-            location.reload();
+            //location.reload();
           }
+          this.inputUrl = ''; // clear input field after submitting
       } catch (error) {
           console.error('Error:', error);
       }
@@ -112,6 +120,7 @@ export default {
     },
 
     async handleDeleteRequest(repo) {
+      
       const data = {'url': repo}; // define data to be sent in postOptions, repo id in this case
 
       const postOptions = { // defines how data is sent to backend, POST request in this case
@@ -124,8 +133,14 @@ export default {
       
       try {
           const response = await fetchData('http://127.0.0.1:8000/delete/', postOptions); // send repo name to backend delete function through path 'delete'
+          if (response) {
+            // inject('repoInfo', response); // update repoInfo with the fetched backend db data
+            this.repoInfo = response;
+            console.log('reload')
+            //location.reload();
+          }
           console.log('delete reload')
-          location.reload();
+          // location.reload();
       } catch (error) {
           console.error('Error:', error);
       }
