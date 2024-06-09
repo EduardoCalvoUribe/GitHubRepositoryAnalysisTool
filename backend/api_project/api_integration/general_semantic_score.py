@@ -3,7 +3,7 @@ import numpy as np
 from . import views
 from django.http import HttpResponse
 from django.http import JsonResponse
-from .nlp_functions import CodeCommitMessageRatio, FleschReadingEase, LexicalDensity, AsyncCodeCommitMessageRatio
+from .nlp_functions import FleschReadingEase, LexicalDensity, AsyncCodeCommitMessageRatio
 # from .comment_info import list_of_comments
 import asyncio
 
@@ -11,22 +11,23 @@ import asyncio
 def sigmoid(x):
  return (1/(1 + np.exp(-x)))*100
 
+# NOTE: redundant function, use calculateWeightedCommitSemanticScore instead. 
 # Function which calculates the semantic score with every metric weighted equally
 # In order to retrieve message from commit object, let commit_message = commit.commit.message
-def calculateSemanticScore(commit):
-    # Get commit message associated with commit object in string form
-    commit_message = commit.commit.message
+# def calculateSemanticScore(commit):
+#     # Get commit message associated with commit object in string form
+#     commit_message = commit.commit.message
     
-    # Get commit message/code length ratio, bounded between 0 and 1 by sigmoid function
-    bounded_ratio = sigmoid(CodeCommitMessageRatio.computeCodeCommitRatio(commit))
+#     # Get commit message/code length ratio, bounded between 0 and 1 by sigmoid function
+#     bounded_ratio = sigmoid(CodeCommitMessageRatio.computeCodeCommitRatio(commit))
 
-    # Get Flesch reading ease value for commit message
-    flesch_reading_ease = FleschReadingEase.calculateFleschReadingEase(commit_message)
+#     # Get Flesch reading ease value for commit message
+#     flesch_reading_ease = FleschReadingEase.calculateFleschReadingEase(commit_message)
 
-    # Get lexical density value for commit message
-    lexical_density = LexicalDensity.singleMessageLexicalDensity(commit_message)
+#     # Get lexical density value for commit message
+#     lexical_density = LexicalDensity.singleMessageLexicalDensity(commit_message)
 
-    return (bounded_ratio + flesch_reading_ease + lexical_density)/3
+#     return (bounded_ratio + flesch_reading_ease + lexical_density)/3
 
 # Function which calculates the semantic score with adjusted weights
 # Accepts additional parameters ld_weight, fre_weight and cmcl_weight, representing the weights

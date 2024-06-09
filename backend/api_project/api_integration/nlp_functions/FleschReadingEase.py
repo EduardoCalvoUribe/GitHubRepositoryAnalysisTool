@@ -1,38 +1,53 @@
-# TO ADD (minor bug solving): This function does not yet properly handle URLs, for instance the string "github.com" currently gets 
-# a low Flesch reading ease score way below 0. Furthermore, the output for standalone words (so a string containing only 1 word)
-# which are unknown to cmudict get Flesch reading ease scores which vary highly, often being either 36, 121 or way below 0. 
-# Furthermore, decide if negative Flesch reading ease scores should be set as 0 to have clearly defined bounds for semantic score.
-
-# NOTE: for this function, the nltk dependency must be installed (pip install nltk)
+# Necessary imports for FleschReadingEase.py
 import nltk
+from nltk.corpus import cmudict #Pronounciation dictionary for annotated syllables
+from nltk.tokenize import sent_tokenize #Sentence count using sent_tokenize
 
-# download cmudict
-# NOTE: nltk data libraries cannot be downloaded through the requirements.txt file, 
-# thus they must be installed manually. Make sure that there is a list of libraries which must be 
-# manually installed when the end product is provided to Rodrigo. 
-nltk.download('cmudict')
-#import cmudict (pronounciation dictionary) for annotated syllables
-from nltk.corpus import cmudict
-# read in cmudict as dictionary
+# A list of libraries which must be installed manually, as explained in project report.
+# If libraries are downloaded, please comment them out.
+# nltk.download('cmudict') 
+# nltk.download('punkt')
+
+# Read in cmudict as dictionary
 d = cmudict.dict()
-
-# Sentence count using nltk sent_tokenize
-nltk.download('punkt')
-from nltk.tokenize import sent_tokenize
 
 
 #Function which calculates the Flesch reading ease metric for a given message.
 #Returns Flesch reading ease as a single numerical value
 # If division by 0 occurs -1 is returned.
 def calculateFleschReadingEase(message):
+    """
+    Function which calculates the Flesch reading ease for a given message. This 
+    metric is part of the general semantic score for commit and comment messages.
+
+    The Flesch reading ease is a measure which measures the readability of a text fragment.
+    The Flesch reading ease is dependent on the number of words in a message, 
+    the number of sentences in a message and the number of syllables in a message.    
+
+    The formula associated with the Flesch reading ease metric can be found on
+    https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests
+
+    In theory the Flesch reading ease value for a string can be negative (highly unreadable text),
+    but this is uncommon. This function  ensures that the value is bounded between 0 and 100. 
+    
+    Parameters:
+    message: The message for which the Flesch reading ease is computed. Must be a string.
+
+    Returns:
+    float: A float between 0 and 100 representing the (bounded) Flesch reading ease. 
+    If message is None (not defined) or empty, the Flesch reading ease is set to 0. 
+    """
+
     # If message is None type (not defined) or empty, let Flesch reading ease equal 0
     if message is None or message.strip() == "":
         return 0
 
     # Count number of words with .split() function. By default the separator character is any whitespace
     wordCount = len(message.split())
-    # Count sentences using nltk sent_tokenize
+
+    # Count number of sentences using nltk sent_tokenize
     sentence_count = len(sent_tokenize(message))
+
     # Initialise syllable count for message using syllable_count function.
     syllable_count = 0
 
@@ -40,7 +55,6 @@ def calculateFleschReadingEase(message):
     for word in message.split():
         syllable_count += syllableCount(word)
     
-
     # If sentenceCount or wordCount are 0, return -1 to prevent division by 0
     if sentence_count == 0 or wordCount == 0:
         return -1
@@ -54,30 +68,70 @@ def calculateFleschReadingEase(message):
     # Return Flesch reading ease score.  
     return flesch_reading_ease_score 
 
-
-#Helper function which checks if word is in cmudict dictionary.
 def lookupWord(word):
+    """
+    Helper function which looks up word in cmudict dictionary.
+
+    Parameters:
+    word: The word which is looked up in cmudict dictionary.
+
+    Returns:
+    list object: A list object containing all matching phonetic representations for the word.    
+    If no matching phonetic representations are found, the returned list is empty.
+    """
     return d.get(word)
 
-# Function which uses cmudict to return number of syllables, if word not in cmudict then number of syllables is counted manually. 
-# Courtesy of https://datascience.stackexchange.com/questions/23376/how-to-get-the-number-of-syllables-in-a-word
 def syllableCount(word):
+    """
+    Function which returns the number of syllables in a word.
+
+    This function uses cmudict to return the number of syllables for a word.
+    If the word is not in the cmudict dictionary, then the number of syllables
+    is counted manually. For a more detailed explanation on the manual syllable
+    count, see documentation in the otherSyllables(word) function.
+
+    Parameters:
+    word: The word for which the number of syllables is returned. 
+
+    Returns:
+    int: The syllable count for the provided word.
+    """
+
+    # Look up word in cmudict dictionary
     wordCheck = lookupWord(word)
 
     #if wordCheck is not empty and therefore word is in dictionary
     if wordCheck:
         # Process first matched word in dictionary
         wordForProcessing = wordCheck[0]
+        # Return number of syllables for the word
         return len([p for p in wordForProcessing if p[-1].isdigit()])
     # else if word not found in cmudict
     else:        
+        # Return manually counted number of syllables for the word
         return otherSyllables(word)
 
-# Function with simple heuristic for determining the number of syllables in English words. 
-# All words which are not in cmudict are processed by this function. 
-# Courtesy of https://datascience.stackexchange.com/questions/23376/how-to-get-the-number-of-syllables-in-a-word, 
-# slightly adjusted and improved by ChatGPT 3.5. 
+
 def otherSyllables(word):
+    """
+    Function which manually counts the number of syllables in a word.
+
+    This function counts the number of syllables manually for all words which 
+    are not found in the cmudict dictionary. To count the number of syllables manually, 
+    a heuristic has been used based on the linguistic heuristic as introduced in 
+    https://datascience.stackexchange.com/questions/23376/how-to-get-the-number-of-syllables-in-a-word
+    (and https://medium.com/@mholtzscher/programmatically-counting-syllables-ca760435fab4). 
+    The heuristic has been slightly adjusted and improved by ChatGPT 3.5. The function 
+    is used in the syllableCount function. 
+
+    NOTE: the manual syllable count is not optimal and can be optimized in the future.  
+
+    Parameters:
+    word: The word for which the number of syllables is manually counted. 
+
+    Returns:
+    int: The syllable count for the provided word.
+    """
     # syllable count
     count = 0
 
@@ -110,6 +164,21 @@ def otherSyllables(word):
 # NOTE: The average flesch reading ease score can also be calculated with aggregate avg() function in sqlite database. 
 # However, this is only possible if we decide to store the flesch reading ease scores in the database. 
 def calculateAverageFleschReadingEase(messageList):
+  """
+    Function which computes the average Flesch reading ease for a list of message strings.
+
+    NOTE: The same task can be easily done with the aggregate avg() function on data
+    which is stored in the system database (db.sqlite3). This function may be relevant
+    for data which is not stored in the database.
+
+    Parameters:
+    messageList: The list of messages for which the average Flesch reading ease
+    is computed. Must be a list of strings. 
+
+    Returns:
+    float: A float between 0 and 100 representing the average (bounded) Flesch reading ease
+    for the list of messages. 
+    """    
   # Initialise total flesch reading ease variable
   total_flesch_reading_ease = 0
   
