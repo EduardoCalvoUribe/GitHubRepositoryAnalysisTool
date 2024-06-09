@@ -1,3 +1,8 @@
+"""
+This file contains the functions associated with computing the code/commit message ratio
+"""
+
+# Necessary imports for AsyncCodeCommitMessageRatio.py
 import aiohttp
 from django.conf import settings
 

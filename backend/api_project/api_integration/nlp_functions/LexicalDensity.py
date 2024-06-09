@@ -1,3 +1,7 @@
+"""
+This file contains the functions associated with computing the lexical density
+"""
+
 # Necessary imports for LexicalDensity.py
 import nltk
 from nltk.tokenize import word_tokenize

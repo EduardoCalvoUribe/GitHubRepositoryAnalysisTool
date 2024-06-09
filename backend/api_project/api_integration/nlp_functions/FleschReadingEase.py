@@ -1,3 +1,7 @@
+"""
+This file contains the functions associated with computing the Flesch reading ease
+"""
+
 # Necessary imports for FleschReadingEase.py
 import nltk
 from nltk.corpus import cmudict #Pronounciation dictionary for annotated syllables
@@ -166,7 +170,7 @@ def otherSyllables(word):
 def calculateAverageFleschReadingEase(messageList):
   """
     Function which computes the average Flesch reading ease for a list of message strings.
-    
+
     Parameters:
     messageList: The list of messages for which the average Flesch reading ease
     is computed. Must be a list of strings. 
