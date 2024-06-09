@@ -1,5 +1,4 @@
 import aiohttp
-import asyncio
 from django.conf import settings
 
 async def get_pr_files(repo_owner, repo_name, pull_number):

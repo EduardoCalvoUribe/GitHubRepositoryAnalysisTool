@@ -166,11 +166,7 @@ def otherSyllables(word):
 def calculateAverageFleschReadingEase(messageList):
   """
     Function which computes the average Flesch reading ease for a list of message strings.
-
-    NOTE: The same task can be easily done with the aggregate avg() function on data
-    which is stored in the system database (db.sqlite3). This function may be relevant
-    for data which is not stored in the database.
-
+    
     Parameters:
     messageList: The list of messages for which the average Flesch reading ease
     is computed. Must be a list of strings. 
