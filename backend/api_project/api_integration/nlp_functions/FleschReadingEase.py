@@ -25,6 +25,10 @@ from nltk.tokenize import sent_tokenize
 #Returns Flesch reading ease as a single numerical value
 # If division by 0 occurs -1 is returned.
 def calculateFleschReadingEase(message):
+    # If message is None type (not defined) or empty, let Flesch reading ease equal 0
+    if message is None or message.strip() == "":
+        return 0
+
     # Count number of words with .split() function. By default the separator character is any whitespace
     wordCount = len(message.split())
     # Count sentences using nltk sent_tokenize

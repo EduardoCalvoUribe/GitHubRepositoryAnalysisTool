@@ -9,6 +9,10 @@ nltk.download('averaged_perceptron_tagger')
 # This function computes the lexical density for a message string using NLTK
 # POS (part of speech) tagging.
 def singleMessageLexicalDensity(message):
+  # If message is None type (not defined) or empty, let lexical density equal 0  
+  if message is None or message.strip() == "":
+        return 0
+  
   # Split message string into separate word tokens (i.e. substrings)
   tokens = word_tokenize(message)
 
