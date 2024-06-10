@@ -102,6 +102,12 @@ export default {
     });
     // console.log(githubResponse, "hey")
 
+    const pullRequestCount = computed(() => {
+  return sortedPullRequests.value.length;
+});
+
+
+
     onMounted(async () => {
       await getPackage('');
     });
@@ -113,6 +119,7 @@ export default {
       selectedSort,
       sorts,
       route,
+      pullRequestCount,
     }
   },
 
@@ -152,22 +159,19 @@ export default {
 </script>
 
 <template>
-  <header>
+  <!-- <header>
     <RouterLink to="/repoinfo/${url}">Repository Information</RouterLink>
     <RouterLink style="margin-left: 2%" to="/prpage">Pull Requests</RouterLink>
     <RouterLink style="margin-left: 2%" to="/commitpage">Commits</RouterLink>
     <RouterLink style="margin-left: 2%" to="/commentpage">Comments</RouterLink>
-  </header>
+  </header> -->
 
   <header>
-
     <div v-if="state.githubResponse" style="margin-top: 50px">
       <div style="font-size: 180%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
       <div style="margin-bottom: 5px"> URL: {{ state.githubResponse.Repo.url }} </div>
       <div> Last Updated: {{ state.githubResponse.Repo.updated_at }} </div>
-    </div>
-    
-    
+    </div>  
   </header>
 
   <div style="margin-top: 4%; display: flex; justify-content: center;">
@@ -180,13 +184,12 @@ export default {
     </div>
   </div>
 
-  <div class="box-container">
-    <div class="box" v-for="item in items" :key="item.id">
-      <router-link :to="item.path">
-        <button class="button-6" style="width: 150px; height: 100px; font-size: 100%;">{{item.text}}</button>
-      </router-link>
-    </div>
-  </div>
+
+  <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+    Total Pull Requests: {{ pullRequestCount }}
+  </button>
+
+  
 
   <!-- <div>
     <pre v-if="githubResponse">{{ githubResponse }}</pre>
@@ -227,6 +230,9 @@ export default {
   <div style="display: flex; justify-content: center; margin-top: 4%; height: 400px;">
     <BarChart :chartData="chartData" :chartOptions="chartOptions" />
   </div>
+  <router-link :to="{path: '/' }">
+        <button class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
+    </router-link>
 </template>
 
 <style scoped>

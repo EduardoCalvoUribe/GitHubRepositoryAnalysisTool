@@ -44,6 +44,10 @@ export default {
         </div>
       </div>
     </div>
+
+    <router-link :to="{path: '/' }">
+        <button class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
+    </router-link>
   </template>
   
 

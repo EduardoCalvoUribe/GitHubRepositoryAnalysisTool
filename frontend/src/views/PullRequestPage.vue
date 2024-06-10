@@ -42,14 +42,14 @@ export default {
 </script>
 
 <template>
-  <header>
-    <router-link :to="`/repoinfo/${repositoryId}`">Repository Information</router-link>
+  <!-- <header> -->
+    <!-- <router-link :to="`/repoinfo/${repositoryId}`">Repository Information</router-link>
     <router-link style="margin-left: 2%" to="/prpage">Pull Requests</router-link>
     <router-link style="margin-left: 2%" to="/commitpage">Commits</router-link>
-    <router-link style="margin-left: 2%" to="/commentpage">Comments</router-link>
-  </header>
+    <router-link style="margin-left: 2%" to="/commentpage">Comments</router-link> -->
+  <!-- </header> -->
 
-  <router-view />
+  <!-- <router-view /> -->
 
   <header>
     <div v-if="pullpackage" style="margin-top: 50px">
@@ -97,6 +97,9 @@ export default {
       </div>
     </body>
     </div>
+    <router-link :to="{path: '/' }">
+        <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;">Back</button>
+    </router-link>
 </template>
 
 <style scoped>
