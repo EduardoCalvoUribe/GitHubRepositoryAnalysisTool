@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 from datetime import datetime, timedelta
 from collections import Counter
-from . import functions, models, views, general_semantic_score
+from . import functions, models, views, general_semantic_score, comment_info
 from .models import Commit, Comment, User, Repository, PullRequest
 import aiohttp
 import asyncio
@@ -276,7 +276,10 @@ def create_comments(data_list, repo_db):
 def create_commits(data_list, repo_db):
     comment_set = set()
     for comment in data_list[3]:
-        models.Comment.objects.update_or_create(url=comment.url, defaults={'pull_request': PullRequest.objects.get(url=comment.pull_request.url), 'date': comment.date, 'updated_at': comment.updated_at, 'body': comment.body, 'user': comment.user, 'semantic_score': comment.semantic_score, 'comment_type': comment.comment_type, 'commit_id': comment.commit_id})
+        # Handle empty comment
+        body = comment.body if comment.body is not None else ''
+
+        models.Comment.objects.update_or_create(url=comment.url, defaults={'pull_request': PullRequest.objects.get(url=comment.pull_request.url), 'date': comment.date, 'updated_at': comment.updated_at, 'body': body, 'user': comment.user, 'semantic_score': comment.semantic_score, 'comment_type': comment.comment_type, 'commit_id': comment.commit_id})
         #update_model_data(repo_db, "comments_list", comment.url) # add comment to list of comments in repo
         comment_set.add(comment.url)
     update_model_data(repo_db, "comments_list", list(comment_set)) # add comment to list of comments in repo
@@ -397,8 +400,13 @@ async def process_pull_request(session, pull_request):
     Returns:
     tuple: A tuple containing a list of commits and a list of comments for the pull request.
     """
+
+    owner = pull_request['base']['repo']['owner']['login']
+    repo = pull_request['base']['repo']['name']
+    pull_number = pull_request['number']
     commits_task = asyncio.create_task(fetch_commits(session, pull_request))
-    comments_task = asyncio.create_task(fetch_comments(session, pull_request))
+    # comments_task = asyncio.create_task(fetch_comments(session, pull_request)) #using old fetch_comments function
+    comments_task = asyncio.create_task(comment_info.get_pull_request_comments(owner,repo,pull_number,session.headers))
     
     all_commits = await commits_task
     all_comments = await comments_task

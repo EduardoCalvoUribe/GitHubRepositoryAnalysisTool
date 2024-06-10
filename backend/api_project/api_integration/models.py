@@ -209,7 +209,7 @@ class Comment(models.Model): # comment
     url = models.URLField() # API url of comment
     date = models.DateField(default=date.today) # Date of comment
     updated_at = models.DateTimeField(default=timezone.now) # Date last updated in database
-    body = models.CharField(max_length=500) # Body of comment
+    body = models.CharField(max_length=500,null=True,blank=True) # Body of comment
     user = models.CharField(max_length=100) # User that posted the comment
     semantic_score = models.FloatField(default=0.0)
     comment_type = models.CharField(max_length=200, default= "")
@@ -222,7 +222,18 @@ class Comment(models.Model): # comment
     async def save_comment_to_db(request, comment_response, semantic_score):
         try:
             # Convert API response to JSON format
+
+            body = comment_response.get('body')  # Get the body from the response
+
+            # If body is None or empty, set it to None
+            if not body:
+                body = None
             comment = await Comment.objects.create()
+            # body = comment_response.get('body', '')
+
+            # if not body:
+            #     # Handle the case where body is missing or empty
+            #     body = "No body provided"
             #for key,value in comment_response.items():
                 #if key is not None:
                     #if value is not None:
