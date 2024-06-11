@@ -54,10 +54,23 @@ export default {
   <header>
     <div v-if="pullpackage" style="margin-top: 50px">
       <div style="font-size: 180%; margin-bottom: 20px;"> {{ pullpackage.title }} </div>
-      <div style="margin-bottom: 5px"> User: {{ pullpackage.user }} </div>
+      <div> User: {{ pullpackage.user }} </div>
       <div> Created: {{ pullpackage.date }} </div>
+      <div>Description: {{ pullpackage.body }}</div>
     </div>
   </header>
+
+  <div v-if="pullpackage" class="grid-container">
+    <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+    Number of Commits: {{ pullpackage.number_commits }}
+    </button>
+    <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+    Number of Comments: {{ pullpackage.number_comments }}
+  </button>
+  <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+    Average Semantic Score: {{ pullpackage.average_semantic }}
+  </button>
+  </div>
 
   <div v-if="pullpackage" style=" display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
@@ -95,11 +108,12 @@ export default {
           </div>
         </div>
       </div>
-    </body>
-    </div>
-    <router-link :to="{path: '/' }">
+      <router-link :to="{path: '/' }">
         <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;">Back</button>
     </router-link>
+    </body>
+    </div>
+
 </template>
 
 <style scoped>

@@ -2,6 +2,7 @@
 export default {
   name: "CommitPage",
   // Component Data and Methods would be added here if necessary
+
 }
 </script>
 
