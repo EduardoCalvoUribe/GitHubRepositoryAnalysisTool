@@ -211,4 +211,6 @@ coverage
 
 *.tsbuildinfo
 
-db.sqlite3
+backend/api_project/db.sqlite3
+
+test.vue
