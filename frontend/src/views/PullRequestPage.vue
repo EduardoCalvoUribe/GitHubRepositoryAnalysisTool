@@ -37,39 +37,39 @@ export default {
     </div>
   </header>
 
-  <div v-if="pullpackage" class="grid-container">
+  <div v-if="pullpackage" class="grid-container-2">
     <div class="info-section">
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+      <div class="stat-container">
         Number of Commits: {{ pullpackage.number_commits ? pullpackage.number_commits : 'N/A' }}
-      </button>
+      </div>
     </div>
 
     <div class="info-section">
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+      <div class="stat-container">
         Number of Comments: {{ pullpackage.number_comments ? pullpackage.number_comments : 'N/A' }}
-      </button>
+      </div>
     </div>
 
     <div class="info-section">
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-        Average Semantic Score: {{ pullpackage.average_semantic ? pullpackage.average_semantic : 'N/A' }}
-      </button>
+      <div class="stat-container">
+        Average Semantic Score: {{ pullpackage.average_semantic ? pullpackage.average_semantic.toFixed(2) : 'N/A' }}
+      </div>
     </div>
   </div>
 
 
-  <div v-if="pullpackage" class="grid-container">
-    <div class="grid-item" v-for="commit in pullpackage.commits" :key="commit.id">
+  <div v-if="pullpackage" class="grid-container" style="max-height: 300px; overflow-y: auto;">
+    <div class="grid-item" style="border-radius: 10px;" v-for="commit in pullpackage.commits" :key="commit.id">
       {{ commit.title }}
       <div>Date: {{ commit.date }}</div>
       <div>User: {{ commit.user }}</div>
-      <div>Semantic Score: {{ commit.semantic_score }}</div>
+      <div>Semantic Score: {{ commit.semantic_score.toFixed(2) }}</div>
       <div>Updated At: {{ commit.updated_at }}</div>
     </div>
   </div>
 
   <router-link :to="{path: '/' }">
-    <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;">Back</button>
+    <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%; margin-top: 20px">Back</button>
   </router-link>
 </template>
 
@@ -82,10 +82,32 @@ export default {
     padding: 10px;
   }
 
+  .grid-container-2 {
+    display: flex;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 10px;
+    padding: 10px;
+  }
+
   .grid-item {
     background-color: #157eff4d;
     padding: 10px;
     border: 1px solid #ccc;
   }
+}
+
+.stat-container {
+  background-color: white;
+  border: 1px solid #157eff4d;
+  border-radius: 5px;
+  width: 100%;
+  height: 50px; 
+  width: 300px;
+  margin-top: 20px; 
+  justify-content: center;
+  text-align: center;
+  padding: 4%;
 }
 </style>
