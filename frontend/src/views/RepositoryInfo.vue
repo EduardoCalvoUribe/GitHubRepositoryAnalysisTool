@@ -102,11 +102,25 @@ export default {
     });
 
     const pullRequestCount = computed(() => {
+      return sortedPullRequests.value.length;
+    });
 
-  return sortedPullRequests.value.length;
-});
-
-
+    const formattedDate = computed(() => {
+      if (!state.githubResponse || !state.githubResponse.Repo.updated_at) {
+        return 'Loading...';
+      }
+      const date = new Date(state.githubResponse.Repo.updated_at);
+      const formatter = new Intl.DateTimeFormat('en-GB', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'short'
+      });
+      return formatter.format(date);
+    });
 
     onMounted(async () => {
       await getPackage('');
@@ -121,6 +135,7 @@ export default {
       sorts,
       route,
       pullRequestCount,
+      formattedDate
     }
   },
 
@@ -169,9 +184,9 @@ export default {
 
   <header>
     <div v-if="state.githubResponse" style="margin-top: 50px">
-      <div style="font-size: 180%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
+      <div style="font-size: 240%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
       <a :href="state.githubResponse.Repo.url" target="_blank" style="margin-bottom: 5px"> URL: {{ state.githubResponse.Repo.url }} </a>
-      <div> Last Updated: {{ state.githubResponse.Repo.updated_at }} </div>
+      <div style="font-size: 90%; margin-left: 3px; margin-top: 6px;"> Last Updated: {{ formattedDate }} </div>
     </div>  
   </header>
 
@@ -199,7 +214,7 @@ export default {
 
   <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <div>
+      <div style="margin-bottom: 25px;">
         <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
         <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
       </div>
