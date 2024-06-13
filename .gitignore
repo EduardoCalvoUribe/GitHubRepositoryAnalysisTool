@@ -210,3 +210,5 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+db.sqlite3
