@@ -212,3 +212,5 @@ coverage
 *.tsbuildinfo
 
 backend/api_project/db.sqlite3
+
+backend/api_project/db.sqlite3

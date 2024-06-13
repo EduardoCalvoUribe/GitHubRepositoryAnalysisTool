@@ -4,6 +4,8 @@ from django.db import models
 from datetime import date
 from . import functions
 from asgiref.sync import sync_to_async
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AbstractUser
 
 
 class User(models.Model): # user
@@ -17,7 +19,7 @@ class User(models.Model): # user
 
 
     def __str__(self):
-        return self.name
+        return self.login
     
     @classmethod
     def save_user_to_db(request, json_response):
@@ -51,7 +53,9 @@ class Repository(models.Model): # repository, might have to change this into com
     updated_at = models.DateTimeField(default=timezone.now) # time of last update in database
     #contributers = models.JSONField(blank=True, default=dict) # list of users
     pull_requests_list = models.JSONField(blank=True, default=list) # list of pull request in repository 
-    commits = models.JSONField(blank=True, default=list) # list of commits in repository 
+    commits_list = models.JSONField(blank=True, default=list) # list of commits in repository
+    comments_list = models.JSONField(blank=True, default=list) # list of comments in repository
+    users_list = models.JSONField(blank=True, default=list) # list of users in repository 
     token = models.CharField(max_length=100, default = "") # save personal access token
 
     def __str__(self):
@@ -113,7 +117,7 @@ class PullRequest(models.Model): # pull request
     number = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.name
+        return self.url
     
     @classmethod
     def save_pull_to_db(request, pull_response):
@@ -205,20 +209,31 @@ class Comment(models.Model): # comment
     url = models.URLField() # API url of comment
     date = models.DateField(default=date.today) # Date of comment
     updated_at = models.DateTimeField(default=timezone.now) # Date last updated in database
-    body = models.CharField(max_length=500) # Body of comment
+    body = models.CharField(max_length=500,null=True,blank=True) # Body of comment
     user = models.CharField(max_length=100) # User that posted the comment
     semantic_score = models.FloatField(default=0.0)
     comment_type = models.CharField(max_length=200, default= "")
     commit_id = models.CharField(max_length=200, default = "")
 
     def __str__(self):
-        return self.name
+        return self.url
     
     @classmethod
     async def save_comment_to_db(request, comment_response, semantic_score):
         try:
             # Convert API response to JSON format
+
+            body = comment_response.get('body')  # Get the body from the response
+
+            # If body is None or empty, set it to None
+            if not body:
+                body = None
             comment = await Comment.objects.create()
+            # body = comment_response.get('body', '')
+
+            # if not body:
+            #     # Handle the case where body is missing or empty
+            #     body = "No body provided"
             #for key,value in comment_response.items():
                 #if key is not None:
                     #if value is not None:
@@ -240,4 +255,3 @@ class Comment(models.Model): # comment
 
     class Meta:
         app_label = 'api_integration'
-
