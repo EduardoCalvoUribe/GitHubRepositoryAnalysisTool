@@ -9,7 +9,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
 from .models import Repository, PullRequest, Commit, User
-from . import functions, API_call_information, general_semantic_score
+from . import functions, API_call_information
 # from .serializers import ItemSerializer
 from django.views.decorators.csrf import csrf_exempt
 import aiohttp
@@ -305,7 +305,7 @@ def send_post_request_to_repo_frontend_info(request):
 
     # Define the payload for the POST request
     payload = {
-        "url": "https://github.com/lucidrains/PaLM-rlhf-pytorch"
+        "url": "github.com/LucaAmbrogioni/CalculusTeachingMaterial"
     }
 
     try:
@@ -383,8 +383,6 @@ def repo_frontend_info(request):
                     "number_commits": 0,
                     "number_comments": 0,
                     "average_semantic": 0,
-                    "pr_title_semantic": calculate_pr_semantic(pr.title),
-                    "pr_body_semantic": calculate_pr_semantic(pr.body)
                 }
 
                 for commit in pr.commits.all():
@@ -579,9 +577,3 @@ def testAsyncCodeCommit(request):
 
     ratio = asyncio.run(compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_sha))
     return JsonResponse(str(ratio), safe=False)
-
-# Helper function which calculates the semantic score for the PR title and body
-# It simply encapsulates the same function which is used for the comment semantic score.
-# Possibly move this to general_semantic_score.py if metric weights will be passed from frontend
-def calculate_pr_semantic(message):
-    return general_semantic_score.calculateWeightedCommentSemanticScore(message,0.5,0.5)
