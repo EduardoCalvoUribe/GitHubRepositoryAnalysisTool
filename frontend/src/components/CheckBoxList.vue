@@ -24,10 +24,20 @@ export default {
             required: true
         }
     },
+    emits: ['update:selected'],
+    data() {
+        return {
+            checkedUsers: this.usernames.map(() => true) // Initialize all users as checked
+        }
+    },
     methods: {
       selectAll(event) {
           const isChecked = event.target.checked;
-          this.checkedUsers = this.checkedUsers.map(() => isChecked);
+          this.checkedUsers.fill(isChecked);
+      },
+      emitSelectedUsers() {
+          const selectedUsernames = this.usernames.filter((_, index) => this.checkedUsers[index]);
+          this.$emit('update:selected', selectedUsernames);
       }
     },
     watch: {
@@ -36,16 +46,17 @@ export default {
             handler(newVal) {
                 this.checkedUsers = newVal.map(() => true);
             }
+        },
+        checkedUsers: {
+            deep: true,  // Necessary for watching array changes
+            handler() {
+                this.emitSelectedUsers();
+            }
         }
     },
     computed: {
         areAllSelected() {
-            return this.checkedUsers.every(Boolean);
-        }
-    },
-    data() {
-        return {
-            checkedUsers: this.usernames.map(() => true)
+          return this.checkedUsers.length && this.checkedUsers.every(Boolean);
         }
     }
 }

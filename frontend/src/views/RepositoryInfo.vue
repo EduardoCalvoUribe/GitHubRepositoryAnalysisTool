@@ -22,21 +22,8 @@ export default {
 
 
   setup() {
-    const route = useRoute(); // allows for passage of variables from homepage to current page
-    // const githubResponse = ref(null);
-    //const repoUrl = ({'url': decodeURIComponent(route.params.url)}).url;
-    // console.log(repoUrl, "url?")
-    // const postOptions = { // defines how data is sent to backend, POST request in this case
-    //       method: 'POST',
-    //       headers: {
-    //           'Content-Type': 'application/json',
-    //       },
-    //       body: JSON.stringify(repoUrl),
-    //   };
-    // const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
-    // console.log("received")
-    // githubResponse.value = response;
-
+    const route = useRoute();
+    const selectedUsers = ref([]); // list of users that user selects from checkbox list
     const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
     const sorts = ref([ // different possible sort options
         // { name: 'Semantic Score Ascending' },
@@ -137,6 +124,12 @@ export default {
       return Array.from(users);  // Convert Set back to Array
     });
 
+    const handleSelectedUsers = (selected) => { // Function to handle selected users from checkbox list
+      selectedUsers.value = selected;
+      console.log("Selected users:", selectedUsers.value);
+      // You can now use selectedUsers to filter or display specific data
+    };
+
     onMounted(async () => {
       await getPackage('');
     });
@@ -151,7 +144,9 @@ export default {
       route,
       pullRequestCount,
       formattedDate,
-      userList
+      userList,
+      selectedUsers,
+      handleSelectedUsers,
     }
   },
 
@@ -227,17 +222,13 @@ export default {
     <BarChart :chartData="chartData" :chartOptions="chartOptions" />
 
     <div style="margin-left: 20px; ">
-      <CheckBoxList :usernames="userList" />
+      <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
+      <div> users: {{ selectedUsers }} </div>
     </div>
+
+    
   </div>
 
-
-
-  
-
-  <!-- <div>
-    <pre v-if="githubResponse">{{ githubResponse }}</pre>
-  </div> -->
 
   <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
