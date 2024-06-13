@@ -388,12 +388,13 @@ def select_commit(pull_request):
 
 #Create a data package that is used by the frontend to show on the frontend
 def homepage_datapackage(request):
-    try:
+    print("Homepage reached")
+    #try:
         #We import all the repositories from the database
-        repos = Repository.objects.all()
-
+    repos = Repository.objects.all()
+    print(repos)
         # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
-        unique_repos = list(OrderedDict((repo.id, {
+    unique_repos = list(OrderedDict((repo.id, {
             "name": repo.name,
             "id": repo.id,
             "url": repo.url,
@@ -401,10 +402,10 @@ def homepage_datapackage(request):
         }) for repo in repos).values())
 
         # The Repos is a list that has name & updated_at as values
-        data = {"Repos" : unique_repos}
-        return JsonResponse(data)
-    except Repository.DoesNotExist:
-        return JsonResponse({"error": "Repository not found"}, status=404)
+    data = {"Repos" : unique_repos}
+    return JsonResponse(data)
+    # except Repository.DoesNotExist:
+    #     return JsonResponse({"error": "Repository not found"}, status=404)
     
 # def engagement_score(request):
 #     # The calculation is based on the type(s) of object(s) you'd like to calculate the engagement score of
