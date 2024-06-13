@@ -385,6 +385,7 @@ def repo_frontend_info(request):
                     "average_semantic": 0,
                     "pr_title_semantic": calculate_pr_semantic(pr.title),
                     "pr_body_semantic": calculate_pr_semantic(pr.body)
+
                 }
 
                 for commit in pr.commits.all():
@@ -534,7 +535,10 @@ def calculate_average_semantic_pull(pr_data):
             total_semantic += comment['semantic_score']
             comment_count += 1
 
-    total_count = len(pr_data["commits"]) + comment_count
+    total_semantic+=pr_data["pr_title_semantic"]
+    total_semantic+=pr_data["pr_body_semantic"]
+
+    total_count = len(pr_data["commits"]) + comment_count + 2 
     # Divison by 0 handled 
     return total_semantic / total_count if total_count > 0 else 0 
 
