@@ -305,7 +305,7 @@ def send_post_request_to_repo_frontend_info(request):
 
     # Define the payload for the POST request
     payload = {
-        "url": "github.com/LucaAmbrogioni/CalculusTeachingMaterial"
+        "url": "https://github.com/lucidrains/PaLM-pytorch"
     }
 
     try:
