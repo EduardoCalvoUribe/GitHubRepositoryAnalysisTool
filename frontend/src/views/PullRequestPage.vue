@@ -38,15 +38,42 @@ export default {
   </header>
 
   <div v-if="pullpackage" class="grid-container">
-    <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-      Number of Commits: {{ pullpackage.number_commits }}
+    <div id="app">
+    <p v-if="!pullpackage.number_commits.length">
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+     Number of Commits: N/A
+      </button>
+    </p>
+    <p v-else>
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
+    Number of Commits: {{ pullpackage.number_commits }}
     </button>
-    <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-      Number of Comments: {{ pullpackage.number_comments }}
+    </p>
+  </div>
+  <div id="app">
+    <p v-if="!pullpackage.number_comments.length">
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+     Number of Comments: N/A
+      </button>
+    </p>
+    <p v-else>
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
+    Number of Comments: {{ pullpackage.number_comments }}
     </button>
-    <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-      Average Semantic Score: {{ pullpackage.average_semantic }}
+    </p>
+  </div>
+  <div id="app">
+    <p v-if="!pullpackage.average_semantic.length">
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+     Average Semantic Score: N/A
+      </button>
+    </p>
+    <p v-else>
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
+    Number of Comments: {{ pullpackage.average_semantic }}
     </button>
+    </p>
+  </div>
   </div>
 
   <div v-if="pullpackage" class="grid-container">
