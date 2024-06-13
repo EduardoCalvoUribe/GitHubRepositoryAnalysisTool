@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 import requests
 from django.conf import settings
 from datetime import datetime
+from django.utils import timezone
 from collections import Counter
 from . import functions
 from .models import Commit 
@@ -62,8 +63,8 @@ async def repo_total_commits(request, owner, repo, pull_number, start_date, end_
 
     # Specify time frame in year month day format
     if start_date and end_date:
-        start_date = datetime.strptime(start_date, "%Y-%m-%d").isoformat()
-        end_date = datetime.strptime(end_date, "%Y-%m-%d").isoformat()
+        start_date = timezone.make_aware(datetime.strptime(start_date, "%Y-%m-%d")).isoformat()
+        end_date = timezone.make_aware(datetime.strptime(end_date, "%Y-%m-%d")).isoformat()
 
     # Creating variables to be seen outside of coming if statement
     text_to_display = ''
@@ -324,7 +325,7 @@ async def fetch_commits_for_pull_requests(session, pull_request, start_date, end
         # Iterate over each commit retrieved
         for commit in pr_commits:
             # Extract the date of the commit and format it in iso format
-            commit_date = datetime.strptime(commit['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ").isoformat()
+            commit_date = timezone.make_aware(datetime.strptime(commit['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ")).isoformat()
 
             # Check if the commit data falls between the specified start and end date range
             if start_date <= commit_date <= end_date:

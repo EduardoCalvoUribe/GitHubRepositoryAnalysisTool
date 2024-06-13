@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('url', models.URLField()),
-                ('date', models.DateField(default=datetime.date.today)),
+                ('date', models.DateField(default=datetime.datetime.now)),
                 ('body', models.CharField(max_length=500)),
                 ('user', models.CharField(max_length=100)),
             ],
@@ -28,12 +28,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='commit',
             name='date',
-            field=models.DateField(default=datetime.date.today),
+            field=models.DateField(default=datetime.datetime.now),
         ),
         migrations.AddField(
             model_name='pullrequest',
             name='date',
-            field=models.DateField(default=datetime.date.today),
+            field=models.DateField(default=datetime.datetime.now),
         ),
         migrations.AddField(
             model_name='pullrequest',

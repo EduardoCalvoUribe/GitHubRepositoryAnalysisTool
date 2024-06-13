@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.core.serializers import serialize
+from django.utils import timezone
 import numpy as np
 import requests
 import json
@@ -8,18 +9,15 @@ import re
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
-from .models import User
-from .models import Repository, PullRequest, Commit
+from .models import Repository, PullRequest, Commit, User
 from . import functions, API_call_information
 # from .serializers import ItemSerializer
 from django.views.decorators.csrf import csrf_exempt
 import aiohttp
 import asyncio
-
-
 from django.http import JsonResponse
 from .models import Comment
-from datetime import date, datetime
+from datetime import datetime
 from collections import OrderedDict
 
 # # Helper function which loads in the JSON response from
@@ -157,7 +155,7 @@ def process_vue_POST_request(request):
         # Assuming that POST request contains 'url' key and associated value
         url = data.get('url')
 
-    return str(url)
+    return "https://github.com/lucidrains/PaLM-rlhf-pytorch"
 
 # Simple rapper function which can display POST request Github API URL on Django website
 def display_POST_request(request):
@@ -284,10 +282,16 @@ def repo_frontend_info(request):
             data = json.loads(request_body)
             #url = data.get('url')  # Use get() for optional retrieval
             url = data['url']
-            # dates = data['date']
-            # begin_date, end_date = date_range(dates)
+            print("url reached")
+            dates = data['date']
+            begin_date, end_date = date_range(dates)
         except json.JSONDecodeError:
             print("Error")
+    print("Point reached")
+    url = "https://github.com/lucidrains/PaLM-rlhf-pytorch"
+    begin_date = timezone.make_aware(datetime(2024, 3, 1, 0, 0, 0))
+    end_date = timezone.make_aware(datetime(2024, 6, 1, 0, 0, 0))
+    print(url)
     try:
     # Get the repository by URL (using get() for single object retrieval)
         repo = Repository.objects.get(url=url)
@@ -307,44 +311,46 @@ def repo_frontend_info(request):
         }
 
         pull_requests = repo.pull_requests.all()
+        print("Getting data reached")
+        print(pull_requests)
+        print("But really")
         for pr in pull_requests:
-            pr_data = {
-            "url": pr.url,
-            "updated_at": pr.updated_at,
-            "date": pr.date,
-            "title": pr.title,
-            "body": pr.body,
-            "user": pr.user,
-            "number": pr.number,
-            "closed_at": pr.closed_at,
-            "commits": [],
-            "comments": [],
-            }
+            print("In for loop")
+            print(type(pr.date))
+            print("in between pr.date and begin_date")
+            print(type(begin_date))
+            print(f"Date: {pr.date}")
+            # if pr.date != None:
+            print("pr.date not None")
+            if (pr.closed_at > begin_date) & (pr.date < end_date) & (pr.date > begin_date):
+                    print("Data if reached")
+                    pr_data = {
+                    "url": pr.url,
+                    "updated_at": pr.updated_at,
+                    "date": pr.date,
+                    "title": pr.title,
+                    "body": pr.body,
+                    "user": pr.user,
+                    "number": pr.number,
+                    "closed_at": pr.closed_at,
+                    "commits": [],
+                    "comments": [],
+                    }
 
-            for commit in pr.commits.all():
-                commit_data = {
-                    "name": commit.name,
-                    "url": commit.url,
-                    "title": commit.title,
-                    "user": commit.user,
-                    "date": commit.date,
-                    "semantic_score": commit.semantic_score,
-                    "updated_at": commit.updated_at,
-                }
-                pr_data["commits"].append(commit_data)
+                    pr_data["commits"].append(select_commit(pr))
 
-            for comment in pr.comments.all():
-                comment_data = {
-                    "url": comment.url,
-                    "date": comment.date,
-                    "body": comment.body,
-                    "user": comment.user,
-                    "semantic_score": comment.semantic_score,
-                    "updated_at": comment.updated_at,
-                    "comment_type": comment.comment_type,
-                    "commit_id": comment.commit_id,
-                }
-                pr_data["comments"].append(comment_data)
+                    for comment in pr.comments.all():
+                        comment_data = {
+                            "url": comment.url,
+                            "date": comment.date,
+                            "body": comment.body,
+                            "user": comment.user,
+                            "semantic_score": comment.semantic_score,
+                            "updated_at": comment.updated_at,
+                            "comment_type": comment.comment_type,
+                            "commit_id": comment.commit_id,
+                        }
+                        pr_data["comments"].append(comment_data)
 
             data["Repo"]["pull_requests"].append(pr_data)
         return JsonResponse(data)
@@ -357,14 +363,28 @@ def date_range(data):
     try:
         begin_date_str = data.get('0')
         end_date_str = data.get('1')
-
+        print("daterange 1")
         date_format = '%a %b %d %Y %H:%M:%S GMT%z (%Z)'
-
-        begin_date_obj = datetime.strptime(begin_date_str, date_format)
-        end_date_obj = datetime.strptime(end_date_str, date_format)
+        print("daterange 2")
+        begin_date_obj = timezone.make_aware(datetime.strptime(begin_date_str, date_format))
+        end_date_obj = timezone.make_aware(datetime.strptime(end_date_str, date_format))
+        print("daterange 3")
     except:
         return ""
     return begin_date_obj, end_date_obj
+
+def select_commit(pull_request):
+    for commit in pr.commits.all():
+                commit_data = {
+                    "name": commit.name,
+                    "url": commit.url,
+                    "title": commit.title,
+                    "user": commit.user,
+                    "date": commit.date,
+                    "semantic_score": commit.semantic_score,
+                    "updated_at": commit.updated_at,
+                }
+    return commit_data
 
 #Create a data package that is used by the frontend to show on the frontend
 def homepage_datapackage(request):

@@ -11,6 +11,7 @@ import aiohttp
 import asyncio
 import time
 import re
+import pytz
 from urllib.parse import urlparse, parse_qs
 from django.views.decorators.csrf import csrf_exempt
 from asgiref.sync import sync_to_async
@@ -86,11 +87,11 @@ async def get_github_information(response):
                 # Combine URL and repo checks for update_or_create
                 pr_closed_at = timezone.now()
                 if pr[0]['state'] == 'closed':
-                    pr_closed_at = datetime.strptime(pr[0]['closed_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d')
+                    pr_closed_at = datetime.strptime(pr[0]['closed_at'], '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
                 defaults = {
                     'updated_at': timezone.now(),
                     'closed_at': pr_closed_at,
-                    'date': datetime.strptime(pr[0]['created_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                    'date': datetime.strptime(pr[0]['created_at'], '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=pytz.UTC).strftime('%Y-%m-%d %H:%M:%S'),
                     'title': pr[0]['title'],
                     'body': pr[0]['body'],
                     'user': pr[0]['user']['login'],
@@ -114,7 +115,7 @@ async def get_github_information(response):
                         "name": commit['commit']['message'],
                         "title": commit['commit']['message'],
                         "user": commit['author']['login'],
-                        "date": datetime.strptime(commit['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                        "date": datetime.strptime(commit['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=pytz.UTC).strftime('%Y-%m-%d %H:%M:%S'),
                         "semantic_score": commit_semantic_score,
                         "updated_at": timezone.now(),
                     }
@@ -140,7 +141,7 @@ async def get_github_information(response):
                         comment_url = comment['url']
 
                     defaults = {
-                        "date": datetime.strptime(comment_date, '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
+                        "date": datetime.strptime(comment_date, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=pytz.UTC).strftime('%Y-%m-%d %H:%M:%S'),
                         "updated_at": timezone.now(),
                         "body": comment['body'],
                         "user": comment['user']['login'],

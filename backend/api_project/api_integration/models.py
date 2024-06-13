@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.utils import timezone
 from django.db import models
-from datetime import date
+from datetime import datetime, date
 from . import functions
 from asgiref.sync import sync_to_async
 
@@ -105,15 +105,15 @@ class PullRequest(models.Model): # pull request
     repo = models.ForeignKey(Repository, related_name="pull_requests", on_delete=models.CASCADE, null=True, blank=True)
     url = models.URLField()
     updated_at = models.DateTimeField(default=timezone.now)
-    closed_at = models.DateField(default=date.today)
-    date = models.DateField(default=date.today)
+    closed_at = models.DateTimeField(default=timezone.now)
+    date = models.DateTimeField(default=timezone.now)
     title = models.CharField(max_length=100)
     body = models.TextField(null=True, blank=True)
     user = models.CharField(max_length=100)
     number = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.name
+        return self.title
     
     @classmethod
     def save_pull_to_db(request, pull_response):
@@ -128,7 +128,7 @@ class PullRequest(models.Model): # pull request
                     else:
                         setattr(pull_request, key, "")
 
-            #setattr(pull_request, "name", '')
+            # setattr(pull_request, "name", 'name')
             setattr(pull_request, "url", pull_response['url'])
             setattr(pull_request, "date", pull_response['created_at'])
             setattr(pull_request, "title", pull_response['title'])
@@ -153,7 +153,7 @@ class Commit(models.Model): # commit
     url = models.URLField()
     title = models.CharField(max_length=100)
     user = models.CharField(max_length=100)
-    date = models.DateField(default=date.today)
+    date = models.DateTimeField(default=timezone.now)
     semantic_score = models.FloatField(default=0.0)
     updated_at = models.DateTimeField(default=timezone.now)   
 
@@ -203,7 +203,7 @@ class Commit(models.Model): # commit
 class Comment(models.Model): # comment
     pull_request = models.ForeignKey(PullRequest, related_name='comments', on_delete=models.CASCADE, null=True, blank=True)
     url = models.URLField() # API url of comment
-    date = models.DateField(default=date.today) # Date of comment
+    date = models.DateTimeField(default=timezone.now) # Date of comment
     updated_at = models.DateTimeField(default=timezone.now) # Date last updated in database
     body = models.CharField(max_length=500) # Body of comment
     user = models.CharField(max_length=100) # User that posted the comment
