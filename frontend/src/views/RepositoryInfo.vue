@@ -8,6 +8,7 @@ import { state } from '../repoPackage.js';
 import fakejson from '../test.json';
 import BarChart from '../components/BarChart.vue';
 import Dropdown from 'primevue/dropdown';
+import CheckBoxList from '../components/CheckBoxList.vue';
 // import SelectButton from 'primevue/dropdown';
 
 export default {
@@ -15,7 +16,7 @@ export default {
     VueDatePicker, // datepicker component that lets user pick date range
     BarChart, // chart compoment that allows for displaying of charts
     Dropdown, // dropdown component which lets user selct option from dropdown menu
-    // SelectButton,
+    CheckBoxList // checkbox component that allows selection of users
   },
 
 
@@ -122,6 +123,20 @@ export default {
       return formatter.format(date);
     });
 
+    
+    const userList = computed(() => { // List of contributors is extracted from the pull requests
+      if (!state.githubResponse || !state.githubResponse.Repo.pull_requests) {
+        return [];  // Return an empty array if there are no pull requests
+      }
+      
+      const users = new Set();
+      state.githubResponse.Repo.pull_requests.forEach(pr => {
+        users.add(pr.user); // Add each user
+      });
+
+      return Array.from(users);  // Convert Set back to Array
+    });
+
     onMounted(async () => {
       await getPackage('');
     });
@@ -135,7 +150,8 @@ export default {
       sorts,
       route,
       pullRequestCount,
-      formattedDate
+      formattedDate,
+      userList
     }
   },
 
@@ -194,14 +210,25 @@ export default {
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date range:</label>
       <div id="datePicker" style="display: flex; align-items: flex-start;">
-        <VueDatePicker v-model="selectedRange" range style="width: 500px; height: 50px;"></VueDatePicker>
+        <VueDatePicker v-model="selectedRange" range style="width: 300px; height: 50px;"></VueDatePicker>
         <button class="button-6" style="width: 57px; height: 38px; margin-left: 3px; font-size: smaller;" @click="getPackage(selectedRange)">Reload</button>
       </div>
     </div>
   </div>
 
-  <div style="display: flex; justify-content: center; margin-top: 4%; height: 400px;">
+  <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 80%;">
+    
+    <div style="margin-right: 20px; ">
+      <button class="button-6" style="width: 100px; height: 70px; justify-content: center;">
+        Temporal Resolution
+      </button>
+    </div>
+
     <BarChart :chartData="chartData" :chartOptions="chartOptions" />
+
+    <div style="margin-left: 20px; ">
+      <CheckBoxList :usernames="userList" />
+    </div>
   </div>
 
 
