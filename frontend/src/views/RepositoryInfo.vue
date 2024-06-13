@@ -6,7 +6,7 @@ import { fetchData } from '../fetchData.js'
 import { useRoute } from 'vue-router';
 import { state } from '../repoPackage.js';
 import fakejson from '../test.json';
-import BarChart from '../components/BarChart.vue';
+import Chart from '../components/Chart.vue';
 import Dropdown from 'primevue/dropdown';
 import CheckBoxList from '../components/CheckBoxList.vue';
 // import SelectButton from 'primevue/dropdown';
@@ -14,7 +14,7 @@ import CheckBoxList from '../components/CheckBoxList.vue';
 export default {
   components: {
     VueDatePicker, // datepicker component that lets user pick date range
-    BarChart, // chart compoment that allows for displaying of charts
+    Chart, // chart compoment that allows for displaying of charts
     Dropdown, // dropdown component which lets user selct option from dropdown menu
     CheckBoxList // checkbox component that allows selection of users
   },
@@ -130,6 +130,38 @@ export default {
       // You can now use selectedUsers to filter or display specific data
     };
 
+    const chartOptions = ref({
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        title: {
+          display: true,
+          text: 'Test',
+          font: {
+            size: 20
+          }
+        }
+      }
+    });
+
+    const chartData = ref({ 
+        labels: [ 'January', 'February', 'March', 'April', 'May', 'June', 'July'],
+        datasets: [
+          {
+            data: [3, 0.5, 0.5, 0.5, 0.2, 0.22, 1.2],
+            backgroundColor: '#42A5F5'
+          }
+        ]
+    });
+
     onMounted(async () => {
       await getPackage('');
     });
@@ -147,6 +179,8 @@ export default {
       userList,
       selectedUsers,
       handleSelectedUsers,
+      chartOptions,
+      chartData,
     }
   },
 
@@ -167,19 +201,7 @@ export default {
         { id: 3, text: 'Extra Repository Information' },
         // Add more items as needed
       ],
-      chartData: { 
-        labels: [ 'January', 'February', 'March', 'April', 'May', 'June', 'July'],
-        datasets: [
-          {
-            data: [0.4, 0.5, 0.5, 0.5, 0.2, 0.22, 0.2],
-            backgroundColor: '#42A5F5'
-          }
-        ]
-      },
-      chartOptions: {
-        responsive: true,
-        maintainAspectRatio: false
-      }
+      
     }
   },
 }
@@ -201,6 +223,7 @@ export default {
     </div>  
   </header>
 
+  <!-- DATE PICKER -->
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date range:</label>
@@ -211,6 +234,7 @@ export default {
     </div>
   </div>
 
+  <!-- GRAPH -->
   <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 80%;">
     
     <div style="margin-right: 20px; ">
@@ -219,17 +243,15 @@ export default {
       </button>
     </div>
 
-    <BarChart :chartData="chartData" :chartOptions="chartOptions" />
+    <Chart :chartData="chartData" :chartOptions="chartOptions" />
 
     <div style="margin-left: 20px; ">
       <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
-      <div> users: {{ selectedUsers }} </div>
     </div>
-
     
   </div>
 
-
+  <!-- PULL REQUESTS and CONTRIBUTORS -->
   <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <div style="margin-bottom: 25px;">
@@ -265,6 +287,7 @@ export default {
     </div>
   </div>
 
+  <!-- BACK BUTTON -->
   <router-link :to="{path: '/' }">
         <button class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
     </router-link>
