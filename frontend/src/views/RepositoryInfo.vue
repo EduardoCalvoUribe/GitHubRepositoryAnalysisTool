@@ -228,8 +228,10 @@ export default {
   },
   methods: {
     async handleDateSubmit(range) {
-      const data = {'date': range}; // define data to be sent in postOptions, date range in this case
+      console.log("ranged")
 
+      const data = {'url': githubResponse.value.Repo.url, 'date': range}; // define data to be sent in postOptions, date range in this case
+      console.log(data, "url?");
       const postOptions = { // defines how data is sent to backend, POST request in this case
           method: 'POST',
           headers: {
@@ -239,7 +241,10 @@ export default {
       };
      
       try {
-        const response = await fetchData('', postOptions);  // send date range to backend through correct path that still needs to be created
+        console.log('entered try');
+        const response = await fetchData('http://127.0.0.1:8000/packageRanged', postOptions);  // send date range to backend through correct path that still needs to be created
+        this.githubResponse.value = response;
+        console.log("received")
       } catch (error) {
           console.error('Error:', error);
       }

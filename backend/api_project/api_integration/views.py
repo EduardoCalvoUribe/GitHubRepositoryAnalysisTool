@@ -19,6 +19,7 @@ from django.http import JsonResponse
 from .models import Comment
 from datetime import datetime
 from collections import OrderedDict
+from dateutil.parser import parse
 
 # # Helper function which loads in the JSON response from
 # # the github_repo_pull_requests function and counts the number of pull requests for a given repo. 
@@ -270,7 +271,10 @@ def delete_all_records(request):
     except Exception as e:
         return False, str(e)
 
-# Function to send a package of all repo information to the frontend
+
+
+
+
 @csrf_exempt
 def repo_frontend_info(request):
     if request.method == 'POST':
@@ -280,17 +284,132 @@ def repo_frontend_info(request):
         try:
             # Option 1: Using a dictionary (recommended)
             data = json.loads(request_body)
+            # url = data.get('url')  # Use get() for optional retrieval
+            url = data.get('url')
+            # dates = data['date']
+            # begin_date, end_date = date_range(dates)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        
+        try:
+            # Get the repository by URL (using get() for single object retrieval)
+            repo = Repository.objects.get(url=url)
+        except Repository.DoesNotExist:
+            # Handle repository not found (e.g., return a not found response)
+            return JsonResponse({'error': 'Repository not found'}, status=404)
+
+        try:
+            # Initialize total commit and comment counts
+            total_commit_count = 0
+            total_comment_count = 0
+
+            # Prepare the response data with nested pull request details
+            data = {
+                "Repo": {
+                    "name": repo.name,
+                    "url": repo.url,
+                    "updated_at": repo.updated_at,
+                    "pull_requests": [],
+                    "number_pulls": 0,
+                    "total_commit_count": 0,
+                    "total_comment_count": 0,
+                    "average_semantic": 0,
+                }
+            }
+
+            pull_requests = repo.pull_requests.all()
+            for pr in pull_requests:
+                pr_data = {
+                    "url": pr.url,
+                    "updated_at": pr.updated_at,
+                    "date": pr.date,
+                    "title": pr.title,
+                    "body": pr.body,
+                    "user": pr.user,
+                    "number": pr.number,
+                    "closed_at": pr.closed_at,
+                    "commits": [],
+                    "comments": [],
+                    "number_commits": 0,
+                    "number_comments": 0,
+                    "average_semantic": 0,
+                    #"pr_title_semantic": calculate_pr_semantic(pr.title),
+                    #"pr_body_semantic": calculate_pr_semantic(pr.body)
+
+                }
+
+                for commit in pr.commits.all():
+                    commit_data = {
+                        "name": commit.name,
+                        "url": commit.url,
+                        "title": commit.title,
+                        "user": commit.user,
+                        "date": commit.date,
+                        "semantic_score": commit.semantic_score,
+                        "updated_at": commit.updated_at,
+                    }
+                    pr_data["commits"].append(commit_data)
+                    total_commit_count += 1
+                
+                pr_data["number_commits"] = len(pr_data["commits"])
+
+                for comment in pr.comments.all():
+                    comment_data = {
+                        "url": comment.url,
+                        "date": comment.date,
+                        "body": comment.body,
+                        "user": comment.user,
+                        "semantic_score": comment.semantic_score,
+                        "updated_at": comment.updated_at,
+                        "comment_type": comment.comment_type,
+                        "commit_id": comment.commit_id,
+                    }
+                    pr_data["comments"].append(comment_data)
+                    total_comment_count += 1
+                
+                pr_data["number_comments"] = len(pr_data["comments"])
+                #pr_data["average_semantic"] = calculate_average_semantic_pull(pr_data)
+                data["Repo"]["pull_requests"].append(pr_data)
+
+            data["Repo"]["number_pulls"] = len(data["Repo"]["pull_requests"])
+            data["Repo"]["total_commit_count"] = total_commit_count
+            data["Repo"]["total_comment_count"] = total_comment_count
+            #data["Repo"]["average_semantic"] = calculate_average_semantic_repo(data["Repo"])
+
+            return JsonResponse(data)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    # If the request method is not POST
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+# Function to send a package of all repo information to the frontend
+@csrf_exempt
+def repo_frontend_info_dated(request):
+    print("Point reached")
+    if request.method == 'POST':
+        # Get the request body as a string
+        request_body = request.body.decode('utf-8')
+        # Try to parse the JSON data
+        try:
+            # Option 1: Using a dictionary (recommended)
+            data = json.loads(request_body)
             #url = data.get('url')  # Use get() for optional retrieval
             url = data['url']
+            print(url)
             print("url reached")
             dates = data['date']
+            print(dates) 
             begin_date, end_date = date_range(dates)
         except json.JSONDecodeError:
             print("Error")
     print("Point reached")
-    url = "https://github.com/lucidrains/PaLM-rlhf-pytorch"
-    begin_date = timezone.make_aware(datetime(2024, 3, 1, 0, 0, 0))
-    end_date = timezone.make_aware(datetime(2024, 6, 1, 0, 0, 0))
+    #url = "https://github.com/lucidrains/PaLM-rlhf-pytorch"
+    #begin_date = timezone.make_aware(datetime(2024, 3, 1, 0, 0, 0))
+    #end_date = timezone.make_aware(datetime(2024, 6, 1, 0, 0, 0))
     print(url)
     try:
     # Get the repository by URL (using get() for single object retrieval)
@@ -299,9 +418,9 @@ def repo_frontend_info(request):
     # Handle repository not found (e.g., return a not found response)
         return JsonResponse({'error': 'Repository not found'}, status=404)
 
-    try:
+    #try:
             # Prepare the response data with nested pull request details
-        data = {
+    data = {
             "Repo": {
             "name": repo.name,
             "url": repo.url,
@@ -310,11 +429,11 @@ def repo_frontend_info(request):
             }
         }
 
-        pull_requests = repo.pull_requests.all()
-        print("Getting data reached")
-        print(pull_requests)
-        print("But really")
-        for pr in pull_requests:
+    pull_requests = repo.pull_requests.all()
+    print("Getting data reached")
+    print(pull_requests)
+    print("But really")
+    for pr in pull_requests:
             print("In for loop")
             print(type(pr.date))
             print("in between pr.date and begin_date")
@@ -322,6 +441,7 @@ def repo_frontend_info(request):
             print(f"Date: {pr.date}")
             # if pr.date != None:
             print("pr.date not None")
+            print(pr.closed_at, pr.date, begin_date, end_date)
             if (pr.closed_at > begin_date) & (pr.date < end_date) & (pr.date > begin_date):
                     print("Data if reached")
                     pr_data = {
@@ -352,28 +472,43 @@ def repo_frontend_info(request):
                         }
                         pr_data["comments"].append(comment_data)
 
-            data["Repo"]["pull_requests"].append(pr_data)
-        return JsonResponse(data)
-    except Repository.DoesNotExist:
-        return JsonResponse({"error": "Repository not found"}, status=404)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+                    data["Repo"]["pull_requests"].append(pr_data)
+            else:
+                print("Data else reached")
+    print("done")
+    print(data)
+    return JsonResponse(data)
+    # except Repository.DoesNotExist:
+    #     return JsonResponse({"error": "Repository not found"}, status=404)
+    # except Exception as e:
+    #     return JsonResponse({"error": str(e)}, status=500)
+
 
 def date_range(data):
-    try:
-        begin_date_str = data.get('0')
-        end_date_str = data.get('1')
+    #try:
+        begin_date_str = data[0]
+        end_date_str = data[1]
         print("daterange 1")
-        date_format = '%a %b %d %Y %H:%M:%S GMT%z (%Z)'
-        print("daterange 2")
-        begin_date_obj = timezone.make_aware(datetime.strptime(begin_date_str, date_format))
-        end_date_obj = timezone.make_aware(datetime.strptime(end_date_str, date_format))
-        print("daterange 3")
-    except:
-        return ""
-    return begin_date_obj, end_date_obj
+        #begin_date_obj = parse(begin_date_str)
+        #end_date_obj = parse(end_date_str)
 
-def select_commit(pull_request):
+
+
+        date_format = "%Y-%m-%dT%H:%M:%S.%fZ" # Assuming format with optional space
+
+# Parse the datetime string
+        begin_date_obj = datetime.strptime(begin_date_str, date_format)
+        begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
+
+        end_date_obj = datetime.strptime(end_date_str, date_format)
+        end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
+
+
+    # except:
+    #     return ""
+        return begin_date_obj, end_date_obj
+
+def select_commit(pr):
     for commit in pr.commits.all():
                 commit_data = {
                     "name": commit.name,
@@ -388,11 +523,9 @@ def select_commit(pull_request):
 
 #Create a data package that is used by the frontend to show on the frontend
 def homepage_datapackage(request):
-    print("Homepage reached")
     #try:
         #We import all the repositories from the database
     repos = Repository.objects.all()
-    print(repos)
         # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
     unique_repos = list(OrderedDict((repo.id, {
             "name": repo.name,
