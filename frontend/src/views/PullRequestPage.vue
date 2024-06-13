@@ -1,9 +1,7 @@
 <script>
 import { ref, onMounted } from 'vue';
-import fakejson from '../test.json';
 import { useRoute } from 'vue-router';
 import { state } from '../repoPackage.js';
-import CommitPage from './CommitPage.vue';
 
 export default {
   setup() {
@@ -11,149 +9,74 @@ export default {
     const pullpackage = ref(null);
 
     onMounted(async () => {
-      console.log('onMounted');
-      console.log(state.githubResponse);
       if (state.githubResponse) {
-        console.log('in if');
-        for (let i=0; i < state.githubResponse.Repo.pull_requests.length - 1; i++) {
+        for (let i = 0; i < state.githubResponse.Repo.pull_requests.length; i++) {
           if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
             pullpackage.value = state.githubResponse.Repo.pull_requests[i];
+            break;
           }
         }
-        console.log(pullpackage.value);
-      }
-      if (pullpackage.value) {
-        console.log(pullpackage.value.title)
-      } else {
-        console.log('failure')
       }
     });
 
     return {
-      state,
       pullpackage,
     };
-  },
-
-  data() {
-
   },
 };
 </script>
 
 <template>
-  <!-- <header> -->
-    <!-- <router-link :to="`/repoinfo/${repositoryId}`">Repository Information</router-link>
-    <router-link style="margin-left: 2%" to="/prpage">Pull Requests</router-link>
-    <router-link style="margin-left: 2%" to="/commitpage">Commits</router-link>
-    <router-link style="margin-left: 2%" to="/commentpage">Comments</router-link> -->
-  <!-- </header> -->
-
-  <!-- <router-view /> -->
-
   <header>
     <div v-if="pullpackage" style="margin-top: 50px">
-      <div style="font-size: 180%; margin-bottom: 20px;"> {{ pullpackage.title }} </div>
-      <div> User: {{ pullpackage.user }} </div>
-      <div> Created: {{ pullpackage.date }} </div>
+      <h1>Pull Request</h1>
+      <div style="font-size: 180%; margin-bottom: 20px; margin-top: 40px;">{{ pullpackage.title }}</div>
+      <div>User: {{ pullpackage.user }}</div>
+      <div>Created: {{ pullpackage.date }}</div>
       <div>Description: {{ pullpackage.body }}</div>
     </div>
   </header>
 
   <div v-if="pullpackage" class="grid-container">
     <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-    Number of Commits: {{ pullpackage.number_commits }}
+      Number of Commits: {{ pullpackage.number_commits }}
     </button>
     <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-    Number of Comments: {{ pullpackage.number_comments }}
-  </button>
-  <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-    Average Semantic Score: {{ pullpackage.average_semantic }}
-  </button>
+      Number of Comments: {{ pullpackage.number_comments }}
+    </button>
+    <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+      Average Semantic Score: {{ pullpackage.average_semantic }}
+    </button>
   </div>
 
-  <div v-if="pullpackage" style=" display: flex; justify-content: center;">
-    <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="commits">Commits:</label>
-      <div id="commits" class="row" v-for="commit in pullpackage.commits">
-        <router-link :to="{ path: '/commitpage/' + encodeURIComponent(commit.url) }"><button class="button-6">
-            <span><h2 style="margin-left: 0.3rem;">{{ commit.title }}</h2></span>
-            <span class="last-accessed">Author: {{ commit.user }}</span>
-            <span class="last-accessed">Date: {{ commit.date }}</span>
-        </button></router-link>
-      </div>
+  <div v-if="pullpackage" class="grid-container">
+    <div class="grid-item" v-for="commit in pullpackage.commits" :key="commit.id">
+      {{ commit.title }}
+      <div>Date: {{ commit.date }}</div>
+      <div>User: {{ commit.user }}</div>
+      <div>Semantic Score: {{ commit.semantic_score }}</div>
+      <div>Updated At: {{ commit.updated_at }}</div>
     </div>
   </div>
-  
-  <div v-if="pullpackage">
-    <body>
-      
 
-      <div class="grid-container">
-        <div id="commits" class="row" v-for="commit in pullpackage.commits">
-          <div class="grid-item">
-          {{ commit.title }}
-          <body>
-            Date: {{ commit.date }}
-            <div>
-              User: {{ commit.user }}
-            </div>
-            <div>
-              Semantic Score {{ commit.semantic_score }}
-            </div>
-            <div>
-              Updated At: {{ commit.updated_at }}
-            </div>
-          </body>
-          </div>
-        </div>
-      </div>
-      <router-link :to="{path: '/' }">
-        <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;">Back</button>
-    </router-link>
-    </body>
-    </div>
-
+  <router-link :to="{path: '/' }">
+    <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;">Back</button>
+  </router-link>
 </template>
 
 <style scoped>
 @media (min-width: 1024px) {
-  .about {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-  }
   .grid-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Adjust the number of columns as needed */
-    gap: 10px; /* Spacing between grid items */
-    height: auto;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
     padding: 10px;
   }
 
   .grid-item {
-    background-color: #157eff4d; /* Background color for grid items */
-    padding: 10px; /* Padding inside grid items */
-    text-align: left; /* Centering text inside grid items */
-    border: 1px solid #ccc; /* Border for grid items */
-    min-height: 50px;
-    height: auto;
-  }
-
-  .box-container {
-    display: flex;
-    gap: 10px; /* Space between boxes */
-    justify-content: center; /* Center the boxes horizontally */
-    padding: 20px 0; /* Optional: padding around the container */
-    text-align: center;
-  }
-
-  .box {
-    flex: 1; /* Each box takes equal space */
-    padding: 20px;
-    background-color: rgb(255, 255, 255);
-    text-align: center;
-    border: 1px solid #ffffff;
+    background-color: #157eff4d;
+    padding: 10px;
+    border: 1px solid #ccc;
   }
 }
 </style>
