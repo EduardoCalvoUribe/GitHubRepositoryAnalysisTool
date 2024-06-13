@@ -100,9 +100,9 @@ export default {
         return sortListsScore(state.githubResponse.Repo.pull_requests, selectedSort.value);
       }
     });
-    // console.log(githubResponse, "hey")
 
     const pullRequestCount = computed(() => {
+
   return sortedPullRequests.value.length;
 });
 
@@ -112,6 +112,7 @@ export default {
       await getPackage('');
     });
 
+    
     return {
       getPackage,
       state,
@@ -169,7 +170,7 @@ export default {
   <header>
     <div v-if="state.githubResponse" style="margin-top: 50px">
       <div style="font-size: 180%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
-      <div style="margin-bottom: 5px"> URL: {{ state.githubResponse.Repo.url }} </div>
+      <a :href="state.githubResponse.Repo.url" target="_blank" style="margin-bottom: 5px"> URL: {{ state.githubResponse.Repo.url }} </a>
       <div> Last Updated: {{ state.githubResponse.Repo.updated_at }} </div>
     </div>  
   </header>
@@ -184,10 +185,11 @@ export default {
     </div>
   </div>
 
+  <div style="display: flex; justify-content: center; margin-top: 4%; height: 400px;">
+    <BarChart :chartData="chartData" :chartOptions="chartOptions" />
+  </div>
 
-  <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-    Total Pull Requests: {{ pullRequestCount }}
-  </button>
+
 
   
 
@@ -203,7 +205,10 @@ export default {
       </div>
       <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && state.githubResponse" style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
+          <h1 style="justify-content: center; display: inline-block; width: 250px;" for="pullRequests">Pull Requests</h1>
+          <div style="margin-top: 10px; justify-content: center;">
+            Total Pull Requests: {{ pullRequestCount }}
+          </div>
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
@@ -215,7 +220,7 @@ export default {
       </div>
       <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse" style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
+          <h1 style="justify-content: center; display: inline-block; width: 250px;" for="users">Contributors</h1>
           <div id="users" class="row" v-for="pullrequest in state.githubResponse.Repo.pull_requests">
             <router-link :to="{ path: '/userpage' }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
@@ -227,9 +232,6 @@ export default {
     </div>
   </div>
 
-  <div style="display: flex; justify-content: center; margin-top: 4%; height: 400px;">
-    <BarChart :chartData="chartData" :chartOptions="chartOptions" />
-  </div>
   <router-link :to="{path: '/' }">
         <button class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
     </router-link>
