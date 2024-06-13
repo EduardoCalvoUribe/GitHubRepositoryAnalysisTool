@@ -38,43 +38,25 @@ export default {
   </header>
 
   <div v-if="pullpackage" class="grid-container">
-    <div id="app">
-    <p v-if="!pullpackage.number_commits.length">
+    <div class="info-section">
       <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-     Number of Commits: N/A
+        Number of Commits: {{ pullpackage.number_commits ? pullpackage.number_commits : 'N/A' }}
       </button>
-    </p>
-    <p v-else>
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
-    Number of Commits: {{ pullpackage.number_commits }}
-    </button>
-    </p>
-  </div>
-  <div id="app">
-    <p v-if="!pullpackage.number_comments.length">
+    </div>
+
+    <div class="info-section">
       <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-     Number of Comments: N/A
+        Number of Comments: {{ pullpackage.number_comments ? pullpackage.number_comments : 'N/A' }}
       </button>
-    </p>
-    <p v-else>
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
-    Number of Comments: {{ pullpackage.number_comments }}
-    </button>
-    </p>
-  </div>
-  <div id="app">
-    <p v-if="!pullpackage.average_semantic.length">
+    </div>
+
+    <div class="info-section">
       <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-     Average Semantic Score: N/A
+        Average Semantic Score: {{ pullpackage.average_semantic ? pullpackage.average_semantic : 'N/A' }}
       </button>
-    </p>
-    <p v-else>
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
-    Number of Comments: {{ pullpackage.average_semantic }}
-    </button>
-    </p>
+    </div>
   </div>
-  </div>
+
 
   <div v-if="pullpackage" class="grid-container">
     <div class="grid-item" v-for="commit in pullpackage.commits" :key="commit.id">
