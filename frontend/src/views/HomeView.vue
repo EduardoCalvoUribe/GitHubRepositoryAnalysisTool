@@ -63,14 +63,6 @@ export default {
       }
     };
 
-    const sortListsScore = (list, choice) => {
-      if (choice.name == 'Semantic Score Ascending') {
-        return list.sort((a,b) => (a.average_semantic) - (b.average_semantic));
-      } else {
-        return list.sort((a,b) => (b.average_semantic) - (a.average_semantic));
-      }
-    };
-
     const sortedRepos = computed(() => {
       if (!repoInfo.value) return [];
       else if (selectedSort.value.name.includes('Date')) {
