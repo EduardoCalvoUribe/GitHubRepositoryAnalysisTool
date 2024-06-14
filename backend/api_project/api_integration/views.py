@@ -464,24 +464,26 @@ def selected_data(pr,data, total_comment_count, total_commit_count):
     return data
 
 
-
-
 def date_range(data):
+    if len(data) < 2:
+        # Return a default wide range if not enough data
+        return datetime.min, datetime.max
+
     try:
-        begin_date_str = data[0]
-        end_date_str = data[1]
-        date_format = "%Y-%m-%dT%H:%M:%S.%fZ" # Assuming format with optional space
+        begin_date_str = data[0].strip()
+        end_date_str = data[1].strip()
 
-        # Parse the datetime string
-        begin_date_obj = datetime.strptime(begin_date_str, date_format)
-        begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
+        # Directly parse the ISO format datetime strings
+        begin_date_obj = parse(begin_date_str)
+        end_date_obj = parse(end_date_str)
 
-        end_date_obj = datetime.strptime(end_date_str, date_format)
-        end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
         return begin_date_obj, end_date_obj
 
-    except:
-         return ""
+    except Exception as e:
+        print(f"Error parsing dates: {str(e)}")
+        # Return default max range
+        return datetime.min, datetime.max 
+
         
 
 def select_commits(pr, pr_data, total_commit_count):
