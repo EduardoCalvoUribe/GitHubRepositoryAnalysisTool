@@ -239,7 +239,6 @@ export default {
   },
 }
 </script>
-
 <template>
   <!-- <header>
     <RouterLink to="/repoinfo/${url}">Repository Information</RouterLink>
@@ -247,7 +246,6 @@ export default {
     <RouterLink style="margin-left: 2%" to="/commitpage">Commits</RouterLink>
     <RouterLink style="margin-left: 2%" to="/commentpage">Comments</RouterLink>
   </header> -->
-
   <header>
     <div v-if="state.githubResponse" style="margin-top: 50px">
       <div style="font-size: 240%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
@@ -255,7 +253,6 @@ export default {
       <div style="font-size: 90%; margin-left: 3px; margin-top: 6px;"> Last Updated: {{ formattedDate }} </div>
     </div>  
   </header>
-
   <!-- DATE PICKER -->
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
@@ -266,37 +263,33 @@ export default {
       </div>
     </div>
   </div>
-
   <!-- GRAPH -->
   <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 100%;">
-    
-    <div style="margin-right: 10px; margin-top: 70px; min-width: 160px;">
-      <div>
-        <input type="radio" id="semantic" name="stat" value="semantic">
-        <label style="margin-left: 5px;" for="semantic">Semantic Score</label>
-      </div>
-      <div>
-        <input type="radio" id="engagement" name="stat" value="engagement">
-        <label style="margin-left: 5px;" for="engagement">Engagement Score</label>
-      </div>
-      <div>
-        <input type="radio" id="commits" name="stat" value="commits">
-        <label style="margin-left: 5px;" for="commits">Commits</label>
-      </div>
-      <div>   
-        <input type="radio" id="pullrequests" name="stat" value="pullrequests" checked>
-        <label style="margin-left: 5px;" for="pullrequests">Pull Requests</label>
-      </div>
-    </div>
-
-    <Chart style="flex: 1; max-width: 1000px" :chartData="chartData" :chartOptions="chartOptions" :isBar="true"/>
-
-    <div style="margin-left: 40px; margin-top: 50px;">
-      <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
-    </div>
-    
+<div style="margin-right: 10px; margin-top: 70px; min-width: 160px;">
+  <div>
+    <input type="radio" id="semantic" name="stat" value="semantic">
+    <label style="margin-left: 5px;" for="semantic">Semantic Score</label>
   </div>
+  <div>
+    <input type="radio" id="engagement" name="stat" value="engagement">
+    <label style="margin-left: 5px;" for="engagement">Engagement Score</label>
+  </div>
+  <div>
+    <input type="radio" id="commits" name="stat" value="commits">
+    <label style="margin-left: 5px;" for="commits">Commits</label>
+  </div>
+  <div>   
+    <input type="radio" id="pullrequests" name="stat" value="pullrequests" checked>
+    <label style="margin-left: 5px;" for="pullrequests">Pull Requests</label>
+  </div>
+</div>
 
+<Chart style="flex: 1; max-width: 1000px" :chartData="chartData" :chartOptions="chartOptions" :isBar="true"/>
+
+<div style="margin-left: 40px; margin-top: 50px;">
+  <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
+</div>
+  </div>
   <!-- PULL REQUESTS and CONTRIBUTORS -->
   <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
@@ -313,8 +306,10 @@ export default {
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
-                <span class="last-accessed">Author: {{ pullrequest.user }}</span>
-                <span class="last-accessed">Date {{ pullrequest.date }}</span>
+                <div class="pr-details">
+                  <span>{{ pullrequest.user }}</span>
+                  <span>{{ pullrequest.date }}</span>
+                </div>
             </button></router-link>
           </div>
         </div>
@@ -332,13 +327,11 @@ export default {
       </div>
     </div>
   </div>
-
   <!-- BACK BUTTON -->
   <router-link :to="{path: '/' }">
         <button class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
     </router-link>
 </template>
-
 <style scoped>
 .grid-container {
   display: grid;
@@ -367,5 +360,19 @@ export default {
   background-color: rgb(255, 255, 255);
   text-align: center;
   border: 1px solid #ffffff;
+}
+
+.pr-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 0.3rem;
+}
+
+.pr-details span {
+  width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
