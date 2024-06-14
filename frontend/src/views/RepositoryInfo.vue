@@ -38,13 +38,14 @@ export default {
 
     const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
     const sorts = ref([ // different possible sort options
-        // { name: 'Semantic Score Ascending' },
-        // { name: 'Semantic Score Descending' },
+        { name: 'Semantic Score Ascending' },
+        { name: 'Semantic Score Descending' },
         { name: 'Date Oldest to Newest' },
         { name: 'Date Newest to Oldest' },
       ]);
 
     const getPackage = async (date) => {
+      console.log(date, "date")
       const data = {
         'url': decodeURIComponent(route.params.url),
         'date': date
@@ -72,23 +73,15 @@ export default {
 
     const sortListsDate = (list, choice) => {
       if (choice.name == 'Date Oldest to Newest') {
-        const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
-        console.log(list);
-        return sorted_list;
-      } else {
-        const sorted_list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
-        console.log(list);
-        return sorted_list;
-      }
+        return list.sort((a,b) => new Date(a.date) - new Date(b.date));
+      } else return list.sort((a,b) => new Date(b.date) - new Date(a.date));
     };
 
     const sortListsScore = (list, choice) => {
       if (choice.name == 'Semantic Score Ascending') {
-        const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
-        return sorted_list;
+        return list.sort((a,b) => (a.average_semantic) - (b.average_semantic));
       } else {
-        const sorted_list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
-        return sorted_list;
+        return list.sort((a,b) => (b.average_semantic) - (a.average_semantic));
       }
     };
 
@@ -96,21 +89,40 @@ export default {
       if (!state.githubResponse) return [];
       else if (selectedSort.value.name.includes('Date')) {
         return sortListsDate(state.githubResponse.Repo.pull_requests, selectedSort.value);
-      } else {
-        return sortListsScore(state.githubResponse.Repo.pull_requests, selectedSort.value);
-      }
+      } else return sortListsScore(state.githubResponse.Repo.pull_requests, selectedSort.value);
     });
     // console.log(githubResponse, "hey")
 
     const pullRequestCount = computed(() => {
-  return sortedPullRequests.value.length;
-});
+      return sortedPullRequests.value.length;
+    });
 
 
 
     onMounted(async () => {
-      await getPackage('');
+      await getPackage(null);
+      // const data = {'url': decodeURIComponent(route.params.url), "date": ""}; // define data to be sent in postOptions, repo url in this case
+      // console.log(data, "url?");
+      // console.log(route)
+      
+
+      // const postOptions = { // defines how data is sent to backend, POST request in this case
+      //     method: 'POST',
+      //     headers: {
+      //         'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify(data),
+      // };
+      // console.log("in")
+      // try {      
+      //     const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
+      //     console.log("received")
+      //     state.githubResponse = response;
+      // } catch (error) {
+      //     console.error('Error:', error);
+      // }
     });
+
 
     return {
       getPackage,
@@ -208,6 +220,7 @@ export default {
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
                 <span class="last-accessed">Author: {{ pullrequest.user }}</span>
+                <span class="last-accessed">Semantic score: {{ pullrequest.average_semantic }}</span>
                 <span class="last-accessed">Date {{ pullrequest.date }}</span>
             </button></router-link>
           </div>

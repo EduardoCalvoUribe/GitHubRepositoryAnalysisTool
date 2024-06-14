@@ -9,7 +9,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
 from .models import Repository, PullRequest, Commit, User
-from . import functions, API_call_information
+from . import functions, API_call_information, general_semantic_score
 # from .serializers import ItemSerializer
 from django.views.decorators.csrf import csrf_exempt
 import aiohttp
@@ -20,6 +20,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import logout
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, login
+from dateutil.parser import parse
 
 
 
@@ -305,7 +306,7 @@ def send_post_request_to_repo_frontend_info(request):
 
     # Define the payload for the POST request
     payload = {
-        "url": "github.com/LucaAmbrogioni/CalculusTeachingMaterial"
+        "url": "https://github.com/lucidrains/PaLM-rlhf-pytorch"
     }
 
     try:
@@ -324,9 +325,11 @@ def send_post_request_to_repo_frontend_info(request):
         # If an exception occurs, return an error response
         return JsonResponse({"error": str(e)}, status=500)
 
+
 # Function to send a package of all repo information to the frontend
 @csrf_exempt
 def repo_frontend_info(request):
+    print("Point reached")
     if request.method == 'POST':
         # Get the request body as a string
         request_body = request.body.decode('utf-8')
@@ -334,42 +337,71 @@ def repo_frontend_info(request):
         try:
             # Option 1: Using a dictionary (recommended)
             data = json.loads(request_body)
-            # url = data.get('url')  # Use get() for optional retrieval
-            url = data.get('url', "github.com/LucaAmbrogioni/CalculusTeachingMaterial")
-            # dates = data['date']
-            # begin_date, end_date = date_range(dates)
+            #url = data.get('url')  # Use get() for optional retrieval
+            url = data['url']
+            print(url)
+            print("url reached")
+            dates = data['date']
+            ranged = False
+            if dates != None:
+                print(dates)
+                ranged = True
+                begin_date, end_date = date_range(dates)
         except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        
-        try:
-            # Get the repository by URL (using get() for single object retrieval)
-            repo = Repository.objects.get(url=url)
-        except Repository.DoesNotExist:
-            # Handle repository not found (e.g., return a not found response)
-            return JsonResponse({'error': 'Repository not found'}, status=404)
+            print("Error")
+    print("Point reached")
+    #url = "https://github.com/lucidrains/PaLM-rlhf-pytorch"
+    #begin_date = timezone.make_aware(datetime(2024, 3, 1, 0, 0, 0))
+    #end_date = timezone.make_aware(datetime(2024, 6, 1, 0, 0, 0))
+    print(url)
+    try:
+    # Get the repository by URL (using get() for single object retrieval)
+        repo = Repository.objects.get(url=url)
+    except Repository.DoesNotExist:
+    # Handle repository not found (e.g., return a not found response)
+        return JsonResponse({'error': 'Repository not found'}, status=404)
 
-        try:
-            # Initialize total commit and comment counts
-            total_commit_count = 0
-            total_comment_count = 0
-
+    try:
             # Prepare the response data with nested pull request details
-            data = {
-                "Repo": {
-                    "name": repo.name,
-                    "url": repo.url,
-                    "updated_at": repo.updated_at,
-                    "pull_requests": [],
-                    "number_pulls": 0,
-                    "total_commit_count": 0,
-                    "total_comment_count": 0,
-                    "average_semantic": 0,
-                }
-            }
+    # Initialize total commit and comment counts
+        total_commit_count = 0
+        total_comment_count = 0
 
-            pull_requests = repo.pull_requests.all()
-            for pr in pull_requests:
-                pr_data = {
+                # Prepare the response data with nested pull request details
+        data = {
+                    "Repo": {
+                        "name": repo.name,
+                        "url": repo.url,
+                        "updated_at": repo.updated_at,
+                        "pull_requests": [],
+                        "number_pulls": 0,
+                        "total_commit_count": 0,
+                        "total_comment_count": 0,
+                        "average_semantic": 0,
+                    }
+                }
+        
+        pull_requests = repo.pull_requests.all()
+        print("Getting data reached")
+        print(pull_requests)
+        print("But really")
+        for pr in pull_requests:
+            if not ranged:
+                data = selected_data(pr,data, total_comment_count, total_commit_count)
+            else:
+                if (pr.closed_at > begin_date) & (pr.date < end_date) & (pr.date > begin_date):
+                    data = selected_data(pr,data, total_comment_count, total_commit_count)
+        return JsonResponse(data)
+    except Repository.DoesNotExist:
+        return JsonResponse({"error": "Repository not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+
+
+def selected_data(pr,data, total_comment_count, total_commit_count):
+    pr_data = {
                     "url": pr.url,
                     "updated_at": pr.updated_at,
                     "date": pr.date,
@@ -383,9 +415,77 @@ def repo_frontend_info(request):
                     "number_commits": 0,
                     "number_comments": 0,
                     "average_semantic": 0,
-                }
+                    "pr_title_semantic": calculate_pr_semantic(pr.title),
+                    "pr_body_semantic": calculate_pr_semantic(pr.body)
+    }
 
-                for commit in pr.commits.all():
+    pr_data, total_comment_count = select_comments(pr, pr_data, total_comment_count)
+    pr_data, total_commit_count = select_commits(pr, pr_data, total_commit_count )
+
+
+
+    # for commit in pr.commits.all():
+    #                 commit_data = {
+    #                     "name": commit.name,
+    #                     "url": commit.url,
+    #                     "title": commit.title,
+    #                     "user": commit.user,
+    #                     "date": commit.date,
+    #                     "semantic_score": commit.semantic_score,
+    #                     "updated_at": commit.updated_at,
+    #                 }
+    #                 pr_data["commits"].append(commit_data)
+    #                 total_commit_count += 1
+                
+    # pr_data["number_commits"] = len(pr_data["commits"])
+
+    # for comment in pr.comments.all():
+    #                 comment_data = {
+    #                     "url": comment.url,
+    #                     "date": comment.date,
+    #                     "body": comment.body,
+    #                     "user": comment.user,
+    #                     "semantic_score": comment.semantic_score,
+    #                     "updated_at": comment.updated_at,
+    #                     "comment_type": comment.comment_type,
+    #                     "commit_id": comment.commit_id,
+    #                 }
+    #                 pr_data["comments"].append(comment_data)
+    #                 total_comment_count += 1
+                
+    # pr_data["number_comments"] = len(pr_data["comments"])
+
+    pr_data["average_semantic"] = calculate_average_semantic_pull(pr_data)
+    data["Repo"]["pull_requests"].append(pr_data)
+    data["Repo"]["number_pulls"] = len(data["Repo"]["pull_requests"])
+    data["Repo"]["total_commit_count"] = total_commit_count
+    data["Repo"]["total_comment_count"] = total_comment_count
+    data["Repo"]["average_semantic"] = calculate_average_semantic_repo(data["Repo"])
+    return data
+
+
+
+
+def date_range(data):
+    try:
+        begin_date_str = data[0]
+        end_date_str = data[1]
+        date_format = "%Y-%m-%dT%H:%M:%S.%fZ" # Assuming format with optional space
+
+        # Parse the datetime string
+        begin_date_obj = datetime.strptime(begin_date_str, date_format)
+        begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
+
+        end_date_obj = datetime.strptime(end_date_str, date_format)
+        end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
+        return begin_date_obj, end_date_obj
+
+    except:
+         return ""
+        
+
+def select_commits(pr, pr_data, total_commit_count):
+    for commit in pr.commits.all():
                     commit_data = {
                         "name": commit.name,
                         "url": commit.url,
@@ -398,9 +498,11 @@ def repo_frontend_info(request):
                     pr_data["commits"].append(commit_data)
                     total_commit_count += 1
                 
-                pr_data["number_commits"] = len(pr_data["commits"])
+    pr_data["number_commits"] = len(pr_data["commits"])
+    return pr_data, total_commit_count
 
-                for comment in pr.comments.all():
+def select_comments(pr, pr_data, total_comment_count):
+    for comment in pr.comments.all():
                     comment_data = {
                         "url": comment.url,
                         "date": comment.date,
@@ -414,36 +516,9 @@ def repo_frontend_info(request):
                     pr_data["comments"].append(comment_data)
                     total_comment_count += 1
                 
-                pr_data["number_comments"] = len(pr_data["comments"])
-                pr_data["average_semantic"] = calculate_average_semantic_pull(pr_data)
-                data["Repo"]["pull_requests"].append(pr_data)
+    pr_data["number_comments"] = len(pr_data["comments"])
+    return pr_data, total_comment_count
 
-            data["Repo"]["number_pulls"] = len(data["Repo"]["pull_requests"])
-            data["Repo"]["total_commit_count"] = total_commit_count
-            data["Repo"]["total_comment_count"] = total_comment_count
-            data["Repo"]["average_semantic"] = calculate_average_semantic_repo(data["Repo"])
-
-            return JsonResponse(data)
-
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    
-    # If the request method is not POST
-    return JsonResponse({"error": "Invalid request method"}, status=405)
-
-
-def date_range(data):
-    try:
-        begin_date_str = data.get('0')
-        end_date_str = data.get('1')
-
-        date_format = '%a %b %d %Y %H:%M:%S GMT%z (%Z)'
-
-        begin_date_obj = datetime.strptime(begin_date_str, date_format)
-        end_date_obj = datetime.strptime(end_date_str, date_format)
-    except:
-        return ""
-    return begin_date_obj, end_date_obj
 
 #Create a data package that is used by the frontend to show on the frontend
 def homepage_datapackage(request):
@@ -577,3 +652,9 @@ def testAsyncCodeCommit(request):
 
     ratio = asyncio.run(compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_sha))
     return JsonResponse(str(ratio), safe=False)
+
+# Helper function which calculates the semantic score for the PR title and body
+# It simply encapsulates the same function which is used for the comment semantic score.
+# Possibly move this to general_semantic_score.py if metric weights will be passed from frontend
+def calculate_pr_semantic(message):
+    return general_semantic_score.calculateWeightedCommentSemanticScore(message,0.5,0.5)

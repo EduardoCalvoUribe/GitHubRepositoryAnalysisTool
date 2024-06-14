@@ -5,6 +5,7 @@ import { fetchData } from '../fetchData.js'
 export default {
   components: {
   },
+
   setup() {
     const repoInfo = ref(null);
     // const repoInfo = ref([ // Uses this by default, but is updated with fetched data from backend in onMounted.
@@ -34,6 +35,8 @@ export default {
     const sorts = [ // different possible sort options
         { name: 'Date Oldest to Newest' },
         { name: 'Date Newest to Oldest' },
+        { name: 'Semantic Score Ascending' },
+        { name: 'Semantic Score Descending' },
     ];
 
     onMounted(async () => {
@@ -55,9 +58,19 @@ export default {
       }
     };
 
+    const sortListsScore = (list, choice) => {
+      if (choice.name == 'Semantic Score Ascending') {
+        return list.sort((a,b) => (a.average_semantic) - (b.average_semantic));
+      } else {
+        return list.sort((a,b) => (b.average_semantic) - (a.average_semantic));
+      }
+    };
+
     const sortedRepos = computed(() => {
       if (!repoInfo.value) return [];
-      else return sortListsDate(repoInfo.value.Repos, selectedSort.value);
+      else if (selectedSort.value.name.includes('Date')) {
+        return sortListsDate(repoInfo.value.Repos, selectedSort.value);
+      } else return sortListsScore(repoInfo.value.Repos, selectedSort.value);
     });
 
     return { 
@@ -67,16 +80,19 @@ export default {
       sorts
     }; 
   },
+
   data() {
     return {
       invalidInput: false, // set to false by default so false message is not displayed constantly
     }
   },
+
   computed: {
-  currentUrl() {
-    return this.inputUrl;
-  }
-},
+    currentUrl() {
+      return this.inputUrl;
+    }
+  },
+  
   methods: {
    
     async checkInput(str) {
@@ -176,6 +192,7 @@ export default {
         <div id="repos" class="row" v-for="repo in sortedRepos" >
           <router-link :to="{ path: '/repoinfo/' + encodeURIComponent(repo.url) }"><button class="button-6" > 
               <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
+              <span class="last-accessed">Semantic score: {{ repo.average_semantic }}</span>
               <span class="last-accessed">Last Accessed: {{ repo.updated_at }}</span>
           </button></router-link>
           <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
