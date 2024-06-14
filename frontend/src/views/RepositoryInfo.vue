@@ -6,36 +6,24 @@ import { fetchData } from '../fetchData.js'
 import { useRoute } from 'vue-router';
 import { state } from '../repoPackage.js';
 import fakejson from '../test.json';
-import BarChart from '../components/BarChart.vue';
+import Chart from '../components/Chart.vue';
 import Dropdown from 'primevue/dropdown';
+import CheckBoxList from '../components/CheckBoxList.vue';
 // import SelectButton from 'primevue/dropdown';
 
 export default {
   components: {
     VueDatePicker, // datepicker component that lets user pick date range
-    BarChart, // chart compoment that allows for displaying of charts
+    Chart, // chart compoment that allows for displaying of charts
     Dropdown, // dropdown component which lets user selct option from dropdown menu
-    // SelectButton,
+    CheckBoxList // checkbox component that allows selection of users
   },
 
 
 
   setup() {
-    const route = useRoute(); // allows for passage of variables from homepage to current page
-    // const githubResponse = ref(null);
-    //const repoUrl = ({'url': decodeURIComponent(route.params.url)}).url;
-    // console.log(repoUrl, "url?")
-    // const postOptions = { // defines how data is sent to backend, POST request in this case
-    //       method: 'POST',
-    //       headers: {
-    //           'Content-Type': 'application/json',
-    //       },
-    //       body: JSON.stringify(repoUrl),
-    //   };
-    // const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
-    // console.log("received")
-    // githubResponse.value = response;
-
+    const route = useRoute();
+    const selectedUsers = ref([]); // list of users that user selects from checkbox list
     const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
     const sorts = ref([ // different possible sort options
         { name: 'Semantic Score Ascending' },
@@ -91,39 +79,110 @@ export default {
         return sortListsDate(state.githubResponse.Repo.pull_requests, selectedSort.value);
       } else return sortListsScore(state.githubResponse.Repo.pull_requests, selectedSort.value);
     });
-    // console.log(githubResponse, "hey")
 
     const pullRequestCount = computed(() => {
       return sortedPullRequests.value.length;
     });
 
-
-
-    onMounted(async () => {
-      await getPackage(null);
-      // const data = {'url': decodeURIComponent(route.params.url), "date": ""}; // define data to be sent in postOptions, repo url in this case
-      // console.log(data, "url?");
-      // console.log(route)
-      
-
-      // const postOptions = { // defines how data is sent to backend, POST request in this case
-      //     method: 'POST',
-      //     headers: {
-      //         'Content-Type': 'application/json',
-      //     },
-      //     body: JSON.stringify(data),
-      // };
-      // console.log("in")
-      // try {      
-      //     const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
-      //     console.log("received")
-      //     state.githubResponse = response;
-      // } catch (error) {
-      //     console.error('Error:', error);
-      // }
+    const formattedDate = computed(() => {
+      if (!state.githubResponse || !state.githubResponse.Repo.updated_at) {
+        return 'Loading...';
+      }
+      const date = new Date(state.githubResponse.Repo.updated_at);
+      const formatter = new Intl.DateTimeFormat('en-GB', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'short'
+      });
+      return formatter.format(date);
     });
 
+    
+    const userList = computed(() => { // List of contributors is extracted from the pull requests
+      if (!state.githubResponse || !state.githubResponse.Repo.pull_requests) {
+        return [];  // Return an empty array if there are no pull requests
+      }
+      
+      const users = new Set();
+      state.githubResponse.Repo.pull_requests.forEach(pr => {
+        users.add(pr.user); // Add each user
+      });
 
+      return Array.from(users);  // Convert Set back to Array
+    });
+
+    const handleSelectedUsers = (selected) => { // Function to handle selected users from checkbox list
+      selectedUsers.value = selected;
+      console.log("Selected users:", selectedUsers.value);
+      // You can now use selectedUsers to filter or display specific data
+    };
+
+    const chartOptions = ref({
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        title: {
+          display: true,
+          text: 'Test',
+          font: {
+            size: 20
+          }
+        }
+      }
+    });
+
+    const pullRequestsRange = computed(() => {
+      let minDate = new Date();
+      let maxDate = new Date(0);
+      const counts = {};
+      
+      if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
+        state.githubResponse.Repo.pull_requests.forEach(pr => {
+          const date = new Date(pr.date); 
+          minDate = date < minDate ? date : minDate;
+          maxDate = date > maxDate ? date : maxDate;
+          const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0');
+          counts[monthKey] = counts[monthKey] ? counts[monthKey] + 1 : 1;
+        });
+      }
+
+      // Generate all months between minDate and maxDate
+      const labels = [];
+      const data = [];
+      for (let d = new Date(minDate); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
+        const key = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
+        labels.push(key);
+        data.push(counts[key] || 0);
+      }
+
+      return { labels, data };
+    });
+
+    const chartData = ref({
+      labels: pullRequestsRange.value.labels,
+      datasets: [{
+        data: pullRequestsRange.value.data,
+        backgroundColor: '#42A5F5'
+      }]
+    });
+
+    onMounted(async () => {
+      await getPackage('');
+    });
+
+    
     return {
       getPackage,
       state,
@@ -132,6 +191,12 @@ export default {
       sorts,
       route,
       pullRequestCount,
+      formattedDate,
+      userList,
+      selectedUsers,
+      handleSelectedUsers,
+      chartOptions,
+      chartData,
     }
   },
 
@@ -152,19 +217,7 @@ export default {
         { id: 3, text: 'Extra Repository Information' },
         // Add more items as needed
       ],
-      chartData: { 
-        labels: [ 'January', 'February', 'March', 'April', 'May', 'June', 'July'],
-        datasets: [
-          {
-            data: [0.4, 0.5, 0.5, 0.5, 0.2, 0.22, 0.2],
-            backgroundColor: '#42A5F5'
-          }
-        ]
-      },
-      chartOptions: {
-        responsive: true,
-        maintainAspectRatio: false
-      }
+      
     }
   },
 }
@@ -180,42 +233,66 @@ export default {
 
   <header>
     <div v-if="state.githubResponse" style="margin-top: 50px">
-      <div style="font-size: 180%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
-      <div style="margin-bottom: 5px"> URL: {{ state.githubResponse.Repo.url }} </div>
-      <div> Last Updated: {{ state.githubResponse.Repo.updated_at }} </div>
+      <div style="font-size: 240%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
+      <a :href="state.githubResponse.Repo.url" target="_blank" style="margin-bottom: 5px"> URL: {{ state.githubResponse.Repo.url }} </a>
+      <div style="font-size: 90%; margin-left: 3px; margin-top: 6px;"> Last Updated: {{ formattedDate }} </div>
     </div>  
   </header>
 
+  <!-- DATE PICKER -->
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date range:</label>
       <div id="datePicker" style="display: flex; align-items: flex-start;">
-        <VueDatePicker v-model="selectedRange" range style="width: 500px; height: 50px;"></VueDatePicker>
+        <VueDatePicker v-model="selectedRange" range style="width: 300px; height: 50px;"></VueDatePicker>
         <button class="button-6" style="width: 57px; height: 38px; margin-left: 3px; font-size: smaller;" @click="getPackage(selectedRange)">Reload</button>
       </div>
     </div>
   </div>
 
+  <!-- GRAPH -->
+  <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 80%;">
+    
+    <div style="margin-right: 40px;">
+      <div>
+        <input type="radio" id="semantic" name="stat" value="semantic">
+        <label for="semantic">Semantic Score</label>
+      </div>
+      <div>
+        <input type="radio" id="engagement" name="stat" value="engagement">
+        <label for="engagement">Engagement Score</label>
+      </div>
+      <div>
+        <input type="radio" id="commits" name="stat" value="commits">
+        <label for="commits">Commits</label>
+      </div>
+      <div>
+        <input type="radio" id="pullrequests" name="stat" value="pullrequests">
+        <label for="pullrequests">Pull Requests</label>
+      </div>
+    </div>
 
-  <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-    Total Pull Requests: {{ pullRequestCount }}
-  </button>
+    <Chart :chartData="chartData" :chartOptions="chartOptions" />
 
-  
+    <div style="margin-left: 20px; ">
+      <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
+    </div>
+    
+  </div>
 
-  <!-- <div>
-    <pre v-if="githubResponse">{{ githubResponse }}</pre>
-  </div> -->
-
+  <!-- PULL REQUESTS and CONTRIBUTORS -->
   <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <div>
-        <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
+      <div style="margin-bottom: 25px;">
+        <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" style="margin-right: 10px;" />
         <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
       </div>
       <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && state.githubResponse" style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
+          <h1 style="justify-content: center; display: inline-block; width: 250px;" for="pullRequests">Pull Requests</h1>
+          <div style="margin-top: 10px; justify-content: center;">
+            Total Pull Requests: {{ pullRequestCount }}
+          </div>
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
@@ -228,7 +305,7 @@ export default {
       </div>
       <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse" style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
+          <h1 style="justify-content: center; display: inline-block; width: 250px;" for="users">Contributors</h1>
           <div id="users" class="row" v-for="pullrequest in state.githubResponse.Repo.pull_requests">
             <router-link :to="{ path: '/userpage' }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
@@ -240,9 +317,7 @@ export default {
     </div>
   </div>
 
-  <div style="display: flex; justify-content: center; margin-top: 4%; height: 400px;">
-    <BarChart :chartData="chartData" :chartOptions="chartOptions" />
-  </div>
+  <!-- BACK BUTTON -->
   <router-link :to="{path: '/' }">
         <button class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
     </router-link>
