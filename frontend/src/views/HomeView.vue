@@ -191,7 +191,7 @@ export default {
           <router-link :to="{ path: '/repoinfo/' + encodeURIComponent(repo.url) }">
             <button class="button-6">
               <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
-              <span class="last-accessed">Semantic score: {{ repo.average_semantic }}</span>
+              <span class="last-accessed">Semantic score: {{ repo.average_semantic.toFixed(2) }}</span>
               <span class="last-accessed">Last Accessed: {{ repo.updated_at }}</span>
             </button>
           </router-link>

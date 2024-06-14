@@ -389,8 +389,9 @@ def repo_frontend_info(request):
             if not ranged:
                 data = selected_data(pr,data, total_comment_count, total_commit_count)
             else:
-                # if (pr.closed_at > begin_date) & (pr.date < end_date) & (pr.date > begin_date):
-                data = selected_data(pr,data, total_comment_count, total_commit_count)
+                if (pr.closed_at > begin_date) & (pr.date < end_date) & (pr.date > begin_date):
+                    data = selected_data(pr,data, total_comment_count, total_commit_count)
+        print(data)
         return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
@@ -465,24 +466,21 @@ def selected_data(pr,data, total_comment_count, total_commit_count):
 
 
 def date_range(data):
-    if len(data) < 2:
-        # Return a default wide range if not enough data
-        return datetime.min, datetime.max
+    # try:
+        begin_date_str = data[0]
+        end_date_str = data[1]
+        date_format = "%Y-%m-%dT%H:%M:%S.%fZ" # Assuming format with optional space
 
-    try:
-        begin_date_str = data[0].strip()
-        end_date_str = data[1].strip()
+        # Parse the datetime string
+        begin_date_obj = datetime.strptime(begin_date_str, date_format)
+        begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S")).date()
 
-        # Directly parse the ISO format datetime strings
-        begin_date_obj = parse(begin_date_str)
-        end_date_obj = parse(end_date_str)
-
+        end_date_obj = datetime.strptime(end_date_str, date_format)
+        end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S")).date()
         return begin_date_obj, end_date_obj
 
-    except Exception as e:
-        print(f"Error parsing dates: {str(e)}")
-        # Return default max range
-        return datetime.min, datetime.max 
+    # except:
+    #      return ""
 
         
 

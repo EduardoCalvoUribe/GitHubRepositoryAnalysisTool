@@ -184,7 +184,7 @@ export default {
     });
 
     onMounted(async () => {
-      await getPackage('');
+      await getPackage(null);
     });
 
     
@@ -221,8 +221,7 @@ export default {
         { id: 2, text: 'Number of Commits: ' + fakejson.repository.number_of_commits, path: '/commitpage' },
         { id: 3, text: 'Extra Repository Information' },
         // Add more items as needed
-      ],
-      
+      ],   
     }
   },
 
@@ -276,6 +275,27 @@ export default {
     </div>
   </div>
 
+  <!-- INFO BOXES -->
+  <div v-if="state.githubResponse" class="grid-container-2">
+    <div class="info-section">
+      <div class="stat-container">
+        Number of Commits: {{ state.githubResponse.Repo.total_commit_count ? state.githubResponse.Repo.total_commit_count : 'N/A' }}
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="stat-container">
+        Number of Comments: {{ state.githubResponse.Repo.total_comment_count ? state.githubResponse.Repo.total_comment_count : 'N/A' }}
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div :style="buttonColor" class="stat-container">
+        Average Semantic Score: {{ state.githubResponse.Repo.average_semantic ? state.githubResponse.Repo.average_semantic.toFixed(2) : 'N/A' }}
+      </div>
+    </div>
+  </div>
+
   <!-- GRAPH -->
   <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 80%;">
     
@@ -323,7 +343,7 @@ export default {
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
                 <span class="last-accessed">Author: {{ pullrequest.user }}</span>
-                <span class="last-accessed">Semantic score: {{ pullrequest.average_semantic }}</span>
+                <span class="last-accessed">Semantic score: {{ pullrequest.average_semantic.toFixed(2) }}</span>
                 <span class="last-accessed">Date {{ pullrequest.date }}</span>
             </button></router-link>
           </div>
@@ -335,7 +355,7 @@ export default {
           <div id="users" class="row" v-for="pullrequest in state.githubResponse.Repo.pull_requests">
             <router-link :to="{ path: '/userpage' }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
-                <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
+                <span class="last-accessed">Semantic score:</span>
             </button></router-link>
           </div>
         </div>
@@ -354,6 +374,28 @@ export default {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+}
+
+.grid-container-2 {
+  display: flex;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 10px;
+  padding: 10px;
+}
+
+.stat-container {
+  background-color: white;
+  border: 1px solid #157eff4d;
+  border-radius: 5px;
+  width: 100%;
+  height: 50px; 
+  width: 300px;
+  margin-top: 20px; 
+  justify-content: center;
+  text-align: center;
+  padding: 4%;
 }
 
 .grid-item {
