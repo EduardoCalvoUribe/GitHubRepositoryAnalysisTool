@@ -35,13 +35,27 @@ export default {
       default: true
     }
   },
-  setup(props) {
+  emits: ['bar-click'],
+  setup(props, { emit }) {
     const chartData = ref(props.chartData);
     const chartOptions = ref(props.chartOptions);
 
+    const onClick = (event, elements) => {
+      if (elements.length > 0) {
+        const firstElement = elements[0];
+        const label = chartData.value.labels[firstElement.index];
+        const value = chartData.value.datasets[firstElement.datasetIndex].data[firstElement.index];
+        console.log(`Clicked label: ${label}, value: ${value}`);
+        emit('bar-click', { label })
+      }
+    };
+
     watchEffect(() => {
       chartData.value = props.chartData;
-      chartOptions.value = props.chartOptions;
+      chartOptions.value = {
+        ...props.chartOptions,
+        onClick,
+      };
     });
 
     return {

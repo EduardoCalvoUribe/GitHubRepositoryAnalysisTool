@@ -31,6 +31,7 @@ export default {
         { name: 'Date Oldest to Newest' },
         { name: 'Date Newest to Oldest' },
       ]);
+    const isZoomedIn = ref(false); // boolean to check if user is in day view or month view
 
     const getPackage = async (date) => {
       const data = {
@@ -179,6 +180,58 @@ export default {
       return { labels, data };
     });
 
+    const handleBarClick = (label) => {
+      console.log(`Clicked on bar: ${label}`);
+
+      // Extract year and month from the label
+      const [year, month] = label['label'].split('-').map(Number);
+
+      // Filter the pull requests for the selected month
+      const selectedMonthData = state.githubResponse.Repo.pull_requests.filter(pr => {
+        const date = new Date(pr.date);
+        return date.getFullYear() === year && date.getMonth() + 1 === month;
+      });
+
+      // Group the pull requests by day
+      const counts = {};
+      selectedMonthData.forEach(pr => {
+        const date = new Date(pr.date);
+        const day = date.getDate();
+        counts[day] = (counts[day] || 0) + 1;
+      });
+
+      // Generate labels for each day of the month
+      const daysInMonth = new Date(year, month, 0).getDate(); // Get the number of days in the month
+      const labels = [];
+      const data = [];
+      for (let day = 1; day <= daysInMonth; day++) {
+        labels.push(`${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
+        data.push(counts[day] || 0); // Push count or 0 if no pull requests on that day
+      }
+
+      chartData.value = {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: '#42A5F5'
+        }]
+      };
+
+      isZoomedIn.value = true;
+    };
+
+    const resetChartView = () => {
+      chartData.value = {
+        labels: pullRequestsRange.value.labels,
+        datasets: [{
+          data: pullRequestsRange.value.data,
+          backgroundColor: '#42A5F5'
+        }]
+      };
+
+      isZoomedIn.value = false;
+    };
+
     const chartData = ref({
       labels: pullRequestsRange.value.labels,
       datasets: [{
@@ -216,6 +269,9 @@ export default {
       handleSelectedUsers,
       chartOptions,
       chartData,
+      handleBarClick,
+      resetChartView,
+      isZoomedIn,
     }
   },
 
@@ -272,7 +328,7 @@ export default {
   <!-- GRAPH -->
   <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 100%;">
     
-    <div style="margin-right: 10px; margin-top: 70px; min-width: 160px;">
+    <div style="margin-right: 10px; margin-top: 70px; min-width: 160px; position: relative">
       <div>
         <input type="radio" id="semantic" name="stat" value="semantic">
         <label style="margin-left: 5px;" for="semantic">Semantic Score</label>
@@ -289,9 +345,15 @@ export default {
         <input type="radio" id="pullrequests" name="stat" value="pullrequests" checked>
         <label style="margin-left: 5px;" for="pullrequests">Pull Requests</label>
       </div>
+      <button class="button-6" v-if="isZoomedIn" @click="resetChartView" style="position: absolute; bottom: 10px; right: 10px; margin-top: 20px; width: 40px; height: 40px; justify-content: center; vertical-align: center; font-size: larger;"><</button>
     </div>
 
-    <Chart style="flex: 1; max-width: 1000px" :chartData="chartData" :chartOptions="chartOptions" :isBar="true"/>
+    <Chart style="flex: 1; max-width: 1000px" 
+      @bar-click="handleBarClick" 
+      :chartData="chartData" 
+      :chartOptions="chartOptions" 
+      :isBar="true"
+    />
 
     <div style="margin-left: 40px; margin-top: 50px;">
       <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
