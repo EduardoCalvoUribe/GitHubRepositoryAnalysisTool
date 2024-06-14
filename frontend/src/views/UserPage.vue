@@ -3,8 +3,6 @@
     <RouterLink to="/">Home</RouterLink>
   </header>
 
-  <RouterView />
-
   <header>
     <div style="font-size: 180%; margin-top: 30px;">
       User page
@@ -13,7 +11,7 @@
 
   <main>
     <div style="margin-top: 20px;">
-      <label for="userSelect"></label>
+      <label for="userSelect">Select a User:</label>
       <Dropdown v-model="selectedUser" :options="users" optionLabel="label" placeholder="Select a user" @change="fetchUserData" style="width: 250px;" />
     </div>
 
