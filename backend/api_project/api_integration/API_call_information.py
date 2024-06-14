@@ -186,7 +186,7 @@ async def comment_task(comment, data_list):
     commit_id = ''
     comment_date = None
     comment_url = None
-    if comment['comment_type'] == 'review':
+    if comment['comment_type'] == 'review' or comment['comment_type'] == 'review comment':
         commit_id = comment['commit_id']
         comment_date = comment['submitted_at']
         comment_url = comment['html_url']
@@ -205,6 +205,7 @@ async def comment_task(comment, data_list):
         "comment_type": comment['comment_type'],
         "commit_id": commit_id
     }
+    
     data_list[3].append(models.Comment(**defaults)) # Append comment to list of comments
     data_list[4].append([models.User(login=comment['user']['login']), "comments", comment_url]) 
     return data_list

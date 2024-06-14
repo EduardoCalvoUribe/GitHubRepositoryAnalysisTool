@@ -532,6 +532,7 @@ def homepage_datapackage(request):
             "id": repo.id,
             "url": repo.url,
             "updated_at": repo.updated_at,
+            #"semantic_score": calculate_semantics_scores(unique_repos),
         }) for repo in repos).values())
 
         # The Repos is a list that has name & updated_at as values
@@ -540,6 +541,13 @@ def homepage_datapackage(request):
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
     
+
+
+# def calculate_semantics_scores(repos):
+#     for repo in repos:
+        
+
+
 # def engagement_score(request):
 #     # The calculation is based on the type(s) of object(s) you'd like to calculate the engagement score of
 #     user, repository = process_vue_POST_request(request)['user'], process_vue_POST_request(request)['repository']

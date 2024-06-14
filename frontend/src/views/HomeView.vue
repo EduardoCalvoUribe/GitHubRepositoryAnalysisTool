@@ -174,12 +174,12 @@ export default {
         <h2 style="justify-content: center; display: inline-block; width: 250px; margin-bottom: 3%" for="repos">Tracked Repositories:</h2> 
         <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
         <div id="repos" class="row" v-for="repo in sortedRepos" >
-          <router-link :to="{ path: '/repoinfo/' + encodeURIComponent(repo.url) }"><button class="button-6" > 
+          <router-link :to="{ path: '/repoinfo/' + encodeURIComponent(repo.url) + '/current' }"><button class="button-6" > 
               <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
               <span class="last-accessed">Last Accessed: {{ repo.updated_at }}</span>
           </button></router-link>
-          <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
-            <div style="margin-bottom: 3px; font-weight: 100" @click="handleDeleteRequest(repo.id)">x</div>
+          <button class="button-6" @click="handleDeleteRequest(repo.id)" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
+            <div style="margin-bottom: 3px; font-weight: 100">x</div>
           </button>
         </div> 
       </div>

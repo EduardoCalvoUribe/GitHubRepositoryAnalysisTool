@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { state } from '../repoPackage.js';
+import { useRouter } from 'vue-router';
 
 export default {
   setup() {
@@ -9,6 +10,7 @@ export default {
     const pullpackage = ref(null);
 
     onMounted(async () => {
+      console.log(state.githubResponse)
       if (state.githubResponse) {
         for (let i = 0; i < state.githubResponse.Repo.pull_requests.length; i++) {
           if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
@@ -23,6 +25,7 @@ export default {
       pullpackage,
     };
   },
+
 };
 </script>
 
@@ -39,41 +42,41 @@ export default {
 
   <div v-if="pullpackage" class="grid-container">
     <div id="app">
-    <p v-if="!pullpackage.number_commits.length">
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-     Number of Commits: N/A
-      </button>
-    </p>
-    <p v-else>
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
-    Number of Commits: {{ pullpackage.number_commits }}
-    </button>
-    </p>
-  </div>
-  <div id="app">
-    <p v-if="!pullpackage.number_comments.length">
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-     Number of Comments: N/A
-      </button>
-    </p>
-    <p v-else>
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
-    Number of Comments: {{ pullpackage.number_comments }}
-    </button>
-    </p>
-  </div>
-  <div id="app">
-    <p v-if="!pullpackage.average_semantic.length">
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-     Average Semantic Score: N/A
-      </button>
-    </p>
-    <p v-else>
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
-    Number of Comments: {{ pullpackage.average_semantic }}
-    </button>
-    </p>
-  </div>
+      <p v-if="!pullpackage.number_commits.length">
+        <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+          Number of Commits: N/A
+        </button>
+      </p>
+      <p v-else>
+        <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+          Number of Commits: {{ pullpackage.number_commits }}
+        </button>
+      </p>
+    </div>
+    <div id="app">
+      <p v-if="!pullpackage.number_comments.length">
+        <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+          Number of Comments: N/A
+        </button>
+      </p>
+      <p v-else>
+        <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+          Number of Comments: {{ pullpackage.number_comments }}
+        </button>
+      </p>
+    </div>
+    <div id="app">
+      <p v-if="!pullpackage.average_semantic.length">
+        <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+          Average Semantic Score: N/A
+        </button>
+      </p>
+      <p v-else>
+        <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+          Number of Comments: {{ pullpackage.average_semantic }}
+        </button>
+      </p>
+    </div>
   </div>
 
   <div v-if="pullpackage" class="grid-container">
@@ -86,9 +89,10 @@ export default {
     </div>
   </div>
 
-  <router-link :to="{path: '/' }">
-    <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;">Back</button>
-  </router-link>
+  <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;"
+    @click="$router.go(-1)">
+    Back
+  </button>
 </template>
 
 <style scoped>

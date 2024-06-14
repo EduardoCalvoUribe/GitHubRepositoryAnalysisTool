@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import { fetchData } from '../fetchData.js'
+import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
 import { state } from '../repoPackage.js';
 import fakejson from '../test.json';
@@ -22,7 +23,8 @@ export default {
 
   setup() {
     const route = useRoute(); // allows for passage of variables from homepage to current page
-    // const githubResponse = ref(null);
+    const router = useRouter();
+    const selectedRange = ref(null);
     //const repoUrl = ({'url': decodeURIComponent(route.params.url)}).url;
     // console.log(repoUrl, "url?")
     // const postOptions = { // defines how data is sent to backend, POST request in this case
@@ -38,46 +40,64 @@ export default {
 
     const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
     const sorts = ref([ // different possible sort options
-        // { name: 'Semantic Score Ascending' },
-        // { name: 'Semantic Score Descending' },
-        { name: 'Date Oldest to Newest' },
-        { name: 'Date Newest to Oldest' },
-      ]);
+      // { name: 'Semantic Score Ascending' },
+      // { name: 'Semantic Score Descending' },
+      { name: 'Date Oldest to Newest' },
+      { name: 'Date Newest to Oldest' },
+    ]);
+
 
     const getPackage = async (date) => {
-      console.log(date, "date")
+      const oldurl = route.path;
+      let newUrl = ""
+
+      if ((oldurl.includes("current") && (date == "" || date == null)) || (!oldurl.includes("current") && date == null)) { // reset url and date
+        newUrl = (oldurl.split("/")).slice(0, -1).join("/") + "/current"
+        selectedRange.value = null;
+      } else if (date == "") { // get date from url
+        const parts = oldurl.split("/");
+        const date = decodeURIComponent(parts[parts.length - 1]);
+        const dates = date.split(" - ");
+        selectedRange.value = [new Date(dates[0]), new Date(dates[1])];
+        console.log([new Date(dates[0]), new Date(dates[1])])
+        newUrl = (oldurl.split("/")).slice(0, -1).join("/") + "/" + encodeURIComponent(date);
+      } else { // get date from date picker
+        const dates = date
+        selectedRange.value = date
+        console.log(selectedRange.value[0], selectedRange.value[1], "dates")
+        const start_date = selectedRange.value[0].toISOString()
+        const end_date = selectedRange.value[1].toISOString()
+        newUrl = (oldurl.split("/")).slice(0, -1).join("/") + "/" + encodeURIComponent(start_date + " - " + end_date);
+      }
+      router.push(newUrl);
+
+
       const data = {
         'url': decodeURIComponent(route.params.url),
-        'date': date
-      }; // define data to be sent in postOptions, repo url in this case
-      // console.log(data, "url?");
-      // console.log(route)
-      
-      const postOptions = { // defines how data is sent to backend, POST request in this case
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
+        'date': selectedRange.value
       };
-      // console.log("in")
-      try {      
-          const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
-          // console.log("received")
-          state.githubResponse = response;
-          console.log(state.githubResponse);
-      } catch (error) {
-          console.error('Error:', error);
-      }
+
+      const postOptions = { // defines how data is sent to backend, POST request in this case
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      };
+      // try {
+      const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
+
+      state.githubResponse = response;
+      console.log(state.githubResponse);
     }
 
     const sortListsDate = (list, choice) => {
       if (choice.name == 'Date Oldest to Newest') {
-        const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
+        const sorted_list = list.sort((a, b) => new Date(a.date) - new Date(b.date));
         console.log(list);
         return sorted_list;
       } else {
-        const sorted_list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
+        const sorted_list = list.sort((a, b) => new Date(b.date) - new Date(a.date));
         console.log(list);
         return sorted_list;
       }
@@ -85,10 +105,10 @@ export default {
 
     const sortListsScore = (list, choice) => {
       if (choice.name == 'Semantic Score Ascending') {
-        const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
+        const sorted_list = list.sort((a, b) => new Date(a.date) - new Date(b.date));
         return sorted_list;
       } else {
-        const sorted_list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
+        const sorted_list = list.sort((a, b) => new Date(b.date) - new Date(a.date));
         return sorted_list;
       }
     };
@@ -101,36 +121,15 @@ export default {
         return sortListsScore(state.githubResponse.Repo.pull_requests, selectedSort.value);
       }
     });
-    // console.log(githubResponse, "hey")
 
     const pullRequestCount = computed(() => {
-  return sortedPullRequests.value.length;
-});
+      return sortedPullRequests.value.length;
+    });
 
 
 
     onMounted(async () => {
-      await getPackage(null);
-      // const data = {'url': decodeURIComponent(route.params.url), "date": ""}; // define data to be sent in postOptions, repo url in this case
-      // console.log(data, "url?");
-      // console.log(route)
-      
-
-      // const postOptions = { // defines how data is sent to backend, POST request in this case
-      //     method: 'POST',
-      //     headers: {
-      //         'Content-Type': 'application/json',
-      //     },
-      //     body: JSON.stringify(data),
-      // };
-      // console.log("in")
-      // try {      
-      //     const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
-      //     console.log("received")
-      //     state.githubResponse = response;
-      // } catch (error) {
-      //     console.error('Error:', error);
-      // }
+      await getPackage("");
     });
 
 
@@ -142,28 +141,26 @@ export default {
       sorts,
       route,
       pullRequestCount,
+      selectedRange,
     }
   },
 
   data() {
-    // console.log(githubResponse.value)
     return {
-      // githubResponse: null,
-      selectedOption: { name: 'Pull Requests'}, // view option user selects from dropdown menu, default set to pull requests
+      selectedOption: { name: 'Pull Requests' }, // view option user selects from dropdown menu, default set to pull requests
       options: [ // different possible view options
         { name: 'Pull Requests' },
         { name: 'Contributors' },
         // Add more options if needeed
       ],
-      selectedRange: null, // date range that the user selects in date picker
       items: [ // items are the boxes with content being diplayed on the page§
         { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_commits, path: '/prpage' },
         { id: 2, text: 'Number of Commits: ' + fakejson.repository.number_of_commits, path: '/commitpage' },
         { id: 3, text: 'Extra Repository Information' },
         // Add more items as needed
       ],
-      chartData: { 
-        labels: [ 'January', 'February', 'March', 'April', 'May', 'June', 'July'],
+      chartData: {
+        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
         datasets: [
           {
             data: [0.4, 0.5, 0.5, 0.5, 0.2, 0.22, 0.2],
@@ -193,15 +190,17 @@ export default {
       <div style="font-size: 180%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
       <div style="margin-bottom: 5px"> URL: {{ state.githubResponse.Repo.url }} </div>
       <div> Last Updated: {{ state.githubResponse.Repo.updated_at }} </div>
-    </div>  
+    </div>
   </header>
 
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date range:</label>
+      <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date
+        range:</label>
       <div id="datePicker" style="display: flex; align-items: flex-start;">
         <VueDatePicker v-model="selectedRange" range style="width: 500px; height: 50px;"></VueDatePicker>
-        <button class="button-6" style="width: 57px; height: 38px; margin-left: 3px; font-size: smaller;" @click="getPackage(selectedRange)">Reload</button>
+        <button class="button-6" style="width: 57px; height: 38px; margin-left: 3px; font-size: smaller;"
+          @click="getPackage(selectedRange)">Reload</button>
       </div>
     </div>
   </div>
@@ -211,7 +210,7 @@ export default {
     Total Pull Requests: {{ pullRequestCount }}
   </button>
 
-  
+
 
   <!-- <div>
     <pre v-if="githubResponse">{{ githubResponse }}</pre>
@@ -220,29 +219,39 @@ export default {
   <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <div>
-        <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
-        <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
+        <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option"
+          class="w-full md:w-14rem" />
+        <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by"
+          class="w-full md:w-14rem" />
       </div>
-      <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && state.githubResponse" style=" display: flex; justify-content: center;">
+      <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && state.githubResponse"
+        style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
+          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;"
+            for="pullRequests">Pull Requests:</label>
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
+                <span>
+                  <h2 style="margin-left: 0.3rem;">{{ pullrequest.title }}</h2>
+                </span>
                 <span class="last-accessed">Author: {{ pullrequest.user }}</span>
                 <span class="last-accessed">Date {{ pullrequest.date }}</span>
-            </button></router-link>
+              </button></router-link>
           </div>
         </div>
       </div>
-      <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse" style=" display: flex; justify-content: center;">
+      <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse"
+        style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
+          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;"
+            for="users">Contributors:</label>
           <div id="users" class="row" v-for="pullrequest in state.githubResponse.Repo.pull_requests">
             <router-link :to="{ path: '/userpage' }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
+                <span>
+                  <h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2>
+                </span>
                 <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
-            </button></router-link>
+              </button></router-link>
           </div>
         </div>
       </div>
@@ -252,9 +261,10 @@ export default {
   <div style="display: flex; justify-content: center; margin-top: 4%; height: 400px;">
     <BarChart :chartData="chartData" :chartOptions="chartOptions" />
   </div>
-  <router-link :to="{path: '/' }">
-        <button class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
-    </router-link>
+  <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;"
+    @click="$router.go(-1)">
+    Back
+  </button>
 </template>
 
 <style scoped>

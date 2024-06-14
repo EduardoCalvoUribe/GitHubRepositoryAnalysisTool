@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import fakejson from '../test.json';
 import { useRoute } from 'vue-router';
-import { state } from '../repoPackage.js'; 
+import { state } from '../repoPackage.js';
 import CommitPage from './CommitPage.vue';
 
 export default {
@@ -15,7 +15,7 @@ export default {
       console.log(state.githubResponse);
       if (state.githubResponse) {
         console.log('in if');
-        for (let i=0; i < state.githubResponse.Repo.pull_requests.commits.length - 1; i++) {
+        for (let i = 0; i < state.githubResponse.Repo.pull_requests.commits.length - 1; i++) {
           if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
             pullpackage.value = state.githubResponse.Repo.pull_requests[i];
           }
@@ -51,19 +51,25 @@ export default {
   </header>
 
   <RouterView />
-    <header>
-      <div style="font-size: 180%;  margin-top: 30px;">
-        Comment Page
-      </div>
-    </header>
+  <header>
+    <div style="font-size: 180%;  margin-top: 30px;">
+      Comment Page
+    </div>
+  </header>
+
+  <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;"
+    @click="$router.go(-1)">
+    Back
+  </button>
+</template>
 </template>
 
 <style>
 @media (min-width: 1024px) {
-    .about {
+  .about {
     min-height: 100vh;
     display: flex;
     align-items: center;
-    }
+  }
 }
 </style>
