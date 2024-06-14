@@ -389,8 +389,8 @@ def repo_frontend_info(request):
             if not ranged:
                 data = selected_data(pr,data, total_comment_count, total_commit_count)
             else:
-                if (pr.closed_at > begin_date) & (pr.date < end_date) & (pr.date > begin_date):
-                    data = selected_data(pr,data, total_comment_count, total_commit_count)
+                # if (pr.closed_at > begin_date) & (pr.date < end_date) & (pr.date > begin_date):
+                data = selected_data(pr,data, total_comment_count, total_commit_count)
         return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
