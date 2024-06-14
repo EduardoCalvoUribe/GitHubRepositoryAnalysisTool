@@ -45,6 +45,7 @@ export default {
       ]);
 
     const getPackage = async (date) => {
+      console.log(date, "date")
       const data = {
         'url': decodeURIComponent(route.params.url),
         'date': date
@@ -109,8 +110,29 @@ export default {
 
 
     onMounted(async () => {
-      await getPackage('');
+      await getPackage(null);
+      // const data = {'url': decodeURIComponent(route.params.url), "date": ""}; // define data to be sent in postOptions, repo url in this case
+      // console.log(data, "url?");
+      // console.log(route)
+      
+
+      // const postOptions = { // defines how data is sent to backend, POST request in this case
+      //     method: 'POST',
+      //     headers: {
+      //         'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify(data),
+      // };
+      // console.log("in")
+      // try {      
+      //     const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
+      //     console.log("received")
+      //     state.githubResponse = response;
+      // } catch (error) {
+      //     console.error('Error:', error);
+      // }
     });
+
 
     return {
       getPackage,
