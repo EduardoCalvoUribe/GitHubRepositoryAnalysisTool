@@ -172,7 +172,7 @@ export default {
           <button class="button-6" style="width: 57px; height: 50px; margin-left: 3px; font-size: smaller;"
             @click="handleGithubURLSubmit(inputUrl), handleClick"
             :disabled="busy">
-            <div v-if="busy" class="lds-spinner">
+            <div v-if="busy" class="lds-spinner" style="align-items: center;">
               <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
             </div>
             <div v-else>Submit</div>
