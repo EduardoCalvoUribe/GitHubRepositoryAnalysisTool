@@ -72,7 +72,7 @@ from .nlp_functions.AsyncCodeCommitMessageRatio import compute_code_commit_ratio
 # API call to https://api.github.com/user endpoint
 def github_user_info(request):
     json_response = functions.get_api_reponse('https://api.github.com/user').json()
-    User.save_user_to_db(json_response)
+    # User.save_user_to_db(json_response)
     return JsonResponse(json_response)
 
 # API call to https://api.github.com/user endpoint
@@ -351,9 +351,10 @@ def repo_frontend_info(request):
         except json.JSONDecodeError:
             print("Error")
     print("Point reached")
-    #url = "https://github.com/lucidrains/PaLM-rlhf-pytorch"
-    #begin_date = timezone.make_aware(datetime(2024, 3, 1, 0, 0, 0))
-    #end_date = timezone.make_aware(datetime(2024, 6, 1, 0, 0, 0))
+    url = "https://github.com/lucidrains/PaLM-rlhf-pytorch"
+    ranged = False
+    begin_date = datetime(2023, 3, 1, 0, 0, 0)
+    end_date = datetime(2024, 6, 1, 0, 0, 0)
     print(url)
     try:
     # Get the repository by URL (using get() for single object retrieval)
@@ -388,10 +389,10 @@ def repo_frontend_info(request):
         print("But really")
         for pr in pull_requests:
             if not ranged:
-                data = selected_data(pr,data, total_comment_count, total_commit_count)
+                data = selected_data(pr,data, total_comment_count, total_commit_count,begin_date=None,end_date=None, ranged=False)
             else:
                 if (pr.closed_at > begin_date) & (pr.date < end_date) & (pr.date > begin_date):
-                    data = selected_data(pr,data, total_comment_count, total_commit_count)
+                    data = selected_data(pr,data, total_comment_count, total_commit_count, begin_date, end_date, ranged=True)
         return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
@@ -401,7 +402,7 @@ def repo_frontend_info(request):
 
 
 
-def selected_data(pr,data, total_comment_count, total_commit_count):
+def selected_data(pr,data, total_comment_count, total_commit_count, begin_date, end_date, ranged):
     pr_data = {
                     "url": pr.url,
                     "updated_at": pr.updated_at,
@@ -419,9 +420,8 @@ def selected_data(pr,data, total_comment_count, total_commit_count):
                     "pr_title_semantic": calculate_pr_semantic(pr.title),
                     "pr_body_semantic": calculate_pr_semantic(pr.body)
     }
-
-    pr_data, total_comment_count = select_comments(pr, pr_data, total_comment_count)
-    pr_data, total_commit_count = select_commits(pr, pr_data, total_commit_count )
+    pr_data, total_comment_count = select_comments(pr, pr_data, total_comment_count, begin_date, end_date, ranged)
+    pr_data, total_commit_count = select_commits(pr, pr_data, total_commit_count, begin_date, end_date, ranged)
 
 
 
@@ -485,37 +485,39 @@ def date_range(data):
          return ""
         
 
-def select_commits(pr, pr_data, total_commit_count):
+def select_commits(pr, pr_data, total_commit_count, begin_date, end_date, ranged):
     for commit in pr.commits.all():
-                    commit_data = {
-                        "name": commit.name,
-                        "url": commit.url,
-                        "title": commit.title,
-                        "user": commit.user,
-                        "date": commit.date,
-                        "semantic_score": commit.semantic_score,
-                        "updated_at": commit.updated_at,
-                    }
-                    pr_data["commits"].append(commit_data)
-                    total_commit_count += 1
+                    if not ranged or (commit.url in pr_data["comments"]["commit_id"] or ((commit.date < end_date) & (commit.date > begin_date))):
+                        commit_data = {
+                            "name": commit.name,
+                            "url": commit.url,
+                            "title": commit.title,
+                            "user": commit.user,
+                            "date": commit.date,
+                            "semantic_score": commit.semantic_score,
+                            "updated_at": commit.updated_at,
+                        }
+                        pr_data["commits"].append(commit_data)
+                        total_commit_count += 1
                 
     pr_data["number_commits"] = len(pr_data["commits"])
     return pr_data, total_commit_count
 
-def select_comments(pr, pr_data, total_comment_count):
+def select_comments(pr, pr_data, total_comment_count, begin_date, end_date, ranged):
     for comment in pr.comments.all():
-                    comment_data = {
-                        "url": comment.url,
-                        "date": comment.date,
-                        "body": comment.body,
-                        "user": comment.user,
-                        "semantic_score": comment.semantic_score,
-                        "updated_at": comment.updated_at,
-                        "comment_type": comment.comment_type,
-                        "commit_id": comment.commit_id,
-                    }
-                    pr_data["comments"].append(comment_data)
-                    total_comment_count += 1
+                    if not ranged or ((comment.date < end_date) & (comment.date > begin_date)):
+                        comment_data = {
+                            "url": comment.url,
+                            "date": comment.date,
+                            "body": comment.body,
+                            "user": comment.user,
+                            "semantic_score": comment.semantic_score,
+                            "updated_at": comment.updated_at,
+                            "comment_type": comment.comment_type,
+                            "commit_id": comment.commit_id,
+                        }
+                        pr_data["comments"].append(comment_data)
+                        total_comment_count += 1
                 
     pr_data["number_comments"] = len(pr_data["comments"])
     return pr_data, total_comment_count
