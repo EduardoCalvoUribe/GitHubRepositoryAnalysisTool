@@ -532,6 +532,7 @@ def homepage_datapackage(request):
             "id": repo.id,
             "url": repo.url,
             "updated_at": repo.updated_at,
+            "average_semantic": API_call_information.calculate_semantic_score_repo(repo)
         }) for repo in repos).values())
 
         # The Repos is a list that has name & updated_at as values

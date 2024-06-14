@@ -63,14 +63,6 @@ export default {
       }
     };
 
-    const sortListsScore = (list, choice) => {
-      if (choice.name == 'Semantic Score Ascending') {
-        return list.sort((a,b) => (a.average_semantic) - (b.average_semantic));
-      } else {
-        return list.sort((a,b) => (b.average_semantic) - (a.average_semantic));
-      }
-    };
-
     const sortedRepos = computed(() => {
       if (!repoInfo.value) return [];
       else if (selectedSort.value.name.includes('Date')) {
@@ -94,13 +86,11 @@ export default {
     };
   },
   methods: {
-    methods: {
-  handleClick() {
-    this.busy = true
-    // Do something that takes some time
-    setTimeout(() => { this.busy = false }, 2000) // Match this duration to the spinner's duration
-  }
-},
+    handleClick() {
+      this.busy = true
+      // Do something that takes some time
+      setTimeout(() => { this.busy = false }, 2000) // Match this duration to the spinner's duration
+    },
 
     async checkInput(str) {
       const regex = /^(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+(?:\.git)?\/?$/;

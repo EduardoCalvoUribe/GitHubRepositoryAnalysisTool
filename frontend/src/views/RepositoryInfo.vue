@@ -80,6 +80,11 @@ export default {
       } else return sortListsScore(state.githubResponse.Repo.pull_requests, selectedSort.value);
     });
 
+    const sortedUsers = computed(() => {
+      if (!state.githubResponse) return [];
+      return sortListsScore(state.githubResponse.Repo.pull_requests, selectedSort.value);
+    });
+
     const pullRequestCount = computed(() => {
       return sortedPullRequests.value.length;
     });
@@ -220,6 +225,27 @@ export default {
       
     }
   },
+
+  computed: {
+    buttonColor() {
+      return {
+        backgroundColor: this.getGradientColor(state.githubResponse.Repo.average_semantic)
+      }
+    }
+  },
+
+  methods: {
+    getGradientColor(score) {
+      const startColor = { r: 255, g: 0, b: 0 }; // Red
+      const endColor = { r: 0, g: 255, b: 0 }; // Green
+
+      const r = Math.round(startColor.r + (endColor.r - startColor.r) * score);
+      const g = Math.round(startColor.g + (endColor.g - startColor.g) * score);
+      const b = Math.round(startColor.b + (endColor.b - startColor.b) * score);
+
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+  }
 }
 </script>
 
