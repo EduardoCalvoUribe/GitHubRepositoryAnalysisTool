@@ -1,5 +1,5 @@
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watchEffect } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import { fetchData } from '../fetchData.js'
@@ -185,6 +185,16 @@ export default {
         data: pullRequestsRange.value.data,
         backgroundColor: '#42A5F5'
       }]
+    });
+
+    watchEffect(() => {
+      chartData.value = {
+        labels: pullRequestsRange.value.labels,
+        datasets: [{
+          data: pullRequestsRange.value.data,
+          backgroundColor: '#42A5F5'
+        }]
+      };
     });
 
     onMounted(async () => {
