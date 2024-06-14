@@ -152,14 +152,39 @@ export default {
       }
     });
 
-    const chartData = ref({ 
-        labels: [ 'January', 'February', 'March', 'April', 'May', 'June', 'July'],
-        datasets: [
-          {
-            data: [3, 0.5, 0.5, 0.5, 0.2, 0.22, 1.2],
-            backgroundColor: '#42A5F5'
-          }
-        ]
+    const pullRequestsRange = computed(() => {
+      let minDate = new Date();
+      let maxDate = new Date(0);
+      const counts = {};
+      
+      if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
+        state.githubResponse.Repo.pull_requests.forEach(pr => {
+          const date = new Date(pr.date); 
+          minDate = date < minDate ? date : minDate;
+          maxDate = date > maxDate ? date : maxDate;
+          const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0');
+          counts[monthKey] = counts[monthKey] ? counts[monthKey] + 1 : 1;
+        });
+      }
+
+      // Generate all months between minDate and maxDate
+      const labels = [];
+      const data = [];
+      for (let d = new Date(minDate); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
+        const key = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
+        labels.push(key);
+        data.push(counts[key] || 0);
+      }
+
+      return { labels, data };
+    });
+
+    const chartData = ref({
+      labels: pullRequestsRange.value.labels,
+      datasets: [{
+        data: pullRequestsRange.value.data,
+        backgroundColor: '#42A5F5'
+      }]
     });
 
     onMounted(async () => {
@@ -237,10 +262,23 @@ export default {
   <!-- GRAPH -->
   <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 80%;">
     
-    <div style="margin-right: 20px; ">
-      <button class="button-6" style="width: 100px; height: 70px; justify-content: center;">
-        Temporal Resolution
-      </button>
+    <div style="margin-right: 40px;">
+      <div>
+        <input type="radio" id="semantic" name="stat" value="semantic">
+        <label for="semantic">Semantic Score</label>
+      </div>
+      <div>
+        <input type="radio" id="engagement" name="stat" value="engagement">
+        <label for="engagement">Engagement Score</label>
+      </div>
+      <div>
+        <input type="radio" id="commits" name="stat" value="commits">
+        <label for="commits">Commits</label>
+      </div>
+      <div>
+        <input type="radio" id="pullrequests" name="stat" value="pullrequests">
+        <label for="pullrequests">Pull Requests</label>
+      </div>
     </div>
 
     <Chart :chartData="chartData" :chartOptions="chartOptions" />
