@@ -86,13 +86,11 @@ export default {
     };
   },
   methods: {
-    methods: {
   handleClick() {
     this.busy = true
     // Do something that takes some time
     setTimeout(() => { this.busy = false }, 2000) // Match this duration to the spinner's duration
-  }
-},
+  },
 
     async checkInput(str) {
       const regex = /^(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+(?:\.git)?\/?$/;
