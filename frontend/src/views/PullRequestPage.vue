@@ -1,122 +1,109 @@
-<template>
-  <header>
-    <router-link :to="`/repoinfo/${repositoryId}`">Repository Information</router-link>
-    <router-link style="margin-left: 2%" to="/prpage">Pull Requests</router-link>
-    <router-link style="margin-left: 2%" to="/commitpage">Commits</router-link>
-    <router-link style="margin-left: 2%" to="/commentpage">Comments</router-link>
-  </header>
-
-  <router-view />
-
-  <header>
-    <div style="font-size: 180%; margin-top: 30px;">
-      Pull Request Information
-    </div>
-  </header>
-
-  <header>
-    <div v-if="pullpackage" style="font-size: 180%; margin-top: 30px;">
-      {{ pullpackage.title }}
-    </div>
-  </header>
-
-  <div class="grid-container" v-for="pullitem in pullitems" :key="pullitem.id">
-    <div class="grid-item" v-for="item in items" :key="item.id">
-      {{ item.text }}
-    </div>
-  </div>
-</template>
-
 <script>
 import { ref, onMounted } from 'vue';
-import fakejson from '../test.json';
 import { useRoute } from 'vue-router';
-import { githubResponse } from '../repoPackage.js';
+import { state } from '../repoPackage.js';
 
 export default {
   setup() {
     const route = useRoute();
-    const data = {'id': route.params.id};
     const pullpackage = ref(null);
 
     onMounted(async () => {
-    if (githubResponse.value) {
-      for (let i=0; i < githubResponse.value.Repo.pull_requests.length - 1; i++) {
-        if (githubResponse.value.Repo.pull_requests[i].number == data) {
-          pullpackage.value = githubResponse.value.Repo.pull_requests[i];
+      if (state.githubResponse) {
+        for (let i = 0; i < state.githubResponse.Repo.pull_requests.length; i++) {
+          if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
+            pullpackage.value = state.githubResponse.Repo.pull_requests[i];
+            break;
+          }
         }
       }
-    }
-    if (pullpackage.value) {
-      console.log(pullpackage.value.title)
-    } else {
-      console.log('failure')
-    }
-    
-
-
     });
 
-
     return {
-      data,
-      githubResponse,
       pullpackage,
-    };
-  },
-
-  data() {
-    return {
-      repositoryId: fakejson.repository.pull_requests.id,
-      selectedRange: null,
-      pullitems: [
-        { id: 1, text: 'Pull request ID: ' + fakejson.repository.pull_requests[0].commits[0].id }
-      ],
-      items: [
-        { id: 1, text: 'Date: ' + fakejson.repository.pull_requests[0].commits[0].date },
-        { id: 2, text: 'Author: ' + fakejson.repository.pull_requests[0].commits[0].author },
-        { id: 3, text: 'Message: ' + fakejson.repository.pull_requests[0].commits[0].message },
-        { id: 4, text: 'Semantic Score: ' + fakejson.repository.pull_requests[0].commits[0].semantic_score },
-      ],
     };
   },
 };
 </script>
 
+<template>
+  <header>
+    <div v-if="pullpackage" style="margin-top: 50px">
+      <h1>Pull Request</h1>
+      <div style="font-size: 180%; margin-bottom: 20px; margin-top: 40px;">{{ pullpackage.title }}</div>
+      <div>User: {{ pullpackage.user }}</div>
+      <div>Created: {{ pullpackage.date }}</div>
+      <div>Description: {{ pullpackage.body }}</div>
+    </div>
+  </header>
+
+  <div v-if="pullpackage" class="grid-container">
+    <div id="app">
+    <p v-if="!pullpackage.number_commits.length">
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+     Number of Commits: N/A
+      </button>
+    </p>
+    <p v-else>
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
+    Number of Commits: {{ pullpackage.number_commits }}
+    </button>
+    </p>
+  </div>
+  <div id="app">
+    <p v-if="!pullpackage.number_comments.length">
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+     Number of Comments: N/A
+      </button>
+    </p>
+    <p v-else>
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
+    Number of Comments: {{ pullpackage.number_comments }}
+    </button>
+    </p>
+  </div>
+  <div id="app">
+    <p v-if="!pullpackage.average_semantic.length">
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
+     Average Semantic Score: N/A
+      </button>
+    </p>
+    <p v-else>
+      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
+    Number of Comments: {{ pullpackage.average_semantic }}
+    </button>
+    </p>
+  </div>
+  </div>
+
+  <div v-if="pullpackage" class="grid-container">
+    <div class="grid-item" v-for="commit in pullpackage.commits" :key="commit.id">
+      {{ commit.title }}
+      <div>Date: {{ commit.date }}</div>
+      <div>User: {{ commit.user }}</div>
+      <div>Semantic Score: {{ commit.semantic_score }}</div>
+      <div>Updated At: {{ commit.updated_at }}</div>
+    </div>
+  </div>
+
+  <router-link :to="{path: '/' }">
+    <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;">Back</button>
+  </router-link>
+</template>
+
 <style scoped>
 @media (min-width: 1024px) {
-  .about {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-  }
   .grid-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Adjust the number of columns as needed */
-    gap: 10px; /* Spacing between grid items */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 10px;
   }
 
   .grid-item {
-    background-color: #157eff4d; /* Background color for grid items */
-    padding: 50px; /* Padding inside grid items */
-    text-align: center; /* Centering text inside grid items */
-    border: 1px solid #ccc; /* Border for grid items */
-  }
-
-  .box-container {
-    display: flex;
-    gap: 10px; /* Space between boxes */
-    justify-content: center; /* Center the boxes horizontally */
-    padding: 20px 0; /* Optional: padding around the container */
-    text-align: center;
-  }
-
-  .box {
-    flex: 1; /* Each box takes equal space */
-    padding: 20px;
-    background-color: rgb(255, 255, 255);
-    text-align: center;
-    border: 1px solid #ffffff;
+    background-color: #157eff4d;
+    padding: 10px;
+    border: 1px solid #ccc;
   }
 }
 </style>

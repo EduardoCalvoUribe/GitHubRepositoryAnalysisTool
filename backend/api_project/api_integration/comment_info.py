@@ -9,7 +9,9 @@ import aiohttp
 import asyncio
 from asgiref.sync import sync_to_async
 from .models import Comment, PullRequest, Repository
-from .general_semantic_score import calculate_weighted_comment_semantic_score
+from .general_semantic_score import calculateWeightedCommentSemanticScore
+from datetime import datetime
+from datetime import date
 from django.utils import timezone
 from django.db import IntegrityError, transaction
 import json
@@ -74,7 +76,7 @@ async def comment_visual(response):
                                 
                 # Assign semantic score to the comment            
                 # Params of semantic score function are comment, ld weight and fre_weight
-                semantic_score = calculate_weighted_comment_semantic_score(comment_text_body, 50, 700)
+                semantic_score = calculateWeightedCommentSemanticScore(comment_text_body, 50, 700)
 
                 # Retrieve data about when comment was created and updated. Converted to YYYY-MM-DD format
                 created_at = timezone.make_aware(datetime.strptime(comment.get('created_at', ''), '%Y-%m-%dT%H:%M:%SZ')).date() if comment.get('created_at') else datetime.now()
