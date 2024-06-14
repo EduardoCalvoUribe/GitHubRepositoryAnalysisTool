@@ -44,6 +44,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+  
   const authToken = localStorage.getItem("authToken");
   const isLoggedIn = !!authToken;
 

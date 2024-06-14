@@ -391,6 +391,7 @@ def repo_frontend_info(request):
             else:
                 if (pr.closed_at > begin_date) & (pr.date < end_date) & (pr.date > begin_date):
                     data = selected_data(pr,data, total_comment_count, total_commit_count)
+        print(data)
         return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
@@ -464,24 +465,23 @@ def selected_data(pr,data, total_comment_count, total_commit_count):
     return data
 
 
-
-
 def date_range(data):
-    try:
+    # try:
         begin_date_str = data[0]
         end_date_str = data[1]
         date_format = "%Y-%m-%dT%H:%M:%S.%fZ" # Assuming format with optional space
 
         # Parse the datetime string
         begin_date_obj = datetime.strptime(begin_date_str, date_format)
-        begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
+        begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S")).date()
 
         end_date_obj = datetime.strptime(end_date_str, date_format)
-        end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
+        end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S")).date()
         return begin_date_obj, end_date_obj
 
-    except:
-         return ""
+    # except:
+    #      return ""
+
         
 
 def select_commits(pr, pr_data, total_commit_count):
@@ -532,7 +532,7 @@ def homepage_datapackage(request):
             "id": repo.id,
             "url": repo.url,
             "updated_at": repo.updated_at,
-            #"semantic_score": calculate_semantics_scores(unique_repos),
+            "average_semantic": API_call_information.calculate_semantic_score_repo(repo)
         }) for repo in repos).values())
 
         # The Repos is a list that has name & updated_at as values
