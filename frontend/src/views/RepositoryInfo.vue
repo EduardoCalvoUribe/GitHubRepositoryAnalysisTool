@@ -38,8 +38,8 @@ export default {
 
     const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
     const sorts = ref([ // different possible sort options
-        // { name: 'Semantic Score Ascending' },
-        // { name: 'Semantic Score Descending' },
+        { name: 'Semantic Score Ascending' },
+        { name: 'Semantic Score Descending' },
         { name: 'Date Oldest to Newest' },
         { name: 'Date Newest to Oldest' },
       ]);
@@ -73,23 +73,15 @@ export default {
 
     const sortListsDate = (list, choice) => {
       if (choice.name == 'Date Oldest to Newest') {
-        const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
-        console.log(list);
-        return sorted_list;
-      } else {
-        const sorted_list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
-        console.log(list);
-        return sorted_list;
-      }
+        return list.sort((a,b) => new Date(a.date) - new Date(b.date));
+      } else return list.sort((a,b) => new Date(b.date) - new Date(a.date));
     };
 
     const sortListsScore = (list, choice) => {
       if (choice.name == 'Semantic Score Ascending') {
-        const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
-        return sorted_list;
+        return list.sort((a,b) => (a.average_semantic) - (b.average_semantic));
       } else {
-        const sorted_list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
-        return sorted_list;
+        return list.sort((a,b) => (b.average_semantic) - (a.average_semantic));
       }
     };
 
@@ -97,15 +89,13 @@ export default {
       if (!state.githubResponse) return [];
       else if (selectedSort.value.name.includes('Date')) {
         return sortListsDate(state.githubResponse.Repo.pull_requests, selectedSort.value);
-      } else {
-        return sortListsScore(state.githubResponse.Repo.pull_requests, selectedSort.value);
-      }
+      } else return sortListsScore(state.githubResponse.Repo.pull_requests, selectedSort.value);
     });
     // console.log(githubResponse, "hey")
 
     const pullRequestCount = computed(() => {
-  return sortedPullRequests.value.length;
-});
+      return sortedPullRequests.value.length;
+    });
 
 
 
@@ -230,6 +220,7 @@ export default {
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
                 <span class="last-accessed">Author: {{ pullrequest.user }}</span>
+                <span class="last-accessed">Semantic score: {{ pullrequest.average_semantic }}</span>
                 <span class="last-accessed">Date {{ pullrequest.date }}</span>
             </button></router-link>
           </div>
