@@ -1,12 +1,18 @@
 <template>
-  <Bar
-    :data="chartData"
-    :options="chartOptions"
-  />
+  <div>
+    <Bar v-if="isBar"
+      :data="chartData"
+      :options="chartOptions"
+    />
+    <Line v-else
+      :data="chartData"
+      :options="chartOptions"
+    />
+  </div>
 </template>
 
 <script>
-import { Bar } from 'vue-chartjs'
+import { Bar, Line } from 'vue-chartjs'
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js'
 import { ref, watchEffect } from 'vue';
 
@@ -14,7 +20,7 @@ ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale,
 
 export default {
   name: 'Chart',
-  components: { Bar },
+  components: { Bar, Line },
   props: {
     chartData: {
       type: Object,
@@ -23,6 +29,10 @@ export default {
     chartOptions: {
       type: Object,
       default: () => {}
+    },
+    isBar: {
+      type: Boolean,
+      default: true
     }
   },
   setup(props) {

@@ -270,30 +270,30 @@ export default {
   </div>
 
   <!-- GRAPH -->
-  <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 80%;">
+  <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 100%;">
     
-    <div style="margin-right: 40px;">
+    <div style="margin-right: 10px; margin-top: 70px; min-width: 160px;">
       <div>
         <input type="radio" id="semantic" name="stat" value="semantic">
-        <label for="semantic">Semantic Score</label>
+        <label style="margin-left: 5px;" for="semantic">Semantic Score</label>
       </div>
       <div>
         <input type="radio" id="engagement" name="stat" value="engagement">
-        <label for="engagement">Engagement Score</label>
+        <label style="margin-left: 5px;" for="engagement">Engagement Score</label>
       </div>
       <div>
         <input type="radio" id="commits" name="stat" value="commits">
-        <label for="commits">Commits</label>
+        <label style="margin-left: 5px;" for="commits">Commits</label>
       </div>
-      <div>
-        <input type="radio" id="pullrequests" name="stat" value="pullrequests">
-        <label for="pullrequests">Pull Requests</label>
+      <div>   
+        <input type="radio" id="pullrequests" name="stat" value="pullrequests" checked>
+        <label style="margin-left: 5px;" for="pullrequests">Pull Requests</label>
       </div>
     </div>
 
-    <Chart :chartData="chartData" :chartOptions="chartOptions" />
+    <Chart style="flex: 1; max-width: 1000px" :chartData="chartData" :chartOptions="chartOptions" :isBar="true"/>
 
-    <div style="margin-left: 20px; ">
+    <div style="margin-left: 40px; margin-top: 50px;">
       <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
     </div>
     
