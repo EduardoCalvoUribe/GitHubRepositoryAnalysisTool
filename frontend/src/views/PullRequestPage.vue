@@ -71,9 +71,10 @@ export default {
     </div>
   </div>
 
-  <router-link :to="{ path: '/' }">
-    <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;">Back</button>
-  </router-link>
+  <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;"
+    @click="$router.go(-1)">
+    Back
+  </button>
 </template>
 
 <style scoped>

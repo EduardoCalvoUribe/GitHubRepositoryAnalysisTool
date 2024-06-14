@@ -26,6 +26,7 @@ export default {
     const route = useRoute(); // allows for passage of variables from homepage to current page
     const router = useRouter();
     const selectedRange = ref(null);
+    const selectedUsers = ref([]);
     //const repoUrl = ({'url': decodeURIComponent(route.params.url)}).url;
     // console.log(repoUrl, "url?")
     // const postOptions = { // defines how data is sent to backend, POST request in this case
@@ -51,7 +52,7 @@ export default {
     const getPackage = async (date) => {
       const oldurl = route.path;
       let newUrl = ""
-
+      console.log(date, oldurl.includes("current"))
       if ((oldurl.includes("current") && (date == "" || date == null)) || (!oldurl.includes("current") && date == null)) { // reset url and date
         newUrl = (oldurl.split("/")).slice(0, -1).join("/") + "/current"
         selectedRange.value = null;

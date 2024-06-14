@@ -473,10 +473,10 @@ def date_range(data):
 
         # Parse the datetime string
         begin_date_obj = datetime.strptime(begin_date_str, date_format)
-        begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S")).date()
+        begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
 
         end_date_obj = datetime.strptime(end_date_str, date_format)
-        end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S")).date()
+        end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
         return begin_date_obj, end_date_obj
 
     # except:
