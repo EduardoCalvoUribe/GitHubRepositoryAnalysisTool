@@ -19,8 +19,6 @@ export default {
     CheckBoxList // checkbox component that allows selection of users
   },
 
-
-
   setup() {
     const route = useRoute();
     const selectedUsers = ref([]); // list of users that user selects from checkbox list
@@ -386,9 +384,9 @@ export default {
       <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse" style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
           <h1 style="justify-content: center; display: inline-block; width: 250px;" for="users">Contributors</h1>
-          <div id="users" class="row" v-for="pullrequest in state.githubResponse.Repo.pull_requests">
+          <div id="users" class="row" v-for="user in userList">
             <router-link :to="{ path: '/userpage' }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
+                <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
                 <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
             </button></router-link>
           </div>
