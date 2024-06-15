@@ -157,7 +157,12 @@ export default {
       const counts = {};
       
       if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
-        state.githubResponse.Repo.pull_requests.forEach(pr => {
+        // Filter pull requests based on selected users
+        const filteredPullRequests = selectedUsers.value.length > 0
+          ? state.githubResponse.Repo.pull_requests.filter(pr => selectedUsers.value.includes(pr.user))
+          : state.githubResponse.Repo.pull_requests;
+          
+        filteredPullRequests.forEach(pr => {
           const date = new Date(pr.date); 
           minDate = date < minDate ? date : minDate;
           maxDate = date > maxDate ? date : maxDate;
