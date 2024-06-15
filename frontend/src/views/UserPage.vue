@@ -1,6 +1,6 @@
 <template>
   <header>
-    <RouterLink to="/">Home</RouterLink>
+    <!-- <RouterLink to="/">Home</RouterLink> -->
   </header>
 
   <header>
@@ -10,58 +10,90 @@
   </header>
 
   <main>
-    <div style="margin-top: 20px;">
-      <label for="userSelect">Select a User:</label>
-      <Dropdown v-model="selectedUser" :options="users" optionLabel="label" placeholder="Select a user" @change="fetchUserData" style="width: 250px;" />
+    <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center;">
+      <Dropdown v-model="selectedUser" :options="users" optionLabel="label" placeholder="Select a user" style="width: 250px; margin-right: 10px;" />
+      <div class="stat-box" style="margin-right: 10px;">
+        <strong>Avg. Semantic Score</strong>
+        <div>{{ averageSemanticScore }}</div>
+      </div>
     </div>
 
-    <div v-if="selectedUser" style="margin-top: 20px;">
-      <div style="font-size: 180%; margin-bottom: 20px;">
-        Average Semantic Score for {{ selectedUser.label }}: {{ averageSemanticScore }}
+    <div style="margin-top: 10px; display: flex; justify-content: center;">
+      <button @click="toggleDetails" class="button-6" style="width: 200px;">Further Analytics</button>
+    </div>
+
+    <div v-if="showDetails" class="details-section">
+      <div class="stat-box">
+        <strong>Total Pull Requests</strong>
+        <div>{{ totalPullRequests }}</div>
       </div>
-
-      <div v-if="userDetails">
-        <section style="margin-top: 20px;">
-          <h3>Pull Requests</h3>
-          <div class="scrollable-section">
-            <div v-for="pr in userDetails.pullRequests" :key="pr.id" class="info-section">
-              <div class="stat-container">
-                <div><strong>Title:</strong> {{ pr.title }}</div>
-                <div><strong>Date:</strong> {{ pr.date }}</div>
-                <div><strong>Semantic Score (Title):</strong> {{ pr.pr_title_semantic }}</div>
-                <div><strong>Semantic Score (Body):</strong> {{ pr.pr_body_semantic }}</div>
-                <div><strong>Average Semantic Score (Commits):</strong> {{ pr.average_semantic }}</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section style="margin-top: 20px;">
-          <h3>Commits</h3>
-          <div class="scrollable-section">
-            <div v-for="commit in userDetails.commits" :key="commit.id" class="info-section">
-              <div class="stat-container">
-                <div><strong>Message:</strong> {{ commit.message }}</div>
-                <div><strong>Date:</strong> {{ commit.date }}</div>
-                <div><strong>Semantic Score:</strong> {{ commit.semantic_score }}</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section style="margin-top: 20px;">
-          <h3>Comments</h3>
-          <div class="scrollable-section">
-            <div v-for="comment in userDetails.comments" :key="comment.id" class="info-section">
-              <div class="stat-container">
-                <div><strong>Content:</strong> {{ comment.content }}</div>
-                <div><strong>Date:</strong> {{ comment.date }}</div>
-                <div><strong>Semantic Score:</strong> {{ comment.semantic_score }}</div>
-              </div>
-            </div>
-          </div>
-        </section>
+      <div class="stat-box">
+        <strong>Total Commits</strong>
+        <div>{{ totalCommits }}</div>
       </div>
+      <div class="stat-box">
+        <strong>Total Comments</strong>
+        <div>{{ totalComments }}</div>
+      </div>
+      <div class="stat-box">
+        <strong>Avg. PR Title Semantic Score</strong>
+        <div>{{ averagePrTitleSemanticScore }}</div>
+      </div>
+      <div class="stat-box">
+        <strong>Avg. PR Body Semantic Score</strong>
+        <div>{{ averagePrBodySemanticScore }}</div>
+      </div>
+      <div class="stat-box">
+        <strong>Avg. Commit Semantic Score</strong>
+        <div>{{ averageCommitSemanticScore }}</div>
+      </div>
+      <div class="stat-box">
+        <strong>Avg. Comment Semantic Score</strong>
+        <div>{{ averageCommentSemanticScore }}</div>
+      </div>
+    </div>
+
+    <div v-if="userDetails">
+      <section style="margin-top: 20px;">
+        <h3>Pull Requests</h3>
+        <div class="scrollable-section">
+          <div v-for="pr in userDetails.pullRequests" :key="pr.id" class="info-section">
+            <div class="stat-container">
+              <div><strong>Title:</strong> {{ pr.title }}</div>
+              <div><strong>Date:</strong> {{ pr.date }}</div>
+              <div><strong>Semantic Score (Title):</strong> {{ pr.pr_title_semantic }}</div>
+              <div><strong>Semantic Score (Body):</strong> {{ pr.pr_body_semantic }}</div>
+              <div><strong>Average Semantic Score (Commits):</strong> {{ pr.average_semantic }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style="margin-top: 20px;">
+        <h3>Commits</h3>
+        <div class="scrollable-section">
+          <div v-for="commit in userDetails.commits" :key="commit.id" class="info-section">
+            <div class="stat-container">
+              <div><strong>Message:</strong> {{ commit.message }}</div>
+              <div><strong>Date:</strong> {{ commit.date }}</div>
+              <div><strong>Semantic Score:</strong> {{ commit.semantic_score }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style="margin-top: 20px;">
+        <h3>Comments</h3>
+        <div class="scrollable-section">
+          <div v-for="comment in userDetails.comments" :key="comment.id" class="info-section">
+            <div class="stat-container">
+              <div><strong>Content:</strong> {{ comment.content }}</div>
+              <div><strong>Date:</strong> {{ comment.date }}</div>
+              <div><strong>Semantic Score:</strong> {{ comment.semantic_score }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </main>
 
@@ -83,6 +115,14 @@ export default {
     const selectedUser = ref(null);
     const averageSemanticScore = ref(0);
     const userDetails = ref(null);
+    const totalPullRequests = ref(0);
+    const totalCommits = ref(0);
+    const totalComments = ref(0);
+    const averagePrTitleSemanticScore = ref(0);
+    const averagePrBodySemanticScore = ref(0);
+    const averageCommitSemanticScore = ref(0);
+    const averageCommentSemanticScore = ref(0);
+    const showDetails = ref(false);
 
     const goBack = () => {
       router.go(-1); // Go back to the previous page
@@ -108,6 +148,13 @@ export default {
     const fetchUserData = () => {
       if (selectedUser.value && state.githubResponse && state.githubResponse.Repo.pull_requests) {
         let totalScore = 0;
+        let prTitleScore = 0;
+        let prBodyScore = 0;
+        let commitScore = 0;
+        let commentScore = 0;
+        let prCount = 0;
+        let commitCount = 0;
+        let commentCount = 0;
         let count = 0;
         const pullRequests = [];
         const commits = [];
@@ -116,7 +163,10 @@ export default {
         state.githubResponse.Repo.pull_requests.forEach(pr => {
           if (pr.user === selectedUser.value.value) {
             totalScore += pr.pr_title_semantic + pr.pr_body_semantic + pr.average_semantic;
+            prTitleScore += pr.pr_title_semantic;
+            prBodyScore += pr.pr_body_semantic;
             count += 3;
+            prCount++;
             pullRequests.push({
               id: pr.number,
               title: pr.title,
@@ -130,7 +180,9 @@ export default {
           pr.commits.forEach(commit => {
             if (commit.user === selectedUser.value.value) {
               totalScore += commit.semantic_score;
+              commitScore += commit.semantic_score;
               count++;
+              commitCount++;
               commits.push({
                 id: commit.id,
                 message: commit.message,
@@ -143,7 +195,9 @@ export default {
           pr.comments.forEach(comment => {
             if (comment.user === selectedUser.value.value) {
               totalScore += comment.semantic_score;
+              commentScore += comment.semantic_score;
               count++;
+              commentCount++;
               comments.push({
                 id: comment.id,
                 content: comment.content,
@@ -155,8 +209,19 @@ export default {
         });
 
         averageSemanticScore.value = count ? (totalScore / count).toFixed(2) : 0;
+        averagePrTitleSemanticScore.value = prCount ? (prTitleScore / prCount).toFixed(2) : 0;
+        averagePrBodySemanticScore.value = prCount ? (prBodyScore / prCount).toFixed(2) : 0;
+        averageCommitSemanticScore.value = commitCount ? (commitScore / commitCount).toFixed(2) : 0;
+        averageCommentSemanticScore.value = commentCount ? (commentScore / commentCount).toFixed(2) : 0;
+        totalPullRequests.value = prCount;
+        totalCommits.value = commitCount;
+        totalComments.value = commentCount;
         userDetails.value = { pullRequests, commits, comments };
       }
+    };
+
+    const toggleDetails = () => {
+      showDetails.value = !showDetails.value;
     };
 
     onMounted(() => {
@@ -171,14 +236,36 @@ export default {
       averageSemanticScore,
       users,
       userDetails,
+      totalPullRequests,
+      totalCommits,
+      totalComments,
+      averagePrTitleSemanticScore,
+      averagePrBodySemanticScore,
+      averageCommitSemanticScore,
+      averageCommentSemanticScore,
       fetchUserData,
       goBack, // Return goBack method
+      toggleDetails,
+      showDetails,
     };
   },
 };
 </script>
 
 <style scoped>
+.stat-box {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px;
+  display: inline-block;
+  width: 200px;
+  text-align: center;
+  font-size: 120%;
+  background-color: #f9f9f9;
+  vertical-align: top;
+}
+
 .info-section {
   margin-bottom: 20px;
 }
@@ -192,7 +279,43 @@ export default {
 }
 
 .scrollable-section {
-  max-height: 400px; 
+  max-height: 400px;
   overflow-y: auto;
+}
+
+.detail-button {
+  padding: 10px;
+  font-size: 90%;
+  display: inline-block;
+  vertical-align: top;
+}
+
+.details-section {
+  margin-top: 20px;
+}
+
+.button-6 {
+  appearance: none;
+  background-color: #007bff;
+  border: 1px solid #007bff;
+  border-radius: 0.375rem;
+  box-shadow: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  padding: 0.5rem 1rem;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.2s;
+  user-select: none;
+  vertical-align: middle;
+}
+
+.button-6:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
 }
 </style>
