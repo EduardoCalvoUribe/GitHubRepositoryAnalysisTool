@@ -187,7 +187,7 @@ async def comment_task(comment, data_list):
     commit_id = ''
     comment_date = None
     comment_url = None
-    if comment['comment_type'] == 'review comment' or comment['comment_type'] == 'review':
+    if comment['comment_type'] == 'review comment':
         commit_id = comment['commit_id']
         comment_date = comment['created_at'] # this could be submitted_at
         comment_url = comment['html_url']

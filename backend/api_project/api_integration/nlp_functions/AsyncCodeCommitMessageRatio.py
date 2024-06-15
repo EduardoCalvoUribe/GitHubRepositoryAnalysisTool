@@ -29,8 +29,8 @@ async def get_pr_files(repo_owner, repo_name, pull_number):
     headers = {"Authorization": f"token {settings.GITHUB_PERSONAL_ACCESS_TOKEN}"}
     
     # Asynchronous API call to files endpoint 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
+    async with aiohttp.ClientSession(headers=headers) as session:
+        async with session.get(url) as response:
             response.raise_for_status()
             return await response.json()
 

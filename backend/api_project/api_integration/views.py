@@ -166,7 +166,7 @@ def process_vue_POST_request(request):
         # Assuming that POST request contains 'url' key and associated value
         url = data.get('url')
 
-    return "https://github.com/lucidrains/PaLM-rlhf-pytorch"
+    return url
 
 # Simple rapper function which can display POST request Github API URL on Django website
 def display_POST_request(request):
@@ -351,10 +351,10 @@ def repo_frontend_info(request):
         except json.JSONDecodeError:
             print("Error")
     print("Point reached")
-    url = "https://github.com/lucidrains/PaLM-rlhf-pytorch"
-    ranged = False
-    begin_date = datetime(2023, 3, 1, 0, 0, 0)
-    end_date = datetime(2024, 6, 1, 0, 0, 0)
+    # url = "https://github.com/Trinea/android-open-project"
+    # ranged = True
+    # begin_date = datetime(2020, 3, 1, 0, 0, 0)
+    # end_date = datetime(2024, 6, 1, 0, 0, 0)
     print(url)
     try:
     # Get the repository by URL (using get() for single object retrieval)
@@ -486,19 +486,22 @@ def date_range(data):
         
 
 def select_commits(pr, pr_data, total_commit_count, begin_date, end_date, ranged):
+    commit_ids = [comment["commit_id"] for comment in pr_data["comments"]]
     for commit in pr.commits.all():
-                    if not ranged or (commit.url in pr_data["comments"]["commit_id"] or ((commit.date < end_date) & (commit.date > begin_date))):
-                        commit_data = {
-                            "name": commit.name,
-                            "url": commit.url,
-                            "title": commit.title,
-                            "user": commit.user,
-                            "date": commit.date,
-                            "semantic_score": commit.semantic_score,
-                            "updated_at": commit.updated_at,
-                        }
-                        pr_data["commits"].append(commit_data)
-                        total_commit_count += 1
+        # Extract the commit_id from the commit URL
+        commit_id = parse_Github_url_variables(commit.url)[-1]
+        if not ranged or ((commit_id in commit_ids) or ((commit.date < end_date) & (commit.date > begin_date))):
+            commit_data = {
+                "name": commit.name,
+                "url": commit.url,
+                "title": commit.title,
+                "user": commit.user,
+                "date": commit.date,
+                "semantic_score": commit.semantic_score,
+                "updated_at": commit.updated_at,
+            }
+            pr_data["commits"].append(commit_data)
+            total_commit_count += 1
                 
     pr_data["number_commits"] = len(pr_data["commits"])
     return pr_data, total_commit_count
