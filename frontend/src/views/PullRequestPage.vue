@@ -8,15 +8,22 @@ export default {
   setup() {
     const route = useRoute();
     const pullpackage = ref(null);
+    if (!state.githubResponse) {
+      localStorage.setItem('data', JSON.stringify(state.githubResponse));
+    }
     const storedData = localStorage.getItem('data');
+    console.log(storedData, "storedData")
     onMounted(async () => {
       if (storedData) {
         state.githubResponse = JSON.parse(storedData);
       }
-      console.log(state.githubResponse)
+      console.log(state.githubResponse.Repo.pull_requests.length, "length")
       if (state.githubResponse) {
         for (let i = 0; i < state.githubResponse.Repo.pull_requests.length; i++) {
+          console.log(i, "i")
+          console.log(state.githubResponse.Repo.pull_requests[i].url, decodeURIComponent(route.params.url))
           if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
+            console.log(state.githubResponse.Repo.pull_requests[i])
             pullpackage.value = state.githubResponse.Repo.pull_requests[i];
             break;
           }

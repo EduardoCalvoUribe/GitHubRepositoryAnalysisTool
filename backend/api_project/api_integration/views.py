@@ -306,9 +306,9 @@ def send_post_request_to_repo_frontend_info(request):
     url = '/your-endpoint-url/'
 
     # Define the payload for the POST request
-    payload = {
-        "url": "https://github.com/lucidrains/PaLM-rlhf-pytorch"
-    }
+    # payload = {
+    #     "url": "https://github.com/lucidrains/PaLM-rlhf-pytorch"
+    # }
 
     try:
         # Create a mock request object
@@ -339,6 +339,7 @@ def repo_frontend_info(request):
             # Option 1: Using a dictionary (recommended)
             data = json.loads(request_body)
             #url = data.get('url')  # Use get() for optional retrieval
+
             url = data['url']
             print(url)
             print("url reached")
@@ -351,8 +352,8 @@ def repo_frontend_info(request):
         except json.JSONDecodeError:
             print("Error")
     print("Point reached")
-    # url = "https://github.com/Trinea/android-open-project"
-    # ranged = True
+    # url = "https://github.com/lucidrains/PaLM-rlhf-pytorch"
+    # ranged = False
     # begin_date = datetime(2020, 3, 1, 0, 0, 0)
     # end_date = datetime(2024, 6, 1, 0, 0, 0)
     print(url)
@@ -389,10 +390,10 @@ def repo_frontend_info(request):
         print("But really")
         for pr in pull_requests:
             if not ranged:
-                data = selected_data(pr,data, total_comment_count, total_commit_count,begin_date=None,end_date=None, ranged=False)
+                data, total_comment_count, total_commit_count = selected_data(pr,data, total_comment_count, total_commit_count,begin_date=None,end_date=None, ranged=False)
             else:
                 if (pr.closed_at > begin_date) & (pr.date < end_date) & (pr.date > begin_date):
-                    data = selected_data(pr,data, total_comment_count, total_commit_count, begin_date, end_date, ranged=True)
+                    data, total_comment_count,total_commit_count = selected_data(pr,data, total_comment_count, total_commit_count, begin_date, end_date, ranged=True)
         return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
@@ -462,7 +463,7 @@ def selected_data(pr,data, total_comment_count, total_commit_count, begin_date, 
     data["Repo"]["total_commit_count"] = total_commit_count
     data["Repo"]["total_comment_count"] = total_comment_count
     data["Repo"]["average_semantic"] = calculate_average_semantic_repo(data["Repo"])
-    return data
+    return data, total_comment_count, total_commit_count
 
 
 def date_range(data):

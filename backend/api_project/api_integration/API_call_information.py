@@ -80,8 +80,9 @@ async def get_github_information(response):
             # This for loop is only for creating displayable text on a website (not important for loop and can be deleted in end)
             pull_request_tasks = []
             for page in results:
-                for pr in page:
-                    pull_request_tasks.append(asyncio.create_task(pull_request_task(pr, data_list)))
+                for i,pr in enumerate (page):
+                    print(i)
+                    pull_request_tasks.append(asyncio.create_task(pull_request_task(pr, data_list,i)))
                     
             await asyncio.gather(*pull_request_tasks) 
             print(time.time() - start_time, "before bulk create")     
@@ -97,7 +98,7 @@ async def get_github_information(response):
         #     print(e)
         #     return JsonResponse('Error', safe=False)
 
-async def pull_request_task(pr, data_list):
+async def pull_request_task(pr, data_list, i):
     """
     Process a pull request and update the database with the relevant information.
 
@@ -130,16 +131,16 @@ async def pull_request_task(pr, data_list):
 
     commit_tasks = []
     for commit in pr[1]:
-        commit_tasks.append(asyncio.create_task(commit_task(commit, data_list, pr[0]['number'])))
+        commit_tasks.append(asyncio.create_task(commit_task(commit, data_list, pr[0]['number'], i)))
 
     comment_tasks = []
     for comment in pr[2]:
-        comment_tasks.append(asyncio.create_task(comment_task(comment, data_list)))
+        comment_tasks.append(asyncio.create_task(comment_task(comment, data_list,i)))
 
     await asyncio.gather(*commit_tasks)
     await asyncio.gather(*comment_tasks)
 
-async def commit_task(commit, data_list, pr_num):
+async def commit_task(commit, data_list, pr_num,i):
     """
     Process a commit and add it to the data list.
 
@@ -150,12 +151,12 @@ async def commit_task(commit, data_list, pr_num):
     Returns:
         list: The updated data list.
     """
-    
+    print(type(data_list[1][-1]))
     # commit_semantic_score = general_semantic_score.calculateWeightedCommitSemanticScore(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
     commit_semantic_score = await general_semantic_score.calculateWeightedCommitSemanticScore(commit, 0.33, 0.33, 0.34, commit['commit']['url'],pr_num)
     defaults = {
         "url": commit['commit']['url'],
-        "pull_request": data_list[1][-1],
+        "pull_request": data_list[1][i],
         "name": commit['commit']['message'],
         "title": commit['commit']['message'],
         "user": commit['author']['login'],
@@ -172,7 +173,7 @@ async def commit_task(commit, data_list, pr_num):
 
                 
 
-async def comment_task(comment, data_list):
+async def comment_task(comment, data_list,i):
     """
     Process a comment and add it to the data list.
 
@@ -197,7 +198,7 @@ async def comment_task(comment, data_list):
 
     defaults = {
         "url" : comment_url,
-        "pull_request": data_list[1][-1],
+        "pull_request": data_list[1][i],
         "date": datetime.strptime(comment_date, '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
         "updated_at": timezone.now(),
         "body": comment['body'],
