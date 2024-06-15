@@ -1,9 +1,9 @@
 <script>
 import { ref, onMounted, computed, watch } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css';
-import { fetchData } from '../fetchData.js';
-import { useRoute } from 'vue-router';
+import '@vuepic/vue-datepicker/dist/main.css'
+import { fetchData } from '../fetchData.js'
+import { useRoute, useRouter } from 'vue-router';
 import { state } from '../repoPackage.js';
 import Chart from '../components/Chart.vue';
 import Dropdown from 'primevue/dropdown';
@@ -19,6 +19,7 @@ export default {
 
   setup() {
     const route = useRoute();
+    const router = useRouter();
     const selectedUsers = ref([]);
     const selectedSort = ref({ name: 'Date Newest to Oldest' });
     const selectedStat = ref('pullrequests');
@@ -31,7 +32,10 @@ export default {
     const zoomedMonth = ref(null);
     const isBar = ref(true);
 
-    // Fetch data from backend
+    const goBack = () => {
+      router.go(-1); // Go back to the previous page
+    };
+
     const getPackage = async (date) => {
       const data = {
         'url': decodeURIComponent(route.params.url),
@@ -50,6 +54,7 @@ export default {
         state.githubResponse = response;
         console.log(state.githubResponse);
       } catch (error) {
+        console.error('Error:', error);
         console.error('Error:', error);
       }
     };
@@ -128,9 +133,11 @@ export default {
     const userList = computed(() => {
       if (!state.githubResponse || !state.githubResponse.Repo.pull_requests) {
         return [];
+        return [];
       }
       const users = new Set();
       state.githubResponse.Repo.pull_requests.forEach(pr => {
+        users.add(pr.user);
         users.add(pr.user);
       });
       return Array.from(users);
@@ -399,6 +406,7 @@ export default {
       await getPackage('');
     });
 
+
     return {
       getPackage,
       state,
@@ -418,6 +426,7 @@ export default {
       resetChartView,
       isZoomedIn,
       isBar,
+      goBack,
     }
   },
 
@@ -482,7 +491,6 @@ export default {
     <div style="margin-left: 40px; margin-top: 50px;">
       <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
     </div>
-    
   </div>
 
   <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
@@ -499,9 +507,11 @@ export default {
           </div>
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
-                <span class="last-accessed">Author: {{ pullrequest.user }}</span>
-                <span class="last-accessed">Date {{ pullrequest.date }}</span>
+              <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
+              <div class="pr-details">
+                <span>{{ pullrequest.user }}</span>
+                <span>{{ pullrequest.date }}</span>
+              </div>
             </button></router-link>
           </div>
         </div>
@@ -509,6 +519,7 @@ export default {
       <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse" style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
           <h1 style="justify-content: center; display: inline-block; width: 250px;" for="users">Contributors</h1>
+          <div id="users" class="row" v-for="user in userList"></div>
           <div id="users" class="row" v-for="user in userList">
             <router-link :to="{ path: '/userpage' }"><button class="button-6">
                 <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
@@ -519,9 +530,7 @@ export default {
     </div>
   </div>
 
-  <router-link :to="{path: '/' }">
-    <button class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
-  </router-link>
+  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
 </template>
 
 <style scoped>
@@ -552,5 +561,19 @@ export default {
   background-color: rgb(255, 255, 255);
   text-align: center;
   border: 1px solid #ffffff;
+}
+
+.pr-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 0.3rem;
+}
+
+.pr-details span {
+  width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

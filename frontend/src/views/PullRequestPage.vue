@@ -1,12 +1,17 @@
 <script>
 import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router'; // Import useRouter
 import { state } from '../repoPackage.js';
 
 export default {
   setup() {
     const route = useRoute();
+    const router = useRouter(); // Initialize useRouter
     const pullpackage = ref(null);
+
+    const goBack = () => {
+      router.go(-1); // Go back to the previous page
+    };
 
     onMounted(async () => {
       if (state.githubResponse) {
@@ -21,6 +26,7 @@ export default {
 
     return {
       pullpackage,
+      goBack, // Return goBack method
     };
   },
 };
@@ -57,7 +63,6 @@ export default {
     </div>
   </div>
 
-
   <div v-if="pullpackage" class="grid-container" style="max-height: 300px; overflow-y: auto;">
     <div class="grid-item" style="border-radius: 10px;" v-for="commit in pullpackage.commits" :key="commit.id">
       {{ commit.title }}
@@ -68,9 +73,7 @@ export default {
     </div>
   </div>
 
-  <router-link :to="{path: '/' }">
-    <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%; margin-top: 20px">Back</button>
-  </router-link>
+  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%; margin-top: 20px;">Back</button>
 </template>
 
 <style scoped>
