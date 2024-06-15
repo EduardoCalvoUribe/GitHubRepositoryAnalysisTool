@@ -30,10 +30,10 @@ export default {
 
     const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
     const sorts = [ // different possible sort options
-        { name: 'Date Oldest to Newest' },
-        { name: 'Date Newest to Oldest' },
-        { name: 'Semantic Score Ascending' },
-        { name: 'Semantic Score Descending' },
+      { name: 'Date Oldest to Newest' },
+      { name: 'Date Newest to Oldest' },
+      { name: 'Semantic Score Ascending' },
+      { name: 'Semantic Score Descending' },
     ];
 
     onMounted(async () => {
@@ -57,9 +57,9 @@ export default {
 
     const sortListsScore = (list, choice) => {
       if (choice.name == 'Semantic Score Ascending') {
-        return list.sort((a,b) => (a.average_semantic) - (b.average_semantic));
+        return list.sort((a, b) => (a.average_semantic) - (b.average_semantic));
       } else {
-        return list.sort((a,b) => (b.average_semantic) - (a.average_semantic));
+        return list.sort((a, b) => (b.average_semantic) - (a.average_semantic));
       }
     };
 
@@ -170,10 +170,20 @@ export default {
         <div style="display: flex; align-items: center;">
           <input id="urlTextfield" v-model="inputUrl" style="width: 500px; height: 50px;"></input>
           <button class="button-6" style="width: 57px; height: 50px; margin-left: 3px; font-size: smaller;"
-            @click="handleGithubURLSubmit(inputUrl), handleClick"
-            :disabled="busy">
+            @click="handleGithubURLSubmit(inputUrl), handleClick" :disabled="busy">
             <div v-if="busy" class="lds-spinner" style="align-items: center;">
-              <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
             </div>
             <div v-else>Submit</div>
           </button>
@@ -181,21 +191,29 @@ export default {
       </div>
     </div>
 
-    <div v-if="invalidInput" style="color: red; margin-top: 2%; display: flex; justify-content: center; margin-bottom: 5%">Invalid input! Please enter a valid GitHub URL.</div>
+    <div v-if="invalidInput"
+      style="color: red; margin-top: 2%; display: flex; justify-content: center; margin-bottom: 5%">Invalid input!
+      Please enter a valid GitHub URL.</div>
 
     <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
       <div style="display: flex; flex-direction: column; align-items: flex-start;">
-        <h2 style="justify-content: center; display: inline-block; width: 250px; margin-bottom: 3%" for="repos">Tracked Repositories:</h2>
-        <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
-        <div id="repos" class="row" v-for="repo in sortedRepos" :key="repo.id">
-          <router-link :to="{ path: '/repoinfo/' + encodeURIComponent(repo.url) }">
-            <button class="button-6">
-              <span><h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2></span>
-              <span class="last-accessed">Semantic score: {{ repo.average_semantic }}</span>
+        <h2 style="justify-content: center; display: inline-block; width: 250px; margin-bottom: 3%" for="repos">Tracked
+          Repositories:</h2>
+        <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by"
+          class="w-full md:w-14rem" />
+        <div id="repos" class="row" v-for="repo in sortedRepos">
+          <router-link :to="{ path: '/repoinfo/' + encodeURIComponent(repo.url) + '/current' }"><button
+              class="button-6">
+              <span>
+                <h2 style="margin-left: 0.3rem;">{{ repo.name }}</h2>
+              </span>
+              <span class="last-accessed">Semantic score: {{ repo.average_semantic.toFixed(2) }}</span>
               <span class="last-accessed">Last Accessed: {{ repo.updated_at }}</span>
             </button>
           </router-link>
-          <button class="button-6" style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;" @click="handleDeleteRequest(repo.id)">
+          <button class="button-6"
+            style="font-weight: 100; padding-inline: 1.1rem; width: 45px; margin-left: -8px; border-top-left-radius: 0; border-bottom-left-radius: 0;"
+            @click="handleDeleteRequest(repo.id)">
             <div style="margin-bottom: 3px; font-weight: 100">x</div>
           </button>
         </div>
@@ -220,6 +238,7 @@ header {
 .lds-spinner div:after {
   box-sizing: border-box;
 }
+
 .lds-spinner {
   color: currentColor;
   display: inline-block;
@@ -227,10 +246,12 @@ header {
   width: 30px;
   height: 30px;
 }
+
 .lds-spinner div {
   transform-origin: 15px 15px;
   animation: lds-spinner 1.2s linear infinite;
 }
+
 .lds-spinner div:after {
   content: " ";
   display: block;
@@ -242,58 +263,72 @@ header {
   border-radius: 20%;
   background: currentColor;
 }
+
 .lds-spinner div:nth-child(1) {
   transform: rotate(0deg);
   animation-delay: -1.1s;
 }
+
 .lds-spinner div:nth-child(2) {
   transform: rotate(30deg);
   animation-delay: -1s;
 }
+
 .lds-spinner div:nth-child(3) {
   transform: rotate(60deg);
   animation-delay: -0.9s;
 }
+
 .lds-spinner div:nth-child(4) {
   transform: rotate(90deg);
   animation-delay: -0.8s;
 }
+
 .lds-spinner div:nth-child(5) {
   transform: rotate(120deg);
   animation-delay: -0.7s;
 }
+
 .lds-spinner div:nth-child(6) {
   transform: rotate(150deg);
   animation-delay: -0.6s;
 }
+
 .lds-spinner div:nth-child(7) {
   transform: rotate(180deg);
   animation-delay: -0.5s;
 }
+
 .lds-spinner div:nth-child(8) {
   transform: rotate(210deg);
   animation-delay: -0.4s;
 }
+
 .lds-spinner div:nth-child(9) {
   transform: rotate(240deg);
   animation-delay: -0.3s;
 }
+
 .lds-spinner div:nth-child(10) {
   transform: rotate(270deg);
   animation-delay: -0.2s;
 }
+
 .lds-spinner div:nth-child(11) {
   transform: rotate(300deg);
   animation-delay: -0.1s;
 }
+
 .lds-spinner div:nth-child(12) {
   transform: rotate(330deg);
   animation-delay: 0s;
 }
+
 @keyframes lds-spinner {
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }

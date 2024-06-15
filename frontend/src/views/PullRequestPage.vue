@@ -1,14 +1,19 @@
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import { state } from '../repoPackage.js';
+import { useRouter } from 'vue-router';
 
 export default {
   setup() {
     const route = useRoute();
     const pullpackage = ref(null);
-
+    const storedData = localStorage.getItem('data');
     onMounted(async () => {
+      if (storedData) {
+        state.githubResponse = JSON.parse(storedData);
+      }
+      console.log(state.githubResponse)
       if (state.githubResponse) {
         for (let i = 0; i < state.githubResponse.Repo.pull_requests.length; i++) {
           if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
@@ -17,13 +22,13 @@ export default {
           }
         }
       }
+      localStorage.setItem('data', JSON.stringify(state.githubResponse));
     });
-
     return {
       pullpackage,
     };
   },
-};
+}
 </script>
 
 <template>
@@ -68,9 +73,10 @@ export default {
     </div>
   </div>
 
-  <router-link :to="{path: '/' }">
-    <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%; margin-top: 20px">Back</button>
-  </router-link>
+  <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;"
+    @click="$router.go(-1)">
+    Back
+  </button>
 </template>
 
 <style scoped>
@@ -103,9 +109,9 @@ export default {
   border: 1px solid #157eff4d;
   border-radius: 5px;
   width: 100%;
-  height: 50px; 
+  height: 50px;
   width: 300px;
-  margin-top: 20px; 
+  margin-top: 20px;
   justify-content: center;
   text-align: center;
   padding: 4%;
