@@ -30,6 +30,7 @@ export default {
     const zoomedYear = ref(null);
     const zoomedMonth = ref(null);
 
+    // Fetch data from backend
     const getPackage = async (date) => {
       const data = {
         'url': decodeURIComponent(route.params.url),
@@ -52,12 +53,14 @@ export default {
       }
     };
 
+    // Filter pull requests by selected users
     const filterPullRequests = (pullRequests, users) => {
       return users.length > 0
         ? pullRequests.filter(pr => users.includes(pr.user))
         : pullRequests;
     };
 
+    // Sort list by date
     const sortListsDate = (list, choice) => {
       if (choice.name === 'Date Oldest to Newest') {
         return list.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -66,6 +69,7 @@ export default {
       }
     };
 
+    // Sort list by semantic score
     const sortListsScore = (list, choice) => {
       if (choice.name === 'Semantic Score Ascending') {
         return list.sort((a, b) => a.pr_title_semantic - b.pr_title_semantic);
@@ -74,6 +78,7 @@ export default {
       }
     };
 
+    // Computed property for sorted pull requests
     const sortedPullRequests = computed(() => {
       if (!state.githubResponse) return [];
       let filteredList = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value);
@@ -84,10 +89,12 @@ export default {
       }
     });
 
+    // Count of pull requests
     const pullRequestCount = computed(() => {
       return sortedPullRequests.value.length;
     });
 
+    // Format the updated date
     const formattedDate = computed(() => {
       if (!state.githubResponse || !state.githubResponse.Repo.updated_at) {
         return 'Loading...';
@@ -105,6 +112,7 @@ export default {
       return formatter.format(date);
     });
 
+    // List of users
     const userList = computed(() => {
       if (!state.githubResponse || !state.githubResponse.Repo.pull_requests) {
         return [];
@@ -116,12 +124,14 @@ export default {
       return Array.from(users);
     });
 
+    // Handle selected users
     const handleSelectedUsers = (selected) => {
       selectedUsers.value = selected;
       console.log("Selected users:", selectedUsers.value);
       updateChartData();
     };
 
+    // Chart options
     const chartOptions = ref({
       responsive: true,
       maintainAspectRatio: false,
@@ -174,7 +184,6 @@ export default {
 
       return { labels, data };
     });
-
 
     // Computes the commit count per month for the chart
     const commitsRange = computed(() => {
@@ -242,7 +251,6 @@ export default {
       return { labels, data };
     });
 
-
     // Updates the chart data based on the selected stat and zoom level
     const updateChartData = () => {
       if (isZoomedIn.value && zoomedYear.value && zoomedMonth.value) {
@@ -276,6 +284,12 @@ export default {
       let selectedMonthData;
       if (selectedStat.value === 'commits') {
         // If "commits" is selected, filter commits for the selected month
+        selectedMonthData = filteredPullRequests.flatMap(pr => pr.commits).filter(commit => {
+          const date = new Date(commit.date);
+          return date.getFullYear() === year && date.getMonth() + 1 === month;
+        });
+      } else if (selectedStat.value === 'semantic') {
+        // If "semantic" is selected, filter commits for the selected month
         selectedMonthData = filteredPullRequests.flatMap(pr => pr.commits).filter(commit => {
           const date = new Date(commit.date);
           return date.getFullYear() === year && date.getMonth() + 1 === month;
@@ -332,6 +346,7 @@ export default {
       zoomedMonth.value = month;
     };
 
+    // Reset chart view to monthly data
     const resetChartView = () => {
       let data;
       if (selectedStat.value === 'commits') {
@@ -428,15 +443,15 @@ export default {
     <div style="margin-right: 10px; margin-top: 70px; min-width: 160px; position: relative">
       <div>
         <input type="radio" id="semantic" name="stat" value="semantic" v-model="selectedStat">
-        <label style="margin-left: 5px;" for="semantic">Semantic Score for Commit Messages</label>
+        <label style="margin-left: 5px;" for="semantic">Semantic Score</label>
       </div>
       <div>
         <input type="radio" id="commits" name="stat" value="commits" v-model="selectedStat">
-        <label style="margin-left: 5px;" for="commits">Number of Commits</label>
+        <label style="margin-left: 5px;" for="commits">Commits</label>
       </div>
       <div>   
         <input type="radio" id="pullrequests" name="stat" value="pullrequests" v-model="selectedStat" checked>
-        <label style="margin-left: 5px;" for="pullrequests">Number of Pull Requests</label>
+        <label style="margin-left: 5px;" for="pullrequests">Pull Requests</label>
       </div>
       <button class="button-6" v-if="isZoomedIn" @click="resetChartView" style="position: absolute; bottom: 10px; right: 10px; margin-top: 20px; width: 40px; height: 40px; justify-content: center; vertical-align: center; font-size: larger;"><</button>
     </div>
