@@ -21,6 +21,7 @@ export default {
     const route = useRoute();
     const selectedUsers = ref([]);
     const selectedSort = ref({ name: 'Date Newest to Oldest' });
+    const selectedStat = ref('pullrequests');
     const sorts = ref([
       { name: 'Date Oldest to Newest' },
       { name: 'Date Newest to Oldest' },
@@ -143,71 +144,179 @@ export default {
       }
     });
 
+    // Computes the pull request count per month for the chart
     const pullRequestsRange = computed(() => {
-      let minDate = new Date();
-      let maxDate = new Date(0);
-      const counts = {};
-      
+      let minDate = new Date(); // Set to a future date
+      let maxDate = new Date(0); // Set to a past date
+      const counts = {}; // Stores the count of pull requests per month
+
       if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
+        // Filter pull requests based on selected users
         const filteredPullRequests = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value);
         filteredPullRequests.forEach(pr => {
           const date = new Date(pr.date);
-          minDate = date < minDate ? date : minDate;
-          maxDate = date > maxDate ? date : maxDate;
-          const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0');
+          minDate = date < minDate ? date : minDate; // Update if PR date is earlier
+          maxDate = date > maxDate ? date : maxDate; // Update if PR date is later
+          const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0'); // (YYYY-MM), per month key
+          
+          // Increment the pull request count for the month or initialize to 1 if no data
           counts[monthKey] = counts[monthKey] ? counts[monthKey] + 1 : 1;
         });
       }
 
-      const labels = [];
-      const data = [];
+      const labels = []; // Month labels
+      const data = []; // Pull request counts
       for (let d = new Date(minDate); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
         const key = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
-        labels.push(key);
-        data.push(counts[key] || 0);
+        labels.push(key); // Add month label to labels array
+        data.push(counts[key] || 0); // Add pull request count or 0 if no data
       }
 
       return { labels, data };
     });
 
+
+    // Computes the commit count per month for the chart
+    const commitsRange = computed(() => {
+      let minDate = new Date(); // Set to a future date
+      let maxDate = new Date(0); // Set to a past date
+      const counts = {}; // Stores the count of commits per month
+
+      if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
+        // Filter commits based on selected users and flatten the commit arrays from pull requests
+        const filteredCommits = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value).flatMap(pr => pr.commits);
+        filteredCommits.forEach(commit => {
+          const date = new Date(commit.date);
+          minDate = date < minDate ? date : minDate; // Update minDate if the commit date is earlier
+          maxDate = date > maxDate ? date : maxDate; // Update maxDate if the commit date is later
+          const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0'); // (YYYY-MM), per month key
+          
+          // Increment the commit count for the month (or initialize to 1 if no data)
+          counts[monthKey] = counts[monthKey] ? counts[monthKey] + 1 : 1; 
+        });
+      }
+
+      const labels = []; // Month labels
+      const data = []; // Commit counts
+      for (let d = new Date(minDate); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
+        const key = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
+        labels.push(key); // Add month label to labels array
+        data.push(counts[key] || 0); // Add commit count or 0 if no data
+      }
+
+      return { labels, data };
+    });
+
+    // Computes the average semantic score per month for the chart
+    const semanticRange = computed(() => {
+      let minDate = new Date(); // Set to a future date
+      let maxDate = new Date(0); // Set to a past date
+      const counts = {}; // Stores the sum and count of semantic scores per month
+
+      if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
+        // Filter commits based on selected users and flatten the commit arrays from the pull requests
+        const filteredCommits = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value).flatMap(pr => pr.commits);
+        filteredCommits.forEach(commit => {
+          const date = new Date(commit.date);
+          minDate = date < minDate ? date : minDate; // Update minDate if the commit date is earlier
+          maxDate = date > maxDate ? date : maxDate; // Update maxDate if the commit date is later
+          const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0'); // (YYYY-MM), per month key
+          
+          // Computes the sum and count of semantic scores for each month
+          if (!counts[monthKey]) {
+            counts[monthKey] = { sum: 0, count: 0 };
+          }
+          counts[monthKey].sum += commit.semantic_score;
+          counts[monthKey].count += 1;
+        });
+      }
+
+      const labels = []; // Month labels
+      const data = []; // Average semantic scores
+      for (let d = new Date(minDate); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
+        const key = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
+        labels.push(key); // Add month label to labels array
+        data.push(counts[key] ? (counts[key].sum / counts[key].count) : 0); // Calculate average score or 0 if no data
+      }
+
+      return { labels, data };
+    });
+
+
+    // Updates the chart data based on the selected stat and zoom level
     const updateChartData = () => {
       if (isZoomedIn.value && zoomedYear.value && zoomedMonth.value) {
         handleBarClick({ label: `${zoomedYear.value}-${zoomedMonth.value.toString().padStart(2, '0')}` });
       } else {
+        let data;
+        if (selectedStat.value === 'commits') {
+          data = commitsRange.value;
+        } else if (selectedStat.value === 'semantic') {
+          data = semanticRange.value;
+        } else {
+          data = pullRequestsRange.value;
+        }
         chartData.value = {
-          labels: pullRequestsRange.value.labels,
+          labels: data.labels,
           datasets: [{
-            data: pullRequestsRange.value.data,
+            data: data.data,
             backgroundColor: '#42A5F5'
           }]
         };
       }
     };
 
+    // Handles the clicking of the chart bars
     const handleBarClick = (label) => {
       console.log(`Clicked on bar: ${label}`);
-      const [year, month] = label.label.split('-').map(Number);
+      const [year, month] = label.label.split('-').map(Number); // Extract year and month from the label
 
       const filteredPullRequests = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value);
 
-      const selectedMonthData = filteredPullRequests.filter(pr => {
-        const date = new Date(pr.date);
-        return date.getFullYear() === year && date.getMonth() + 1 === month;
-      });
+      let selectedMonthData;
+      if (selectedStat.value === 'commits') {
+        // If "commits" is selected, filter commits for the selected month
+        selectedMonthData = filteredPullRequests.flatMap(pr => pr.commits).filter(commit => {
+          const date = new Date(commit.date);
+          return date.getFullYear() === year && date.getMonth() + 1 === month;
+        });
+      } else {
+        // Otherwise, filter pull requests for the selected month
+        selectedMonthData = filteredPullRequests.filter(pr => {
+          const date = new Date(pr.date);
+          return date.getFullYear() === year && date.getMonth() + 1 === month;
+        });
+      }
 
       const counts = {};
-      selectedMonthData.forEach(pr => {
-        const date = new Date(pr.date);
-        const day = date.getDate();
-        counts[day] = (counts[day] || 0) + 1;
+      selectedMonthData.forEach(item => {
+        const date = new Date(item.date);
+        const day = date.getDate(); // Get the day of the month
+        if (selectedStat.value === 'semantic') {
+          // If "semantic" is selected, calculate the sum and count of semantic scores
+          if (!counts[day]) {
+            counts[day] = { sum: 0, count: 0 };
+          }
+          counts[day].sum += item.semantic_score;
+          counts[day].count += 1;
+        } else {
+          // Otherwise, increment the count for the day
+          counts[day] = (counts[day] || 0) + 1;
+        }
       });
 
-      const daysInMonth = new Date(year, month, 0).getDate();
+      const daysInMonth = new Date(year, month, 0).getDate(); // Get the number of days in the month
       const labels = [];
       const data = [];
       for (let day = 1; day <= daysInMonth; day++) {
         labels.push(`${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
-        data.push(counts[day] || 0);
+        if (selectedStat.value === 'semantic') {
+          // Calculate average semantic score or 0 if no data
+          data.push(counts[day] ? (counts[day].sum / counts[day].count) : 0);
+        } else {
+          // Add count or 0 if no data
+          data.push(counts[day] || 0);
+        }
       }
 
       chartData.value = {
@@ -224,10 +333,18 @@ export default {
     };
 
     const resetChartView = () => {
+      let data;
+      if (selectedStat.value === 'commits') {
+        data = commitsRange.value;
+      } else if (selectedStat.value === 'semantic') {
+        data = semanticRange.value;
+      } else {
+        data = pullRequestsRange.value;
+      }
       chartData.value = {
-        labels: pullRequestsRange.value.labels,
+        labels: data.labels,
         datasets: [{
-          data: pullRequestsRange.value.data,
+          data: data.data,
           backgroundColor: '#42A5F5'
         }]
       };
@@ -258,6 +375,7 @@ export default {
       state,
       sortedPullRequests,
       selectedSort,
+      selectedStat,
       sorts,
       route,
       pullRequestCount,
@@ -309,16 +427,16 @@ export default {
     
     <div style="margin-right: 10px; margin-top: 70px; min-width: 160px; position: relative">
       <div>
-        <input type="radio" id="semantic" name="stat" value="semantic">
-        <label style="margin-left: 5px;" for="semantic">Semantic Score</label>
+        <input type="radio" id="semantic" name="stat" value="semantic" v-model="selectedStat">
+        <label style="margin-left: 5px;" for="semantic">Semantic Score for Commit Messages</label>
       </div>
       <div>
-        <input type="radio" id="commits" name="stat" value="commits">
-        <label style="margin-left: 5px;" for="commits">Commits</label>
+        <input type="radio" id="commits" name="stat" value="commits" v-model="selectedStat">
+        <label style="margin-left: 5px;" for="commits">Number of Commits</label>
       </div>
       <div>   
-        <input type="radio" id="pullrequests" name="stat" value="pullrequests" checked>
-        <label style="margin-left: 5px;" for="pullrequests">Pull Requests</label>
+        <input type="radio" id="pullrequests" name="stat" value="pullrequests" v-model="selectedStat" checked>
+        <label style="margin-left: 5px;" for="pullrequests">Number of Pull Requests</label>
       </div>
       <button class="button-6" v-if="isZoomedIn" @click="resetChartView" style="position: absolute; bottom: 10px; right: 10px; margin-top: 20px; width: 40px; height: 40px; justify-content: center; vertical-align: center; font-size: larger;"><</button>
     </div>
