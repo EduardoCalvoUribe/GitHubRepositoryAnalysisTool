@@ -268,28 +268,28 @@ export default {
       if (isZoomedIn.value && zoomedYear.value && zoomedMonth.value) {
         handleBarClick({ label: `${zoomedYear.value}-${zoomedMonth.value.toString().padStart(2, '0')}` });
       } else {
-        let data;
         if (selectedStat.value === 'commits') {
-          data = commitsRange.value;
-          chartOptions.value.plugins.title.text = 'Number of Commits';
-          isBar.value = true;
+          updateChart(commitsRange, 'Number of Commits', true);
         } else if (selectedStat.value === 'semantic') {
-          data = semanticRange.value;
-          chartOptions.value.plugins.title.text = 'Average Semantic Score for Commit Messages';
-          isBar.value = false;
+          updateChart(semanticRange, 'Average Semantic Score for Commit Messages', false);
         } else {
-          data = pullRequestsRange.value;
-          chartOptions.value.plugins.title.text = 'Number of Pull Requests';
-          isBar.value = true;
+          updateChart(pullRequestsRange, 'Number of Pull Requests', true);
         }
-        chartData.value = {
-          labels: data.labels,
-          datasets: [{
-            data: data.data,
-            backgroundColor: '#42A5F5'
-          }]
-        };
       }
+    };
+
+    // Helper function for updateChartData
+    const updateChart = (range, title, bar) => {
+      const data = range.value;
+      chartOptions.value.plugins.title.text = title;
+      isBar.value = bar;
+      chartData.value = {
+        labels: data.labels,
+        datasets: [{
+          data: data.data,
+          backgroundColor: '#42A5F5'
+        }]
+      };
     };
 
     // Handles the clicking of the chart bars
