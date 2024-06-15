@@ -29,6 +29,7 @@ export default {
     const isZoomedIn = ref(false);
     const zoomedYear = ref(null);
     const zoomedMonth = ref(null);
+    const isBar = ref(true);
 
     // Fetch data from backend
     const getPackage = async (date) => {
@@ -270,10 +271,16 @@ export default {
         let data;
         if (selectedStat.value === 'commits') {
           data = commitsRange.value;
+          chartOptions.value.plugins.title.text = 'Number of Commits';
+          isBar.value = true;
         } else if (selectedStat.value === 'semantic') {
           data = semanticRange.value;
+          chartOptions.value.plugins.title.text = 'Average Semantic Score for Commit Messages';
+          isBar.value = false;
         } else {
           data = pullRequestsRange.value;
+          chartOptions.value.plugins.title.text = 'Number of Pull Requests';
+          isBar.value = true;
         }
         chartData.value = {
           labels: data.labels,
@@ -410,6 +417,7 @@ export default {
       handleBarClick,
       resetChartView,
       isZoomedIn,
+      isBar,
     }
   },
 
@@ -421,6 +429,7 @@ export default {
         { name: 'Contributors' },
       ],
       selectedRange: null,
+      // isBar: ref(true),
     }
   },
 }
@@ -467,7 +476,7 @@ export default {
       @bar-click="handleBarClick" 
       :chartData="chartData" 
       :chartOptions="chartOptions" 
-      :isBar="true"
+      :isBar="isBar"
     />
 
     <div style="margin-left: 40px; margin-top: 50px;">
