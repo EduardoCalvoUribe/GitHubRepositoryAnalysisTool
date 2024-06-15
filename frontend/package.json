@@ -13,6 +13,7 @@
     "@vuelidate/validators": "^2.0.4",
     "@vuepic/vue-datepicker": "^8.5.0",
     "chart.js": "^4.4.3",
+    "crypto-js": "^4.2.0",
     "primevue": "^3.52.0",
     "vue": "^3.4.21",
     "vue-button-spinner": "^2.2.1",

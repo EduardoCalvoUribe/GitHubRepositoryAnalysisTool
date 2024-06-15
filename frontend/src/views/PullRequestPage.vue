@@ -1,5 +1,5 @@
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import { state } from '../repoPackage.js';
 import { useRouter } from 'vue-router';
@@ -8,8 +8,11 @@ export default {
   setup() {
     const route = useRoute();
     const pullpackage = ref(null);
-
+    const storedData = localStorage.getItem('data');
     onMounted(async () => {
+      if (storedData) {
+        state.githubResponse = JSON.parse(storedData);
+      }
       console.log(state.githubResponse)
       if (state.githubResponse) {
         for (let i = 0; i < state.githubResponse.Repo.pull_requests.length; i++) {
@@ -19,14 +22,13 @@ export default {
           }
         }
       }
+      localStorage.setItem('data', JSON.stringify(state.githubResponse));
     });
-
     return {
       pullpackage,
     };
   },
-
-};
+}
 </script>
 
 <template>

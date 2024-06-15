@@ -480,9 +480,7 @@ def date_range(data):
         return begin_date_obj, end_date_obj
 
     # except:
-    #      return ""
-
-        
+    #      return "" 
 
 def select_commits(pr, pr_data, total_commit_count):
     for commit in pr.commits.all():
