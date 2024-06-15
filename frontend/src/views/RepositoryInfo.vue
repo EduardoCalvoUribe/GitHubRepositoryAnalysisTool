@@ -189,8 +189,13 @@ export default {
       // Extract year and month from the label
       const [year, month] = label['label'].split('-').map(Number);
 
+      // Filter pull requests based on selected users
+      const filteredPullRequests = selectedUsers.value.length > 0
+        ? state.githubResponse.Repo.pull_requests.filter(pr => selectedUsers.value.includes(pr.user))
+        : state.githubResponse.Repo.pull_requests;
+
       // Filter the pull requests for the selected month
-      const selectedMonthData = state.githubResponse.Repo.pull_requests.filter(pr => {
+      const selectedMonthData = filteredPullRequests.filter(pr => {
         const date = new Date(pr.date);
         return date.getFullYear() === year && date.getMonth() + 1 === month;
       });
@@ -336,10 +341,10 @@ export default {
         <input type="radio" id="semantic" name="stat" value="semantic">
         <label style="margin-left: 5px;" for="semantic">Semantic Score</label>
       </div>
-      <div>
+      <!-- <div>
         <input type="radio" id="engagement" name="stat" value="engagement">
         <label style="margin-left: 5px;" for="engagement">Engagement Score</label>
-      </div>
+      </div> -->
       <div>
         <input type="radio" id="commits" name="stat" value="commits">
         <label style="margin-left: 5px;" for="commits">Commits</label>
