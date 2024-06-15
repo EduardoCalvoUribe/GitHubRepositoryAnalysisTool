@@ -1,5 +1,5 @@
 <script>
-import { ref, onMounted, computed, watchEffect } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { fetchData } from '../fetchData.js';
@@ -59,6 +59,17 @@ export default {
         ? pullRequests.filter(pr => users.includes(pr.user))
         : pullRequests;
     };
+
+    // Filter commits by selected users
+    const filterCommits = (pullRequests, users) => {
+      return users.length > 0
+        ? pullRequests.flatMap(pr => {
+            console.log('PR Commits:', pr.commits);
+            return pr.commits || [];
+          }).filter(commit => commit && users.includes(commit.user))
+        : pullRequests.flatMap(pr => pr.commits || []);
+    };
+
 
     // Sort list by date
     const sortListsDate = (list, choice) => {
@@ -193,7 +204,7 @@ export default {
 
       if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
         // Filter commits based on selected users and flatten the commit arrays from pull requests
-        const filteredCommits = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value).flatMap(pr => pr.commits);
+        const filteredCommits = filterCommits(state.githubResponse.Repo.pull_requests, selectedUsers.value);
         filteredCommits.forEach(commit => {
           const date = new Date(commit.date);
           minDate = date < minDate ? date : minDate; // Update minDate if the commit date is earlier
@@ -224,7 +235,7 @@ export default {
 
       if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
         // Filter commits based on selected users and flatten the commit arrays from the pull requests
-        const filteredCommits = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value).flatMap(pr => pr.commits);
+        const filteredCommits = filterCommits(state.githubResponse.Repo.pull_requests, selectedUsers.value);
         filteredCommits.forEach(commit => {
           const date = new Date(commit.date);
           minDate = date < minDate ? date : minDate; // Update minDate if the commit date is earlier
@@ -279,31 +290,26 @@ export default {
       console.log(`Clicked on bar: ${label}`);
       const [year, month] = label.label.split('-').map(Number); // Extract year and month from the label
 
-      const filteredPullRequests = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value);
+      let filteredData;
 
-      let selectedMonthData;
-      if (selectedStat.value === 'commits') {
-        // If "commits" is selected, filter commits for the selected month
-        selectedMonthData = filteredPullRequests.flatMap(pr => pr.commits).filter(commit => {
-          const date = new Date(commit.date);
-          return date.getFullYear() === year && date.getMonth() + 1 === month;
-        });
-      } else if (selectedStat.value === 'semantic') {
-        // If "semantic" is selected, filter commits for the selected month
-        selectedMonthData = filteredPullRequests.flatMap(pr => pr.commits).filter(commit => {
+      if (selectedStat.value === 'commits' || selectedStat.value === 'semantic') {
+        // If "commits" or "semantic" is selected, filter commits for the selected month
+        filteredData = filterCommits(state.githubResponse.Repo.pull_requests, selectedUsers.value).filter(commit => {
+          if (!commit || !commit.date) return false;
           const date = new Date(commit.date);
           return date.getFullYear() === year && date.getMonth() + 1 === month;
         });
       } else {
         // Otherwise, filter pull requests for the selected month
-        selectedMonthData = filteredPullRequests.filter(pr => {
+        filteredData = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value).filter(pr => {
+          if (!pr || !pr.date) return false;
           const date = new Date(pr.date);
           return date.getFullYear() === year && date.getMonth() + 1 === month;
         });
       }
 
       const counts = {};
-      selectedMonthData.forEach(item => {
+      filteredData.forEach(item => {
         const date = new Date(item.date);
         const day = date.getDate(); // Get the day of the month
         if (selectedStat.value === 'semantic') {
@@ -346,6 +352,7 @@ export default {
       zoomedMonth.value = month;
     };
 
+
     // Reset chart view to monthly data
     const resetChartView = () => {
       let data;
@@ -377,7 +384,7 @@ export default {
       }]
     });
 
-    watchEffect(() => {
+    watch([selectedUsers, selectedStat], () => {
       updateChartData();
     });
 
