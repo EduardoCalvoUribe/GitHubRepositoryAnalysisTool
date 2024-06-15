@@ -26,6 +26,8 @@ export default {
       { name: 'Date Newest to Oldest' },
     ]);
     const isZoomedIn = ref(false);
+    const zoomedYear = ref(null);
+    const zoomedMonth = ref(null);
 
     const getPackage = async (date) => {
       const data = {
@@ -116,6 +118,7 @@ export default {
     const handleSelectedUsers = (selected) => {
       selectedUsers.value = selected;
       console.log("Selected users:", selectedUsers.value);
+      updateChartData();
     };
 
     const chartOptions = ref({
@@ -167,9 +170,23 @@ export default {
       return { labels, data };
     });
 
+    const updateChartData = () => {
+      if (isZoomedIn.value && zoomedYear.value && zoomedMonth.value) {
+        handleBarClick({ label: `${zoomedYear.value}-${zoomedMonth.value.toString().padStart(2, '0')}` });
+      } else {
+        chartData.value = {
+          labels: pullRequestsRange.value.labels,
+          datasets: [{
+            data: pullRequestsRange.value.data,
+            backgroundColor: '#42A5F5'
+          }]
+        };
+      }
+    };
+
     const handleBarClick = (label) => {
       console.log(`Clicked on bar: ${label}`);
-      const [year, month] = label['label'].split('-').map(Number);
+      const [year, month] = label.label.split('-').map(Number);
 
       const filteredPullRequests = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value);
 
@@ -202,6 +219,8 @@ export default {
       };
 
       isZoomedIn.value = true;
+      zoomedYear.value = year;
+      zoomedMonth.value = month;
     };
 
     const resetChartView = () => {
@@ -214,6 +233,8 @@ export default {
       };
 
       isZoomedIn.value = false;
+      zoomedYear.value = null;
+      zoomedMonth.value = null;
     };
 
     const chartData = ref({
@@ -225,13 +246,7 @@ export default {
     });
 
     watchEffect(() => {
-      chartData.value = {
-        labels: pullRequestsRange.value.labels,
-        datasets: [{
-          data: pullRequestsRange.value.data,
-          backgroundColor: '#42A5F5'
-        }]
-      };
+      updateChartData();
     });
 
     onMounted(async () => {
