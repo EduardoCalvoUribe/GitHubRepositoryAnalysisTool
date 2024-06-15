@@ -65,14 +65,13 @@
     </div>
   </main>
 
-  <router-link :to="{path: '/' }">
-    <button class="button-6" style="width: 50px; height: 50px; font-size: 90%; margin-top: 20px">Back</button>
-  </router-link>
+  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; font-size: 90%; margin-top: 20px;">Back</button>
 </template>
 
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { state } from '../repoPackage.js';
+import { useRouter } from 'vue-router'; // Import useRouter
 import Dropdown from 'primevue/dropdown';
 
 export default {
@@ -80,9 +79,14 @@ export default {
     Dropdown,
   },
   setup() {
+    const router = useRouter(); // Initialize useRouter
     const selectedUser = ref(null);
     const averageSemanticScore = ref(0);
     const userDetails = ref(null);
+
+    const goBack = () => {
+      router.go(-1); // Go back to the previous page
+    };
 
     const users = computed(() => {
       if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
@@ -168,6 +172,7 @@ export default {
       users,
       userDetails,
       fetchUserData,
+      goBack, // Return goBack method
     };
   },
 };
@@ -187,7 +192,7 @@ export default {
 }
 
 .scrollable-section {
-  max-height: 400px; /* Adjust the height as necessary */
+  max-height: 400px; 
   overflow-y: auto;
 }
 </style>

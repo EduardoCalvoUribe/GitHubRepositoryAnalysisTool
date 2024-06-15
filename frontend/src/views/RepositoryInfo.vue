@@ -3,56 +3,55 @@ import { ref, onMounted, computed, watchEffect } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import { fetchData } from '../fetchData.js'
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router'; // Import useRouter
 import { state } from '../repoPackage.js';
 import fakejson from '../test.json';
 import Chart from '../components/Chart.vue';
 import Dropdown from 'primevue/dropdown';
 import CheckBoxList from '../components/CheckBoxList.vue';
-// import SelectButton from 'primevue/dropdown';
 
 export default {
   components: {
-    VueDatePicker, // datepicker component that lets user pick date range
-    Chart, // chart compoment that allows for displaying of charts
-    Dropdown, // dropdown component which lets user selct option from dropdown menu
-    CheckBoxList // checkbox component that allows selection of users
+    VueDatePicker,
+    Chart,
+    Dropdown,
+    CheckBoxList
   },
 
   setup() {
     const route = useRoute();
-    const selectedUsers = ref([]); // list of users that user selects from checkbox list
-    const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
-    const sorts = ref([ // different possible sort options
-        // { name: 'Semantic Score Ascending' },
-        // { name: 'Semantic Score Descending' },
-        { name: 'Date Oldest to Newest' },
-        { name: 'Date Newest to Oldest' },
-      ]);
+    const router = useRouter(); // Initialize useRouter
+    const selectedUsers = ref([]);
+    const selectedSort = ref({ name: 'Date Newest to Oldest' });
+    const sorts = ref([
+      { name: 'Date Oldest to Newest' },
+      { name: 'Date Newest to Oldest' },
+    ]);
+
+    const goBack = () => {
+      router.go(-1); // Go back to the previous page
+    };
 
     const getPackage = async (date) => {
       const data = {
         'url': decodeURIComponent(route.params.url),
         'date': date
-      }; // define data to be sent in postOptions, repo url in this case
-      // console.log(data, "url?");
-      // console.log(route)
-      
-      const postOptions = { // defines how data is sent to backend, POST request in this case
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
       };
-      // console.log("in")
+
+      const postOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      };
+
       try {      
-          const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
-          // console.log("received")
-          state.githubResponse = response;
-          console.log(state.githubResponse);
+        const response = await fetchData('http://127.0.0.1:8000/package', postOptions);
+        state.githubResponse = response;
+        console.log(state.githubResponse);
       } catch (error) {
-          console.error('Error:', error);
+        console.error('Error:', error);
       }
     }
 
@@ -108,24 +107,22 @@ export default {
       return formatter.format(date);
     });
 
-    
-    const userList = computed(() => { // List of contributors is extracted from the pull requests
+    const userList = computed(() => {
       if (!state.githubResponse || !state.githubResponse.Repo.pull_requests) {
-        return [];  // Return an empty array if there are no pull requests
+        return [];
       }
-      
+
       const users = new Set();
       state.githubResponse.Repo.pull_requests.forEach(pr => {
-        users.add(pr.user); // Add each user
+        users.add(pr.user);
       });
 
-      return Array.from(users);  // Convert Set back to Array
+      return Array.from(users);
     });
 
-    const handleSelectedUsers = (selected) => { // Function to handle selected users from checkbox list
+    const handleSelectedUsers = (selected) => {
       selectedUsers.value = selected;
       console.log("Selected users:", selectedUsers.value);
-      // You can now use selectedUsers to filter or display specific data
     };
 
     const chartOptions = ref({
@@ -165,7 +162,6 @@ export default {
         });
       }
 
-      // Generate all months between minDate and maxDate
       const labels = [];
       const data = [];
       for (let d = new Date(minDate); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
@@ -199,7 +195,6 @@ export default {
       await getPackage('');
     });
 
-    
     return {
       getPackage,
       state,
@@ -214,38 +209,29 @@ export default {
       handleSelectedUsers,
       chartOptions,
       chartData,
+      goBack, // Return goBack method
     }
   },
 
   data() {
-    // console.log(githubResponse.value)
     return {
-      // githubResponse: null,
-      selectedOption: { name: 'Pull Requests'}, // view option user selects from dropdown menu, default set to pull requests
-      options: [ // different possible view options
+      selectedOption: { name: 'Pull Requests'},
+      options: [
         { name: 'Pull Requests' },
         { name: 'Contributors' },
-        // Add more options if needeed
       ],
-      selectedRange: null, // date range that the user selects in date picker
-      items: [ // items are the boxes with content being diplayed on the page§
+      selectedRange: null,
+      items: [
         { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_commits, path: '/prpage' },
         { id: 2, text: 'Number of Commits: ' + fakejson.repository.number_of_commits, path: '/commitpage' },
         { id: 3, text: 'Extra Repository Information' },
-        // Add more items as needed
       ],
-      
     }
   },
 }
 </script>
+
 <template>
-  <!-- <header>
-    <RouterLink to="/repoinfo/${url}">Repository Information</RouterLink>
-    <RouterLink style="margin-left: 2%" to="/prpage">Pull Requests</RouterLink>
-    <RouterLink style="margin-left: 2%" to="/commitpage">Commits</RouterLink>
-    <RouterLink style="margin-left: 2%" to="/commentpage">Comments</RouterLink>
-  </header> -->
   <header>
     <div v-if="state.githubResponse" style="margin-top: 50px">
       <div style="font-size: 240%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
@@ -253,7 +239,7 @@ export default {
       <div style="font-size: 90%; margin-left: 3px; margin-top: 6px;"> Last Updated: {{ formattedDate }} </div>
     </div>  
   </header>
-  <!-- DATE PICKER -->
+
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date range:</label>
@@ -263,34 +249,34 @@ export default {
       </div>
     </div>
   </div>
-  <!-- GRAPH -->
+
   <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 100%;">
-<div style="margin-right: 10px; margin-top: 70px; min-width: 160px;">
-  <div>
-    <input type="radio" id="semantic" name="stat" value="semantic">
-    <label style="margin-left: 5px;" for="semantic">Semantic Score</label>
-  </div>
-  <div>
-    <input type="radio" id="engagement" name="stat" value="engagement">
-    <label style="margin-left: 5px;" for="engagement">Engagement Score</label>
-  </div>
-  <div>
-    <input type="radio" id="commits" name="stat" value="commits">
-    <label style="margin-left: 5px;" for="commits">Commits</label>
-  </div>
-  <div>   
-    <input type="radio" id="pullrequests" name="stat" value="pullrequests" checked>
-    <label style="margin-left: 5px;" for="pullrequests">Pull Requests</label>
-  </div>
-</div>
+    <div style="margin-right: 10px; margin-top: 70px; min-width: 160px;">
+      <div>
+        <input type="radio" id="semantic" name="stat" value="semantic">
+        <label style="margin-left: 5px;" for="semantic">Semantic Score</label>
+      </div>
+      <div>
+        <input type="radio" id="engagement" name="stat" value="engagement">
+        <label style="margin-left: 5px;" for="engagement">Engagement Score</label>
+      </div>
+      <div>
+        <input type="radio" id="commits" name="stat" value="commits">
+        <label style="margin-left: 5px;" for="commits">Commits</label>
+      </div>
+      <div>   
+        <input type="radio" id="pullrequests" name="stat" value="pullrequests" checked>
+        <label style="margin-left: 5px;" for="pullrequests">Pull Requests</label>
+      </div>
+    </div>
 
-<Chart style="flex: 1; max-width: 1000px" :chartData="chartData" :chartOptions="chartOptions" :isBar="true"/>
+    <Chart style="flex: 1; max-width: 1000px" :chartData="chartData" :chartOptions="chartOptions" :isBar="true"/>
 
-<div style="margin-left: 40px; margin-top: 50px;">
-  <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
-</div>
+    <div style="margin-left: 40px; margin-top: 50px;">
+      <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
+    </div>
   </div>
-  <!-- PULL REQUESTS and CONTRIBUTORS -->
+
   <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <div style="margin-bottom: 25px;">
@@ -305,11 +291,11 @@ export default {
           </div>
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
-                <div class="pr-details">
-                  <span>{{ pullrequest.user }}</span>
-                  <span>{{ pullrequest.date }}</span>
-                </div>
+              <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
+              <div class="pr-details">
+                <span>{{ pullrequest.user }}</span>
+                <span>{{ pullrequest.date }}</span>
+              </div>
             </button></router-link>
           </div>
         </div>
@@ -319,19 +305,17 @@ export default {
           <h1 style="justify-content: center; display: inline-block; width: 250px;" for="users">Contributors</h1>
           <div id="users" class="row" v-for="user in userList">
             <router-link :to="{ path: '/userpage' }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
-                <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
+              <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
             </button></router-link>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <!-- BACK BUTTON -->
-  <router-link :to="{path: '/' }">
-        <button class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
-    </router-link>
+
+  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
 </template>
+
 <style scoped>
 .grid-container {
   display: grid;
