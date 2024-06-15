@@ -539,7 +539,7 @@ def select_commit(pr):
 
 #Create a data package that is used by the frontend to show on the frontend
 def homepage_datapackage(request):
-    #try:
+    # try:
         #We import all the repositories from the database
     repos = Repository.objects.all()
         # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
@@ -552,10 +552,10 @@ def homepage_datapackage(request):
         }) for repo in repos).values())
 
         # The Repos is a list that has name & updated_at as values
-        data = {"Repos" : unique_repos}
-        return JsonResponse(data)
-    except Repository.DoesNotExist:
-        return JsonResponse({"error": "Repository not found"}, status=404)
+    data = {"Repos" : unique_repos}
+    return JsonResponse(data)
+    # except Repository.DoesNotExist:
+    #     return JsonResponse({"error": "Repository not found"}, status=404)
     
 
 
