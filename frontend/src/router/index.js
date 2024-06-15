@@ -21,7 +21,7 @@ const router = createRouter({
       component: () => import("../views/UserPage.vue"),
     },
     {
-      path: "/repoinfo/:url",
+      path: "/repoinfo/:url/:date",
       name: "repoinfo",
       component: () => import("../views/RepositoryInfo.vue"),
     },
@@ -44,6 +44,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+  
   const authToken = localStorage.getItem("authToken");
   const isLoggedIn = !!authToken;
 

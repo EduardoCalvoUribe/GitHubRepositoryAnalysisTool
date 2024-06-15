@@ -1,14 +1,19 @@
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import { state } from '../repoPackage.js';
+import { useRouter } from 'vue-router';
 
 export default {
   setup() {
     const route = useRoute();
     const pullpackage = ref(null);
-
+    const storedData = localStorage.getItem('data');
     onMounted(async () => {
+      if (storedData) {
+        state.githubResponse = JSON.parse(storedData);
+      }
+      console.log(state.githubResponse)
       if (state.githubResponse) {
         for (let i = 0; i < state.githubResponse.Repo.pull_requests.length; i++) {
           if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
@@ -17,13 +22,13 @@ export default {
           }
         }
       }
+      localStorage.setItem('data', JSON.stringify(state.githubResponse));
     });
-
     return {
       pullpackage,
     };
   },
-};
+}
 </script>
 
 <template>
@@ -37,58 +42,41 @@ export default {
     </div>
   </header>
 
-  <div v-if="pullpackage" class="grid-container">
-    <div id="app">
-    <p v-if="!pullpackage.number_commits.length">
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-     Number of Commits: N/A
-      </button>
-    </p>
-    <p v-else>
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
-    Number of Commits: {{ pullpackage.number_commits }}
-    </button>
-    </p>
-  </div>
-  <div id="app">
-    <p v-if="!pullpackage.number_comments.length">
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-     Number of Comments: N/A
-      </button>
-    </p>
-    <p v-else>
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
-    Number of Comments: {{ pullpackage.number_comments }}
-    </button>
-    </p>
-  </div>
-  <div id="app">
-    <p v-if="!pullpackage.average_semantic.length">
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">
-     Average Semantic Score: N/A
-      </button>
-    </p>
-    <p v-else>
-      <button class="button-6" style="margin-top: 10px; justify-content: center; height:100px; width:150px">  
-    Number of Comments: {{ pullpackage.average_semantic }}
-    </button>
-    </p>
-  </div>
+  <div v-if="pullpackage" class="grid-container-2">
+    <div class="info-section">
+      <div class="stat-container">
+        Number of Commits: {{ pullpackage.number_commits ? pullpackage.number_commits : 'N/A' }}
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="stat-container">
+        Number of Comments: {{ pullpackage.number_comments ? pullpackage.number_comments : 'N/A' }}
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="stat-container">
+        Average Semantic Score: {{ pullpackage.average_semantic ? pullpackage.average_semantic.toFixed(2) : 'N/A' }}
+      </div>
+    </div>
   </div>
 
-  <div v-if="pullpackage" class="grid-container">
-    <div class="grid-item" v-for="commit in pullpackage.commits" :key="commit.id">
+
+  <div v-if="pullpackage" class="grid-container" style="max-height: 300px; overflow-y: auto;">
+    <div class="grid-item" style="border-radius: 10px;" v-for="commit in pullpackage.commits" :key="commit.id">
       {{ commit.title }}
       <div>Date: {{ commit.date }}</div>
       <div>User: {{ commit.user }}</div>
-      <div>Semantic Score: {{ commit.semantic_score }}</div>
+      <div>Semantic Score: {{ commit.semantic_score.toFixed(2) }}</div>
       <div>Updated At: {{ commit.updated_at }}</div>
     </div>
   </div>
 
-  <router-link :to="{path: '/' }">
-    <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;">Back</button>
-  </router-link>
+  <button class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%;"
+    @click="$router.go(-1)">
+    Back
+  </button>
 </template>
 
 <style scoped>
@@ -100,10 +88,32 @@ export default {
     padding: 10px;
   }
 
+  .grid-container-2 {
+    display: flex;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 10px;
+    padding: 10px;
+  }
+
   .grid-item {
     background-color: #157eff4d;
     padding: 10px;
     border: 1px solid #ccc;
   }
+}
+
+.stat-container {
+  background-color: white;
+  border: 1px solid #157eff4d;
+  border-radius: 5px;
+  width: 100%;
+  height: 50px;
+  width: 300px;
+  margin-top: 20px;
+  justify-content: center;
+  text-align: center;
+  padding: 4%;
 }
 </style>

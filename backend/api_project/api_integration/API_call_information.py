@@ -206,6 +206,7 @@ async def comment_task(comment, data_list):
         "comment_type": comment['comment_type'],
         "commit_id": commit_id
     }
+    
     data_list[3].append(models.Comment(**defaults)) # Append comment to list of comments
     data_list[4].append([models.User(login=comment['user']['login']), "comments", comment_url]) 
     return data_list
@@ -644,3 +645,34 @@ def parse_link_header(link_header):
 
     # Return parsed links dictionary
     return links
+
+def calculate_semantic_score_repo(repo):
+    total_semantic = 0
+    user_comments_urls = repo.comments_list  # user.comments is a list of comment URLs
+    user_commits_urls = repo.commits_list  # user.commits is a list of commit URLs
+
+    # Fetch all comments based on URLs
+    comments = Comment.objects.filter(url__in=user_comments_urls)
+    
+    # await sync_to_async(list)(
+    #     Comment.objects.filter(url__in=user_comments_urls)
+    # )
+    
+    commits = Commit.objects.filter(url__in=user_commits_urls)
+    
+    # Fetch all commits based on URLs
+    # commits = await sync_to_async(list)(
+    #     Commit.objects.filter(url__in=user_commits_urls)
+    # )
+    
+    # Sum the semantic scores from comments
+    for comment in comments:
+        total_semantic += comment.semantic_score
+
+    # Sum the semantic scores from commits
+    for commit in commits:
+        total_semantic += commit.semantic_score
+    
+    total_urls = len(user_comments_urls) + len(user_commits_urls)
+    
+    return total_semantic / total_urls if total_urls > 0 else 0  # Prevent division by zero
