@@ -341,11 +341,10 @@ def repo_frontend_info(request):
             #url = data.get('url')  # Use get() for optional retrieval
 
             url = data['url']
-            print(url)
-            print("url reached")
+            print(data)
             dates = data['date']
             ranged = False
-            if dates != None:
+            if dates != "homepage" and dates != None:
                 print(dates)
                 ranged = True
                 begin_date, end_date = date_range(dates)
