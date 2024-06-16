@@ -227,9 +227,16 @@ export default {
       showDetails.value = !showDetails.value;
     };
 
-    watch(localSelectedUser, () => {
-      emit('update:selectedUser', localSelectedUser.value);
+    const updateUserInURL = (user) => {
+      router.replace({ path: '/userpage', query: { selectedUser: user.value } });
+    };
+
+    watch(localSelectedUser, (newUser) => {
+      emit('update:selectedUser', newUser);
       fetchUserData();
+      if (newUser) {
+        updateUserInURL(newUser);
+      }
     });
 
     onMounted(() => {
@@ -285,8 +292,6 @@ export default {
   },
 };
 </script>
-
-
 
 <style scoped>
 .stat-box {
