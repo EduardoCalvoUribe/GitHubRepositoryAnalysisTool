@@ -330,7 +330,6 @@ def send_post_request_to_repo_frontend_info(request):
 # Function to send a package of all repo information to the frontend
 @csrf_exempt
 def repo_frontend_info(request):
-    print("Point reached")
     if request.method == 'POST':
         # Get the request body as a string
         request_body = request.body.decode('utf-8')
@@ -339,9 +338,9 @@ def repo_frontend_info(request):
             # Option 1: Using a dictionary (recommended)
             data = json.loads(request_body)
             #url = data.get('url')  # Use get() for optional retrieval
-
             url = data['url']
-            print(data)
+            print(url)
+            print("url reached")
             dates = data['date']
             ranged = False
             if dates != "homepage" and dates != None:
@@ -380,6 +379,7 @@ def repo_frontend_info(request):
                         "total_commit_count": 0,
                         "total_comment_count": 0,
                         "average_semantic": 0,
+                        # engagement_score: 0,
                     }
                 }
         

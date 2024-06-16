@@ -86,26 +86,32 @@ async def compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_s
     """
     await asyncio.sleep(0.1)
     try:
+        changed_code_char_count = 0
         # Get files associated with pull request
         #files = await get_pr_files(repo_owner, repo_name, pull_number)
-        files = commitJSON["files"]["patch"]
-        # Get commit object
-        # commit_data = await get_commit(repo_owner, repo_name, commit_sha)
+        # print(commitJSON["files"])
+        # print(type(commitJSON["files"]))
+        if "files" in commitJSON:
+            # print(commitJSON["files"]["patch"])
+            files = commitJSON["files"]["patch"]
+            # Get commit object
+            # commit_data = await get_commit(repo_owner, repo_name, commit_sha)
 
-        # Retrieve commit message
-        commit_message = commitJSON['commit']['message']
-        # Init changed_code_char_count
-        changed_code_char_count = 0
+            # Retrieve commit message
+            commit_message = commitJSON['commit']['message']
+            # Init changed_code_char_count
 
-        # Loop over all files associated with pull request
-        for file in files:
-            patch = file.get("patch", "")
-            if patch:
-                patch_lines = patch.split('\n')
-                for line in patch_lines:
-                    # If line of code starts with + or -, treat as adjusted line of code
-                    if line.startswith('+') or line.startswith('-'):
-                        changed_code_char_count += len(line)
+            # Loop over all files associated with pull request
+            print(files)
+            print(type(files))
+            for file in files:
+                patch = file.get("patch", "")
+                if patch:
+                    patch_lines = patch.split('\n')
+                    for line in patch_lines:
+                        # If line of code starts with + or -, treat as adjusted line of code
+                        if line.startswith('+') or line.startswith('-'):
+                            changed_code_char_count += len(line)
 
         # Compute code/commit message ratio        
         ratio = len(commit_message) / changed_code_char_count if changed_code_char_count != 0 else 0
