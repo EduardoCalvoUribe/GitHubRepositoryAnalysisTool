@@ -584,11 +584,11 @@ export default {
           </div>
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
-              <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
-              <div class="pr-details">
+              <span><h3 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h3></span>
+                <div class="pr-details">
                 <span class="last-accessed">Author: {{ pullrequest.user }}</span>
                 <span class="last-accessed">Semantic score: {{ pullrequest.average_semantic.toFixed(2) }}</span>
-                <span class="last-accessed">Date {{ pullrequest.date }}</span>
+                <span class="last-accessed">Date: {{ pullrequest.date.split('T')[0] }}</span>
               </div>
             </button></router-link>
           </div>
@@ -597,7 +597,7 @@ export default {
       <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse"
         style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <h1 style="justify-content: center; display: inline-block; width: 250px;" for="users">Contributors</h1>
+          <h1 style="justify-content: center; display: inline-block; width: 250px; margin-bottom: 10px;" for="users">Contributors</h1>
           <div id="users" class="row" v-for="user in userList">
             <button style="margin-top: 7px;" class="button-6" @click="goToUserPage(user)">
               <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
@@ -675,5 +675,10 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.last-accessed {
+  min-width: 140px;
+  text-align: left;
 }
 </style>
