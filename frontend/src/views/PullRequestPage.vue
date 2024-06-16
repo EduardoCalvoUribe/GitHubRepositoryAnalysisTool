@@ -37,20 +37,20 @@ export default {
       localStorage.setItem('data', JSON.stringify(state.githubResponse));
     });
 
-    return {
-      pullpackage,
-      goBack, // Return goBack method
-    };
-  },
-
-  computed: {
-    scoreColor() {
+    const scoreColor = computed(() => {
+      const score = pullpackage.value ? pullpackage.value.average_semantic : 0;
       return {
-        border: `5px solid ${getGradientColor(state.githubResponse.Repo.average_semantic, 10)}`,
+        border: `5px solid ${getGradientColor(score, 10)}`,
         padding: '10px',
         paddingTop: '8px',
-      }
-    }
+      };
+    });
+
+    return {
+      pullpackage,
+      goBack,
+      scoreColor,
+    };
   },
 }
 </script>
