@@ -53,4 +53,3 @@ def get_data_from_url(self, url, token):
 def show_database(request):
     database = str(Commit.objects.all())
     return HttpResponse(database)
-

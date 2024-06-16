@@ -1,109 +1,439 @@
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css'
-import { fetchData } from '../fetchData.js'
-import { useRoute } from 'vue-router';
+import '@vuepic/vue-datepicker/dist/main.css';
+import { fetchData } from '../fetchData.js';
+import { useRoute, useRouter } from 'vue-router';
 import { state } from '../repoPackage.js';
-import fakejson from '../test.json';
-import BarChart from '../components/BarChart.vue';
+import Chart from '../components/Chart.vue';
 import Dropdown from 'primevue/dropdown';
-// import SelectButton from 'primevue/dropdown';
+import CheckBoxList from '../components/CheckBoxList.vue';
 
 export default {
   components: {
-    VueDatePicker, // datepicker component that lets user pick date range
-    BarChart, // chart compoment that allows for displaying of charts
-    Dropdown, // dropdown component which lets user selct option from dropdown menu
-    // SelectButton,
+    VueDatePicker,
+    Chart,
+    Dropdown,
+    CheckBoxList,
   },
 
-
-
   setup() {
-    const route = useRoute(); // allows for passage of variables from homepage to current page
-    // const githubResponse = ref(null);
-    //const repoUrl = ({'url': decodeURIComponent(route.params.url)}).url;
-    // console.log(repoUrl, "url?")
-    // const postOptions = { // defines how data is sent to backend, POST request in this case
-    //       method: 'POST',
-    //       headers: {
-    //           'Content-Type': 'application/json',
-    //       },
-    //       body: JSON.stringify(repoUrl),
-    //   };
-    // const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
-    // console.log("received")
-    // githubResponse.value = response;
+    const route = useRoute();
+    const router = useRouter();
+    const selectedUsers = ref([]);
+    const selectedSort = ref({ name: 'Date Newest to Oldest' });
+    const selectedStat = ref('pullrequests');
+    const selectedRange = ref(null);
+    const sorts = ref([
+      { name: 'Date Oldest to Newest' },
+      { name: 'Date Newest to Oldest' },
+    ]);
+    const isZoomedIn = ref(false);
+    const zoomedYear = ref(null);
+    const zoomedMonth = ref(null);
+    const isBar = ref(true);
 
-    const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
-    const sorts = ref([ // different possible sort options
-        // { name: 'Semantic Score Ascending' },
-        // { name: 'Semantic Score Descending' },
-        { name: 'Date Oldest to Newest' },
-        { name: 'Date Newest to Oldest' },
-      ]);
+    const chartModes = {
+      pullrequests: { title: 'Number of Pull Requests', isBar: true },
+      commits: { title: 'Number of Commits', isBar: true },
+      semantic: { title: 'Average Semantic Score for Commit Messages', isBar: false },
+    };
+
+    const goBack = () => {
+      router.go(-1); // Go back to the previous page
+    };
 
     const getPackage = async (date) => {
-      const data = {
-        'url': decodeURIComponent(route.params.url),
-        'date': date
-      }; // define data to be sent in postOptions, repo url in this case
-      // console.log(data, "url?");
-      // console.log(route)
-      
-      const postOptions = { // defines how data is sent to backend, POST request in this case
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
+      const oldurl = route.path;
+      let newUrl = "";
+      console.log(date, oldurl.includes("current"));
+      if (
+        (oldurl.includes("current") && (date == "homepage" || date == null)) ||
+        (!oldurl.includes("current") && date == null)
+      ) {
+        // reset url and date
+        newUrl = oldurl.split("/").slice(0, -1).join("/") + "/current";
+        selectedRange.value = null;
+        console.log("lol");
+      } else if (date == "homepage") {
+        // get date from url
+        const parts = oldurl.split("/");
+        let date = decodeURIComponent(parts[parts.length - 1]);
+        const dates = date.split(" - ");
+        selectedRange.value = [new Date(dates[0]), new Date(dates[1])];
+        console.log([new Date(dates[0]), new Date(dates[1])]);
+        newUrl = oldurl.split("/").slice(0, -1).join("/") + "/" + encodeURIComponent(date);
+        date = dates;
+      } else {
+        // get date from date picker
+        const dates = date;
+        selectedRange.value = date;
+        console.log(selectedRange.value[0], selectedRange.value[1], "dates");
+        const start_date = selectedRange.value[0].toISOString();
+        const end_date = selectedRange.value[1].toISOString();
+        date = [start_date, end_date];
+        newUrl = oldurl.split("/").slice(0, -1).join("/") + "/" + encodeURIComponent(start_date + " - " + end_date);
+      }
+      router.push(newUrl);
+
+      console.log(date, "date");
+      const data_send = {
+        url: decodeURIComponent(route.params.url),
+        date: selectedRange.value,
       };
-      // console.log("in")
-      try {      
-          const response = await fetchData('http://127.0.0.1:8000/package', postOptions); // send repo id to backend function through path 'database'
-          // console.log("received")
-          state.githubResponse = response;
-          console.log(state.githubResponse);
+
+      const postOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data_send),
+      };
+      console.log(data_send, "data_send");
+      try {
+        const response = await fetchData('http://127.0.0.1:8000/package', postOptions);
+        state.githubResponse = response;
+        console.log(state.githubResponse);
       } catch (error) {
-          console.error('Error:', error);
+        console.error('Error:', error);
       }
-    }
+    };
 
+    // Filter pull requests by selected users
+    const filterPullRequests = (pullRequests, users) => {
+      return users.length > 0
+        ? pullRequests.filter(pr => users.includes(pr.user))
+        : pullRequests;
+    };
+
+    // Filter commits by selected users
+    const filterCommits = (pullRequests, users) => {
+      return users.length > 0
+        ? pullRequests.flatMap(pr => {
+          console.log('PR Commits:', pr.commits);
+          return pr.commits || [];
+        }).filter(commit => commit && users.includes(commit.user))
+        : pullRequests.flatMap(pr => pr.commits || []);
+    };
+
+    // Sort list by date
     const sortListsDate = (list, choice) => {
-      if (choice.name == 'Date Oldest to Newest') {
-        const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
-        console.log(list);
-        return sorted_list;
+      if (choice.name === 'Date Oldest to Newest') {
+        return list.sort((a, b) => new Date(a.date) - new Date(b.date));
       } else {
-        const sorted_list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
-        console.log(list);
-        return sorted_list;
+        return list.sort((a, b) => new Date(b.date) - new Date(a.date));
       }
     };
 
+    // Sort list by semantic score
     const sortListsScore = (list, choice) => {
-      if (choice.name == 'Semantic Score Ascending') {
-        const sorted_list = list.sort((a,b) => new Date(a.date) - new Date(b.date));
-        return sorted_list;
+      if (choice.name === 'Semantic Score Ascending') {
+        return list.sort((a, b) => a.pr_title_semantic - b.pr_title_semantic);
       } else {
-        const sorted_list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
-        return sorted_list;
+        return list.sort((a, b) => b.pr_title_semantic - a.pr_title_semantic);
       }
     };
 
+    // Computed property for sorted pull requests
     const sortedPullRequests = computed(() => {
       if (!state.githubResponse) return [];
-      else if (selectedSort.value.name.includes('Date')) {
-        return sortListsDate(state.githubResponse.Repo.pull_requests, selectedSort.value);
+      let filteredList = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value);
+      if (selectedSort.value.name.includes('Date')) {
+        return sortListsDate(filteredList, selectedSort.value);
       } else {
-        return sortListsScore(state.githubResponse.Repo.pull_requests, selectedSort.value);
+        return sortListsScore(filteredList, selectedSort.value);
       }
     });
-    // console.log(githubResponse, "hey")
+
+    // Count of pull requests
+    const pullRequestCount = computed(() => {
+      return sortedPullRequests.value.length;
+    });
+
+    // Format the updated date
+    const formattedDate = computed(() => {
+      if (!state.githubResponse || !state.githubResponse.Repo.updated_at) {
+        return 'Loading...';
+      }
+      const date = new Date(state.githubResponse.Repo.updated_at);
+      const formatter = new Intl.DateTimeFormat('en-GB', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'short'
+      });
+      return formatter.format(date);
+    });
+
+    // List of users
+    const userList = computed(() => {
+      if (!state.githubResponse || !state.githubResponse.Repo.pull_requests) {
+        return [];
+      }
+      const users = new Set();
+      state.githubResponse.Repo.pull_requests.forEach(pr => {
+        users.add(pr.user);
+      });
+      return Array.from(users);
+    });
+
+    // Handle selected users
+    const handleSelectedUsers = (selected) => {
+      selectedUsers.value = selected;
+      console.log("Selected users:", selectedUsers.value);
+      updateChartData();
+    };
+
+    // Chart options
+    const chartOptions = ref({
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        title: {
+          display: true,
+          text: 'Test',
+          font: {
+            size: 20
+          }
+        }
+      }
+    });
+
+    // Computes the pull request count per month for the chart
+    const pullRequestsRange = computed(() => {
+      let minDate = new Date(); // Set to a future date
+      let maxDate = new Date(0); // Set to a past date
+      const counts = {}; // Stores the count of pull requests per month
+
+      if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
+        // Filter pull requests based on selected users
+        const filteredPullRequests = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value);
+        filteredPullRequests.forEach(pr => {
+          const date = new Date(pr.date);
+          minDate = date < minDate ? date : minDate; // Update if PR date is earlier
+          maxDate = date > maxDate ? date : maxDate; // Update if PR date is later
+          const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0'); // (YYYY-MM), per month key
+
+          // Increment the pull request count for the month or initialize to 1 if no data
+          counts[monthKey] = counts[monthKey] ? counts[monthKey] + 1 : 1;
+        });
+      }
+
+      const labels = []; // Month labels
+      const data = []; // Pull request counts
+      for (let d = new Date(minDate); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
+        const key = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
+        labels.push(key); // Add month label to labels array
+        data.push(counts[key] || 0); // Add pull request count or 0 if no data
+      }
+
+      return { labels, data };
+    });
+
+    // Computes the commit count per month for the chart
+    const commitsRange = computed(() => {
+      let minDate = new Date(); // Set to a future date
+      let maxDate = new Date(0); // Set to a past date
+      const counts = {}; // Stores the count of commits per month
+
+      if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
+        // Filter commits based on selected users and flatten the commit arrays from pull requests
+        const filteredCommits = filterCommits(state.githubResponse.Repo.pull_requests, selectedUsers.value);
+        filteredCommits.forEach(commit => {
+          const date = new Date(commit.date);
+          minDate = date < minDate ? date : minDate; // Update minDate if the commit date is earlier
+          maxDate = date > maxDate ? date : maxDate; // Update maxDate if the commit date is later
+          const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0'); // (YYYY-MM), per month key
+
+          // Increment the commit count for the month (or initialize to 1 if no data)
+          counts[monthKey] = counts[monthKey] ? counts[monthKey] + 1 : 1;
+        });
+      }
+
+      const labels = []; // Month labels
+      const data = []; // Commit counts
+      for (let d = new Date(minDate); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
+        const key = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
+        labels.push(key); // Add month label to labels array
+        data.push(counts[key] || 0); // Add commit count or 0 if no data
+      }
+
+      return { labels, data };
+    });
+
+    // Computes the average semantic score per month for the chart
+    const semanticRange = computed(() => {
+      let minDate = new Date(); // Set to a future date
+      let maxDate = new Date(0); // Set to a past date
+      const counts = {}; // Stores the sum and count of semantic scores per month
+
+      if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
+        // Filter commits based on selected users and flatten the commit arrays from the pull requests
+        const filteredCommits = filterCommits(state.githubResponse.Repo.pull_requests, selectedUsers.value);
+        filteredCommits.forEach(commit => {
+          const date = new Date(commit.date);
+          minDate = date < minDate ? date : minDate; // Update minDate if the commit date is earlier
+          maxDate = date > maxDate ? date : maxDate; // Update maxDate if the commit date is later
+          const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0'); // (YYYY-MM), per month key
+
+          // Computes the sum and count of semantic scores for each month
+          if (!counts[monthKey]) {
+            counts[monthKey] = { sum: 0, count: 0 };
+          }
+          counts[monthKey].sum += commit.semantic_score;
+          counts[monthKey].count += 1;
+        });
+      }
+
+      const labels = []; // Month labels
+      const data = []; // Average semantic scores
+      for (let d = new Date(minDate); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
+        const key = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
+        labels.push(key); // Add month label to labels array
+        data.push(counts[key] ? (counts[key].sum / counts[key].count) : 0); // Calculate average score or 0 if no data
+      }
+
+      return { labels, data };
+    });
+
+    // Updates the chart data based on the selected stat and zoom level
+    const updateChartData = () => {
+      if (isZoomedIn.value && zoomedYear.value && zoomedMonth.value) {
+        handleBarClick({ label: `${zoomedYear.value}-${zoomedMonth.value.toString().padStart(2, '0')}` });
+      } else {
+        const mode = chartModes[selectedStat.value];
+        if (selectedStat.value === 'commits') {
+          updateChart(commitsRange, mode.title, mode.isBar);
+        } else if (selectedStat.value === 'semantic') {
+          updateChart(semanticRange, mode.title, mode.isBar);
+        } else {
+          updateChart(pullRequestsRange, mode.title, mode.isBar);
+        }
+      }
+    };
+
+    // Helper function for updateChartData
+    const updateChart = (range, title, bar) => {
+      const data = range.value;
+      chartOptions.value.plugins.title.text = title;
+      isBar.value = bar;
+      chartData.value = {
+        labels: data.labels,
+        datasets: [{
+          data: data.data,
+          backgroundColor: '#42A5F5'
+        }]
+      };
+    };
+
+    // Handles the clicking of the chart bars
+    const handleBarClick = (label) => {
+      console.log(`Clicked on bar: ${label}`);
+      const [year, month] = label.label.split('-').map(Number); // Extract year and month from the label
+
+      let filteredData;
+
+      if (selectedStat.value === 'commits' || selectedStat.value === 'semantic') {
+        // If "commits" or "semantic" is selected, filter commits for the selected month
+        filteredData = filterCommits(state.githubResponse.Repo.pull_requests, selectedUsers.value).filter(commit => {
+          if (!commit || !commit.date) return false;
+          const date = new Date(commit.date);
+          return date.getFullYear() === year && date.getMonth() + 1 === month;
+        });
+      } else {
+        // Otherwise, filter pull requests for the selected month
+        filteredData = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value).filter(pr => {
+          if (!pr || !pr.date) return false;
+          const date = new Date(pr.date);
+          return date.getFullYear() === year && date.getMonth() + 1 === month;
+        });
+      }
+
+      const counts = {};
+      filteredData.forEach(item => {
+        const date = new Date(item.date);
+        const day = date.getDate(); // Get the day of the month
+        if (selectedStat.value === 'semantic') {
+          // If "semantic" is selected, calculate the sum and count of semantic scores
+          if (!counts[day]) {
+            counts[day] = { sum: 0, count: 0 };
+          }
+          counts[day].sum += item.semantic_score;
+          counts[day].count += 1;
+        } else {
+          // Otherwise, increment the count for the day
+          counts[day] = (counts[day] || 0) + 1;
+        }
+      });
+
+      const daysInMonth = new Date(year, month, 0).getDate(); // Get the number of days in the month
+      const labels = [];
+      const data = [];
+      for (let day = 1; day <= daysInMonth; day++) {
+        labels.push(`${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
+        if (selectedStat.value === 'semantic') {
+          // Calculate average semantic score or 0 if no data
+          data.push(counts[day] ? (counts[day].sum / counts[day].count) : 0);
+        } else {
+          // Add count or 0 if no data
+          data.push(counts[day] || 0);
+        }
+      }
+
+      // Determine the title and isBar flag based on the selected stat
+      const mode = chartModes[selectedStat.value];
+
+      // Call updateChart with the processed data
+      updateChart({ value: { labels, data } }, mode.title, mode.isBar);
+
+      isZoomedIn.value = true;
+      zoomedYear.value = year;
+      zoomedMonth.value = month;
+    };
+
+    // Reset chart view to monthly data
+    const resetChartView = () => {
+      const mode = chartModes[selectedStat.value];
+      let data;
+      if (selectedStat.value === 'commits') {
+        data = commitsRange.value;
+      } else if (selectedStat.value === 'semantic') {
+        data = semanticRange.value;
+      } else {
+        data = pullRequestsRange.value;
+      }
+      updateChart({ value: { labels: data.labels, data: data.data } }, mode.title, mode.isBar);
+
+      isZoomedIn.value = false;
+      zoomedYear.value = null;
+      zoomedMonth.value = null;
+    };
+
+    const chartData = ref({
+      labels: pullRequestsRange.value.labels,
+      datasets: [{
+        data: pullRequestsRange.value.data,
+        backgroundColor: '#42A5F5'
+      }]
+    });
+
+    watch([selectedUsers, selectedStat], () => {
+      updateChartData();
+    });
 
     onMounted(async () => {
-      await getPackage('');
+      await getPackage("homepage");
     });
 
     return {
@@ -111,112 +441,170 @@ export default {
       state,
       sortedPullRequests,
       selectedSort,
+      selectedStat,
       sorts,
       route,
+      pullRequestCount,
+      formattedDate,
+      userList,
+      selectedUsers,
+      handleSelectedUsers,
+      chartOptions,
+      chartData,
+      handleBarClick,
+      resetChartView,
+      isZoomedIn,
+      isBar,
+      goBack,
+      selectedRange,
     }
   },
 
   data() {
-    // console.log(githubResponse.value)
     return {
-      // githubResponse: null,
-      selectedOption: { name: 'Pull Requests'}, // view option user selects from dropdown menu, default set to pull requests
-      options: [ // different possible view options
+      selectedOption: { name: 'Pull Requests'},
+      options: [
         { name: 'Pull Requests' },
         { name: 'Contributors' },
-        // Add more options if needeed
       ],
-      selectedRange: null, // date range that the user selects in date picker
-      items: [ // items are the boxes with content being diplayed on the page§
-        { id: 1, text: 'Number of Pull Requests: ' + fakejson.repository.number_of_commits, path: '/prpage' },
-        { id: 2, text: 'Number of Commits: ' + fakejson.repository.number_of_commits, path: '/commitpage' },
-        { id: 3, text: 'Extra Repository Information' },
-        // Add more items as needed
-      ],
-      chartData: { 
-        labels: [ 'January', 'February', 'March', 'April', 'May', 'June', 'July'],
-        datasets: [
-          {
-            data: [0.4, 0.5, 0.5, 0.5, 0.2, 0.22, 0.2],
-            backgroundColor: '#42A5F5'
-          }
-        ]
-      },
-      chartOptions: {
-        responsive: true,
-        maintainAspectRatio: false
+    }
+  },
+
+  computed: {
+    buttonColor() {
+      return {
+        backgroundColor: this.getGradientColor(state.githubResponse.Repo.average_semantic)
       }
     }
   },
+
+  methods: {
+    getGradientColor(score) {
+      const startColor = { r: 255, g: 0, b: 0 }; // Red
+      const endColor = { r: 0, g: 255, b: 0 }; // Green
+
+      const r = Math.round(startColor.r + (endColor.r - startColor.r) * score);
+      const g = Math.round(startColor.g + (endColor.g - startColor.g) * score);
+      const b = Math.round(startColor.b + (endColor.b - startColor.b) * score);
+
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+  }
 }
 </script>
 
 <template>
   <header>
-    <RouterLink to="/repoinfo/${url}">Repository Information</RouterLink>
-    <RouterLink style="margin-left: 2%" to="/prpage">Pull Requests</RouterLink>
-    <RouterLink style="margin-left: 2%" to="/commitpage">Commits</RouterLink>
-    <RouterLink style="margin-left: 2%" to="/commentpage">Comments</RouterLink>
-  </header>
-
-  <header>
-
     <div v-if="state.githubResponse" style="margin-top: 50px">
-      <div style="font-size: 180%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
-      <div style="margin-bottom: 5px"> URL: {{ state.githubResponse.Repo.url }} </div>
-      <div> Last Updated: {{ state.githubResponse.Repo.updated_at }} </div>
+      <div style="font-size: 240%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
+      <a :href="state.githubResponse.Repo.url" target="_blank" style="margin-bottom: 5px"> URL: {{
+        state.githubResponse.Repo.url }} </a>
+      <div style="font-size: 90%; margin-left: 3px; margin-top: 6px;"> Last Updated: {{ formattedDate }} </div>
     </div>
-    
-    
   </header>
 
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date range:</label>
+      <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date
+        range:</label>
       <div id="datePicker" style="display: flex; align-items: flex-start;">
         <VueDatePicker v-model="selectedRange" range style="width: 500px; height: 50px;"></VueDatePicker>
-        <button class="button-6" style="width: 57px; height: 38px; margin-left: 3px; font-size: smaller;" @click="getPackage(selectedRange)">Reload</button>
+        <button class="button-6" style="width: 57px; height: 38px; margin-left: 3px; font-size: smaller;"
+          @click="getPackage(selectedRange)">Reload</button>
       </div>
     </div>
   </div>
 
-  <div class="box-container">
-    <div class="box" v-for="item in items" :key="item.id">
-      <router-link :to="item.path">
-        <button class="button-6" style="width: 150px; height: 100px; font-size: 100%;">{{item.text}}</button>
-      </router-link>
+  <!-- INFO BOXES -->
+  <div v-if="state.githubResponse" class="grid-container-2">
+    <div class="info-section">
+      <div class="stat-container">
+        Number of Commits: {{ state.githubResponse.Repo.total_commit_count ?
+          state.githubResponse.Repo.total_commit_count : 'N/A' }}
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="stat-container">
+        Number of Comments: {{ state.githubResponse.Repo.total_comment_count ?
+          state.githubResponse.Repo.total_comment_count : 'N/A' }}
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div :style="buttonColor" class="stat-container">
+        Average Semantic Score: {{ state.githubResponse.Repo.average_semantic ?
+          state.githubResponse.Repo.average_semantic.toFixed(2) : 'N/A' }}
+      </div>
     </div>
   </div>
 
-  <!-- <div>
-    <pre v-if="githubResponse">{{ githubResponse }}</pre>
-  </div> -->
+  <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 100%;">
+    
+    <div style="margin-right: 10px; margin-top: 70px; min-width: 160px; position: relative">
+      <div>
+        <input type="radio" id="semantic" name="stat" value="semantic" v-model="selectedStat">
+        <label style="margin-left: 5px;" for="semantic">Semantic Score</label>
+      </div>
+      <div>
+        <input type="radio" id="commits" name="stat" value="commits" v-model="selectedStat">
+        <label style="margin-left: 5px;" for="commits">Commits</label>
+      </div>
+      <div>   
+        <input type="radio" id="pullrequests" name="stat" value="pullrequests" v-model="selectedStat" checked>
+        <label style="margin-left: 5px;" for="pullrequests">Pull Requests</label>
+      </div>
+      <button class="button-6" v-if="isZoomedIn" @click="resetChartView" style="position: absolute; bottom: 10px; right: 10px; margin-top: 20px; width: 40px; height: 40px; justify-content: center; vertical-align: center; font-size: larger;"><</button>
+    </div>
+
+    <Chart style="flex: 1; max-width: 1000px" 
+      @bar-click="handleBarClick" 
+      :chartData="chartData" 
+      :chartOptions="chartOptions" 
+      :isBar="isBar"
+    />
+
+    <div style="margin-left: 40px; margin-top: 50px;">
+      <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
+    </div>
+  </div>
 
   <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <div>
-        <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option" class="w-full md:w-14rem" />
-        <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by" class="w-full md:w-14rem" />
+      <div style="margin-bottom: 25px;">
+        <Dropdown v-model="selectedOption" :options="options" optionLabel="name" placeholder="Select an Option"
+          class="w-full md:w-14rem" style="margin-right: 10px;" />
+        <Dropdown v-model="selectedSort" :options="sorts" optionLabel="name" placeholder="Sort by"
+          class="w-full md:w-14rem" />
       </div>
-      <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && state.githubResponse" style=" display: flex; justify-content: center;">
+      <div v-if="selectedOption && selectedOption.name === 'Pull Requests' && state.githubResponse"
+        style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="pullRequests">Pull Requests:</label>
+          <h1 style="justify-content: center; display: inline-block; width: 250px;" for="pullRequests">Pull Requests
+          </h1>
+          <div style="margin-top: 10px; justify-content: center;">
+            Total Pull Requests: {{ pullRequestCount }}
+          </div>
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
+              <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
+              <div class="pr-details">
                 <span class="last-accessed">Author: {{ pullrequest.user }}</span>
+                <span class="last-accessed">Semantic score: {{ pullrequest.average_semantic.toFixed(2) }}</span>
                 <span class="last-accessed">Date {{ pullrequest.date }}</span>
+              </div>
             </button></router-link>
           </div>
         </div>
       </div>
-      <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse" style=" display: flex; justify-content: center;">
+      <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse"
+        style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="users">Contributors:</label>
-          <div id="users" class="row" v-for="pullrequest in state.githubResponse.Repo.pull_requests">
+          <h1 style="justify-content: center; display: inline-block; width: 250px;" for="users">Contributors</h1>
+          <div id="users" class="row" v-for="user in userList"></div>
+          <div id="users" class="row" v-for="user in userList">
             <router-link :to="{ path: '/userpage' }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.user }}</h2></span>
-                <!-- <span class="last-accessed">Semantic score: {{ user }}</span> -->
+                <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
             </button></router-link>
           </div>
         </div>
@@ -224,9 +612,7 @@ export default {
     </div>
   </div>
 
-  <div style="display: flex; justify-content: center; margin-top: 4%; height: 400px;">
-    <BarChart :chartData="chartData" :chartOptions="chartOptions" />
-  </div>
+  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
 </template>
 
 <style scoped>
@@ -234,6 +620,28 @@ export default {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+}
+
+.grid-container-2 {
+  display: flex;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 10px;
+  padding: 10px;
+}
+
+.stat-container {
+  background-color: white;
+  border: 1px solid #157eff4d;
+  border-radius: 5px;
+  width: 100%;
+  height: 50px;
+  width: 300px;
+  margin-top: 20px;
+  justify-content: center;
+  text-align: center;
+  padding: 4%;
 }
 
 .grid-item {
@@ -257,5 +665,19 @@ export default {
   background-color: rgb(255, 255, 255);
   text-align: center;
   border: 1px solid #ffffff;
+}
+
+.pr-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 0.3rem;
+}
+
+.pr-details span {
+  width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

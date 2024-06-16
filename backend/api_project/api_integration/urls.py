@@ -20,15 +20,21 @@ urlpatterns = [
     path('all/', API_call_information.get_github_information, name = 'all'),
     path('database/', views.frontendInfo, name = 'database'),
     path('delete/', views.delete_entry_db, name = 'delete'),
-    path('semantic',general_semantic_score.display_semantic, name = 'semantic'), 
+    # path('semantic',general_semantic_score.display_semantic, name = 'semantic'), 
     path('databaseprint/', functions.show_database, name = 'datbaseshow'),
     path('help/',views.save_comment_view, name = 'help'),
     path('deleteAll', views.delete_all_records, name = 'deleteAll'),
     path('package', views.repo_frontend_info, name = 'frontend_info'),
+    # path('packageRanged', views.repo_frontend_info_dated, name = 'frontend_info_daterange'),
     path('home', views.homepage_datapackage, name = 'homepage_datapackage'),
     path('testCommentJSON/',comment_info.printCommentCountJSON,name = 'testCommentJSON'), #URL for printing combined JSON (comment) package
     path('testCommitJSON/',commit_info.printCommitCountJSON, name = 'testCommitJSON'), #URL for printing JSON commit package
-    path('commentTest', views.comment_test, name = 'commentTest')
+    path('commentTest', views.comment_test, name = 'commentTest'),
+    path('testfro', views.send_post_request_to_repo_frontend_info, name = 'testfro'),
+    path('testCC', views.testAsyncCodeCommit, name = 'testCC'),
     # path('testPR/',views.pr_count_JSON, name = 'testPR') #URL for printing JSON commit package
+    path('login/', views.login_view, name='login'),
+    # Optional logout URL pattern
+    path('logout/', views.logout_view, name='logout'),
 ]
     

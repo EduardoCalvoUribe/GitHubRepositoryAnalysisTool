@@ -24,6 +24,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='pullrequest',
             name='closed_at',
-            field=models.DateField(default=datetime.date.today),
+            field=models.DateField(default=datetime.datetime.now),
         ),
     ]

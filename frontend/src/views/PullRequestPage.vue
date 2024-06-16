@@ -1,142 +1,127 @@
 <script>
-import { ref, onMounted } from 'vue';
-import fakejson from '../test.json';
-import { useRoute } from 'vue-router';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { state } from '../repoPackage.js';
-import CommitPage from './CommitPage.vue';
 
 export default {
   setup() {
     const route = useRoute();
+    const router = useRouter(); // Initialize useRouter
     const pullpackage = ref(null);
+    const goBack = () => {
+      router.go(-1); // Go back to the previous page
+    };
 
+    if (!state.githubResponse) {
+      localStorage.setItem('data', JSON.stringify(state.githubResponse));
+    }
+    const storedData = localStorage.getItem('data');
+    console.log(storedData, "storedData")
     onMounted(async () => {
-      console.log('onMounted');
-      console.log(state.githubResponse);
+      if (storedData) {
+        state.githubResponse = JSON.parse(storedData);
+      }
+      console.log(state.githubResponse.Repo.pull_requests.length, "length")
       if (state.githubResponse) {
-        console.log('in if');
-        for (let i=0; i < state.githubResponse.Repo.pull_requests.length - 1; i++) {
+        for (let i = 0; i < state.githubResponse.Repo.pull_requests.length; i++) {
+          console.log(i, "i")
+          console.log(state.githubResponse.Repo.pull_requests[i].url, decodeURIComponent(route.params.url))
           if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
+            console.log(state.githubResponse.Repo.pull_requests[i])
             pullpackage.value = state.githubResponse.Repo.pull_requests[i];
+            break;
           }
         }
-        console.log(pullpackage.value);
       }
-      if (pullpackage.value) {
-        console.log(pullpackage.value.title)
-      } else {
-        console.log('failure')
-      }
+      localStorage.setItem('data', JSON.stringify(state.githubResponse));
     });
-
     return {
-      state,
       pullpackage,
+      goBack, // Return goBack method
     };
   },
-
-  data() {
-
-  },
-};
+}
 </script>
 
 <template>
   <header>
-    <router-link :to="`/repoinfo/${repositoryId}`">Repository Information</router-link>
-    <router-link style="margin-left: 2%" to="/prpage">Pull Requests</router-link>
-    <router-link style="margin-left: 2%" to="/commitpage">Commits</router-link>
-    <router-link style="margin-left: 2%" to="/commentpage">Comments</router-link>
-  </header>
-
-  <router-view />
-
-  <header>
     <div v-if="pullpackage" style="margin-top: 50px">
-      <div style="font-size: 180%; margin-bottom: 20px;"> {{ pullpackage.title }} </div>
-      <div style="margin-bottom: 5px"> User: {{ pullpackage.user }} </div>
-      <div> Created: {{ pullpackage.date }} </div>
+      <h1>Pull Request</h1>
+      <div style="font-size: 180%; margin-bottom: 20px; margin-top: 40px;">{{ pullpackage.title }}</div>
+      <div>User: {{ pullpackage.user }}</div>
+      <div>Created: {{ pullpackage.date }}</div>
+      <div>Description: {{ pullpackage.body }}</div>
     </div>
   </header>
 
-  <div v-if="pullpackage" style=" display: flex; justify-content: center;">
-    <div style="display: flex; flex-direction: column; align-items: flex-start;">
-      <label style="justify-content: center; display: inline-block; width: 250px; font-size: larger;" for="commits">Commits:</label>
-      <div id="commits" class="row" v-for="commit in pullpackage.commits">
-        <router-link :to="{ path: '/commitpage/' + encodeURIComponent(commit.url) }"><button class="button-6">
-            <span><h2 style="margin-left: 0.3rem;">{{ commit.title }}</h2></span>
-            <span class="last-accessed">Author: {{ commit.user }}</span>
-            <span class="last-accessed">Date: {{ commit.date }}</span>
-        </button></router-link>
+  <div v-if="pullpackage" class="grid-container-2">
+    <div class="info-section">
+      <div class="stat-container">
+        Number of Commits: {{ pullpackage.number_commits ? pullpackage.number_commits : 'N/A' }}
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="stat-container">
+        Number of Comments: {{ pullpackage.number_comments ? pullpackage.number_comments : 'N/A' }}
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="stat-container">
+        Average Semantic Score: {{ pullpackage.average_semantic ? pullpackage.average_semantic.toFixed(2) : 'N/A' }}
       </div>
     </div>
   </div>
-  
-  <div v-if="pullpackage">
-    <body>
-      
 
-      <div class="grid-container">
-        <div id="commits" class="row" v-for="commit in pullpackage.commits">
-          <div class="grid-item">
-          {{ commit.title }}
-          <body>
-            Date: {{ commit.date }}
-            <div>
-              User: {{ commit.user }}
-            </div>
-            <div>
-              Semantic Score {{ commit.semantic_score }}
-            </div>
-            <div>
-              Updated At: {{ commit.updated_at }}
-            </div>
-          </body>
-          </div>
-        </div>
-      </div>
-    </body>
+  <div v-if="pullpackage" class="grid-container" style="max-height: 300px; overflow-y: auto;">
+    <div class="grid-item" style="border-radius: 10px;" v-for="commit in pullpackage.commits" :key="commit.id">
+      {{ commit.title }}
+      <div>Date: {{ commit.date }}</div>
+      <div>User: {{ commit.user }}</div>
+      <div>Semantic Score: {{ commit.semantic_score.toFixed(2) }}</div>
+      <div>Updated At: {{ commit.updated_at }}</div>
     </div>
+  </div>
+
+  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%; margin-top: 20px;">Back</button>
 </template>
 
 <style scoped>
 @media (min-width: 1024px) {
-  .about {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-  }
   .grid-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Adjust the number of columns as needed */
-    gap: 10px; /* Spacing between grid items */
-    height: auto;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .grid-container-2 {
+    display: flex;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 10px;
     padding: 10px;
   }
 
   .grid-item {
-    background-color: #157eff4d; /* Background color for grid items */
-    padding: 10px; /* Padding inside grid items */
-    text-align: left; /* Centering text inside grid items */
-    border: 1px solid #ccc; /* Border for grid items */
-    min-height: 50px;
-    height: auto;
+    background-color: #157eff4d;
+    padding: 10px;
+    border: 1px solid #ccc;
   }
+}
 
-  .box-container {
-    display: flex;
-    gap: 10px; /* Space between boxes */
-    justify-content: center; /* Center the boxes horizontally */
-    padding: 20px 0; /* Optional: padding around the container */
-    text-align: center;
-  }
-
-  .box {
-    flex: 1; /* Each box takes equal space */
-    padding: 20px;
-    background-color: rgb(255, 255, 255);
-    text-align: center;
-    border: 1px solid #ffffff;
-  }
+.stat-container {
+  background-color: white;
+  border: 1px solid #157eff4d;
+  border-radius: 5px;
+  width: 100%;
+  height: 50px;
+  width: 300px;
+  margin-top: 20px;
+  justify-content: center;
+  text-align: center;
+  padding: 4%;
 }
 </style>
