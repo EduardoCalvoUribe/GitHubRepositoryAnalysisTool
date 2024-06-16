@@ -8,6 +8,7 @@ import { state } from '../repoPackage.js';
 import Chart from '../components/Chart.vue';
 import Dropdown from 'primevue/dropdown';
 import CheckBoxList from '../components/CheckBoxList.vue';
+import { getGradientColor } from '../colorUtils.js';
 
 export default {
   components: {
@@ -27,6 +28,8 @@ export default {
     const sorts = ref([
       { name: 'Date Oldest to Newest' },
       { name: 'Date Newest to Oldest' },
+      { name: 'Semantic Score Ascending' },
+      { name: 'Semantic Score Descending' },
     ]);
     const isZoomedIn = ref(false);
     const zoomedYear = ref(null);
@@ -46,7 +49,6 @@ export default {
     const getPackage = async (date) => {
       const oldurl = route.path;
       let newUrl = "";
-      console.log(date, oldurl.includes("current"));
       if (
         (oldurl.includes("current") && (date == "homepage" || date == null)) ||
         (!oldurl.includes("current") && date == null)
@@ -54,21 +56,18 @@ export default {
         // reset url and date
         newUrl = oldurl.split("/").slice(0, -1).join("/") + "/current";
         selectedRange.value = null;
-        console.log("lol");
       } else if (date == "homepage") {
         // get date from url
         const parts = oldurl.split("/");
         let date = decodeURIComponent(parts[parts.length - 1]);
         const dates = date.split(" - ");
         selectedRange.value = [new Date(dates[0]), new Date(dates[1])];
-        console.log([new Date(dates[0]), new Date(dates[1])]);
         newUrl = oldurl.split("/").slice(0, -1).join("/") + "/" + encodeURIComponent(date);
         date = dates;
       } else {
         // get date from date picker
         const dates = date;
         selectedRange.value = date;
-        console.log(selectedRange.value[0], selectedRange.value[1], "dates");
         const start_date = selectedRange.value[0].toISOString();
         const end_date = selectedRange.value[1].toISOString();
         date = [start_date, end_date];
@@ -76,7 +75,6 @@ export default {
       }
       router.push(newUrl);
 
-      console.log(date, "date");
       const data_send = {
         url: decodeURIComponent(route.params.url),
         date: selectedRange.value,
@@ -89,11 +87,9 @@ export default {
         },
         body: JSON.stringify(data_send),
       };
-      console.log(data_send, "data_send");
       try {
         const response = await fetchData('http://127.0.0.1:8000/package', postOptions);
         state.githubResponse = response;
-        console.log(state.githubResponse);
       } catch (error) {
         console.error('Error:', error);
       }
@@ -110,7 +106,6 @@ export default {
     const filterCommits = (pullRequests, users) => {
       return users.length > 0
         ? pullRequests.flatMap(pr => {
-          console.log('PR Commits:', pr.commits);
           return pr.commits || [];
         }).filter(commit => commit && users.includes(commit.user))
         : pullRequests.flatMap(pr => pr.commits || []);
@@ -183,7 +178,6 @@ export default {
     // Handle selected users
     const handleSelectedUsers = (selected) => {
       selectedUsers.value = selected;
-      console.log("Selected users:", selectedUsers.value);
       updateChartData();
     };
 
@@ -339,7 +333,6 @@ export default {
 
     // Handles the clicking of the chart bars
     const handleBarClick = (label) => {
-      console.log(`Clicked on bar: ${label}`);
       const [year, month] = label.label.split('-').map(Number); // Extract year and month from the label
 
       let filteredData;
@@ -428,6 +421,15 @@ export default {
       }]
     });
 
+    const scoreColor = computed(() => {
+      const score = state.githubResponse ? state.githubResponse.Repo.average_semantic : 0;
+      return {
+        border: `5px solid ${getGradientColor(score, 10)}`,
+        padding: '10px',
+        paddingTop: '8px',
+      };
+    });
+
     watch([selectedUsers, selectedStat], () => {
       updateChartData();
     });
@@ -457,12 +459,13 @@ export default {
       isBar,
       goBack,
       selectedRange,
+      scoreColor
     }
   },
 
   data() {
     return {
-      selectedOption: { name: 'Pull Requests'},
+      selectedOption: { name: 'Pull Requests' },
       options: [
         { name: 'Pull Requests' },
         { name: 'Contributors' },
@@ -470,24 +473,9 @@ export default {
     }
   },
 
-  computed: {
-    buttonColor() {
-      return {
-        backgroundColor: this.getGradientColor(state.githubResponse.Repo.average_semantic)
-      }
-    }
-  },
-
   methods: {
-    getGradientColor(score) {
-      const startColor = { r: 255, g: 0, b: 0 }; // Red
-      const endColor = { r: 0, g: 255, b: 0 }; // Green
-
-      const r = Math.round(startColor.r + (endColor.r - startColor.r) * score);
-      const g = Math.round(startColor.g + (endColor.g - startColor.g) * score);
-      const b = Math.round(startColor.b + (endColor.b - startColor.b) * score);
-
-      return `rgb(${r}, ${g}, ${b})`;
+    goToUserPage(user) {
+      this.$router.push({ path: '/userpage', query: { selectedUser: user } });
     }
   }
 }
@@ -532,15 +520,15 @@ export default {
     </div>
 
     <div class="info-section">
-      <div :style="buttonColor" class="stat-container">
+      <div :style="scoreColor" class="stat-container">
         Average Semantic Score: {{ state.githubResponse.Repo.average_semantic ?
-          state.githubResponse.Repo.average_semantic.toFixed(2) : 'N/A' }}
+          state.githubResponse.Repo.average_semantic.toFixed(2) : 'N/A' }}/100
       </div>
     </div>
   </div>
 
   <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 100%;">
-    
+
     <div style="margin-right: 10px; margin-top: 70px; min-width: 160px; position: relative">
       <div>
         <input type="radio" id="semantic" name="stat" value="semantic" v-model="selectedStat">
@@ -550,22 +538,20 @@ export default {
         <input type="radio" id="commits" name="stat" value="commits" v-model="selectedStat">
         <label style="margin-left: 5px;" for="commits">Commits</label>
       </div>
-      <div>   
+      <div>
         <input type="radio" id="pullrequests" name="stat" value="pullrequests" v-model="selectedStat" checked>
         <label style="margin-left: 5px;" for="pullrequests">Pull Requests</label>
       </div>
-      <button class="button-6" v-if="isZoomedIn" @click="resetChartView" style="position: absolute; bottom: 10px; right: 10px; margin-top: 20px; width: 40px; height: 40px; justify-content: center; vertical-align: center; font-size: larger;"><</button>
+      <button class="button-6" v-if="isZoomedIn" @click="resetChartView"
+        style="position: absolute; bottom: 10px; right: 10px; margin-top: 20px; width: 40px; height: 40px; justify-content: center; vertical-align: center; font-size: larger;">
+      <</button>
     </div>
 
-    <Chart style="flex: 1; max-width: 1000px" 
-      @bar-click="handleBarClick" 
-      :chartData="chartData" 
-      :chartOptions="chartOptions" 
-      :isBar="isBar"
-    />
+    <Chart style="flex: 1; max-width: 1000px" @bar-click="handleBarClick" :chartData="chartData"
+      :chartOptions="chartOptions" :isBar="isBar" />
 
     <div style="margin-left: 40px; margin-top: 50px;">
-      <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers"/>
+      <CheckBoxList :usernames="userList" @update:selected="handleSelectedUsers" />
     </div>
   </div>
 
@@ -587,25 +573,29 @@ export default {
           </div>
           <div id="pullRequests" class="row" v-for="pullrequest in sortedPullRequests">
             <router-link :to="{ path: '/prpage/' + encodeURIComponent(pullrequest.url) }"><button class="button-6">
-              <span><h2 style="margin-left: 0.3rem;">{{ pullrequest.title}}</h2></span>
-              <div class="pr-details">
-                <span class="last-accessed">Author: {{ pullrequest.user }}</span>
-                <span class="last-accessed">Semantic score: {{ pullrequest.average_semantic.toFixed(2) }}</span>
-                <span class="last-accessed">Date {{ pullrequest.date }}</span>
-              </div>
-            </button></router-link>
+                <span>
+                  <h3 style="margin-left: 0.3rem;">{{ pullrequest.title }}</h3>
+                </span>
+                <div class="pr-details">
+                  <span class="last-accessed">Author: {{ pullrequest.user }}</span>
+                  <span class="last-accessed">Semantic score: {{ pullrequest.average_semantic.toFixed(2) }}</span>
+                  <span class="last-accessed">Date: {{ pullrequest.date.split('T')[0] }}</span>
+                </div>
+              </button></router-link>
           </div>
         </div>
       </div>
       <div v-else-if="selectedOption && selectedOption.name === 'Contributors' && state.githubResponse"
         style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
-          <h1 style="justify-content: center; display: inline-block; width: 250px;" for="users">Contributors</h1>
-          <div id="users" class="row" v-for="user in userList"></div>
+          <h1 style="justify-content: center; display: inline-block; width: 250px; margin-bottom: 10px;" for="users">
+            Contributors</h1>
           <div id="users" class="row" v-for="user in userList">
-            <router-link :to="{ path: '/userpage' }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
-            </button></router-link>
+            <button style="margin-top: 7px;" class="button-6" @click="goToUserPage(user)">
+              <span>
+                <h2 style="margin-left: 0.3rem;">{{ user }}</h2>
+              </span>
+            </button>
           </div>
         </div>
       </div>
@@ -679,5 +669,10 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.last-accessed {
+  min-width: 140px;
+  text-align: left;
 }
 </style>

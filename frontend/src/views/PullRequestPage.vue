@@ -1,31 +1,29 @@
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { computed } from 'vue';
 import { state } from '../repoPackage.js';
+import { getGradientColor } from '../colorUtils.js';
 
 export default {
   setup() {
     const route = useRoute();
-    const router = useRouter(); // Initialize useRouter
+    const router = useRouter();
     const pullpackage = ref(null);
     const goBack = () => {
       router.go(-1); // Go back to the previous page
     };
 
-    if (!state.githubResponse) {
+    if (state.githubResponse) {
       localStorage.setItem('data', JSON.stringify(state.githubResponse));
     }
     const storedData = localStorage.getItem('data');
-    console.log(storedData, "storedData")
     onMounted(async () => {
       if (storedData) {
         state.githubResponse = JSON.parse(storedData);
       }
-      console.log(state.githubResponse.Repo.pull_requests.length, "length")
       if (state.githubResponse) {
         for (let i = 0; i < state.githubResponse.Repo.pull_requests.length; i++) {
-          console.log(i, "i")
-          console.log(state.githubResponse.Repo.pull_requests[i].url, decodeURIComponent(route.params.url))
           if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
             console.log(state.githubResponse.Repo.pull_requests[i])
             pullpackage.value = state.githubResponse.Repo.pull_requests[i];
@@ -35,9 +33,20 @@ export default {
       }
       localStorage.setItem('data', JSON.stringify(state.githubResponse));
     });
+
+    const scoreColor = computed(() => {
+      const score = pullpackage.value ? pullpackage.value.average_semantic : 0;
+      return {
+        border: `5px solid ${getGradientColor(score, 10)}`,
+        padding: '10px',
+        paddingTop: '8px',
+      };
+    });
+
     return {
       pullpackage,
-      goBack, // Return goBack method
+      goBack,
+      scoreColor,
     };
   },
 }
@@ -68,8 +77,8 @@ export default {
     </div>
 
     <div class="info-section">
-      <div class="stat-container">
-        Average Semantic Score: {{ pullpackage.average_semantic ? pullpackage.average_semantic.toFixed(2) : 'N/A' }}
+      <div :style="scoreColor" class="stat-container">
+        Average Semantic Score: {{ pullpackage.average_semantic ? pullpackage.average_semantic.toFixed(2) : 'N/A' }}/100
       </div>
     </div>
   </div>
@@ -84,7 +93,8 @@ export default {
     </div>
   </div>
 
-  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%; margin-top: 20px;">Back</button>
+  <button @click="goBack" class="button-6"
+    style="width: 50px; height: 50px; justify-content: center; font-size: 90%; margin-top: 20px;">Back</button>
 </template>
 
 <style scoped>

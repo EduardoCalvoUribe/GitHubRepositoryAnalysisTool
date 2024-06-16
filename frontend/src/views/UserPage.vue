@@ -11,18 +11,19 @@
 
   <main>
     <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center;">
-      <Dropdown v-model="selectedUser" :options="users" optionLabel="label" placeholder="Select a user" style="width: 250px; margin-right: 10px;" />
-      <div class="stat-box" style="margin-right: 10px;">
+      <Dropdown v-model="localSelectedUser" :options="users" optionLabel="label" placeholder="Select a user" style="width: 250px; margin-right: 10px;" />
+      <div class="stat-box" :style="scoreColor">
         <strong>Avg. Semantic Score</strong>
-        <div>{{ averageSemanticScore }}</div>
+        <div>{{ roundedAverageSemanticScore }}</div>
       </div>
     </div>
 
-    <div style="margin-top: 10px; display: flex; justify-content: center;">
+    <!-- <div style="margin-top: 10px; display: flex; justify-content: center;">
       <button @click="toggleDetails" class="button-6" style="width: 200px;">Further Analytics</button>
-    </div>
+    </div> -->
 
-    <div v-if="showDetails" class="details-section">
+    <!-- v-if="showDetails" -->
+    <div class="details-section"> 
       <div class="stat-box">
         <strong>Total Pull Requests</strong>
         <div>{{ totalPullRequests }}</div>
@@ -37,19 +38,19 @@
       </div>
       <div class="stat-box">
         <strong>Avg. PR Title Semantic Score</strong>
-        <div>{{ averagePrTitleSemanticScore }}</div>
+        <div>{{ roundedAveragePrTitleSemanticScore }}</div>
       </div>
       <div class="stat-box">
         <strong>Avg. PR Body Semantic Score</strong>
-        <div>{{ averagePrBodySemanticScore }}</div>
+        <div>{{ roundedAveragePrBodySemanticScore }}</div>
       </div>
       <div class="stat-box">
         <strong>Avg. Commit Semantic Score</strong>
-        <div>{{ averageCommitSemanticScore }}</div>
+        <div>{{ roundedAverageCommitSemanticScore }}</div>
       </div>
       <div class="stat-box">
         <strong>Avg. Comment Semantic Score</strong>
-        <div>{{ averageCommentSemanticScore }}</div>
+        <div>{{ roundedAverageCommentSemanticScore }}</div>
       </div>
     </div>
 
@@ -61,9 +62,9 @@
             <div class="stat-container">
               <div><strong>Title:</strong> {{ pr.title }}</div>
               <div><strong>Date:</strong> {{ pr.date }}</div>
-              <div><strong>Semantic Score (Title):</strong> {{ pr.pr_title_semantic }}</div>
-              <div><strong>Semantic Score (Body):</strong> {{ pr.pr_body_semantic }}</div>
-              <div><strong>Average Semantic Score (Commits):</strong> {{ pr.average_semantic }}</div>
+              <div><strong>Semantic Score (Title):</strong> {{ round(pr.pr_title_semantic) }}</div>
+              <div><strong>Semantic Score (Body):</strong> {{ round(pr.pr_body_semantic) }}</div>
+              <div><strong>Average Semantic Score (Commits):</strong> {{ round(pr.average_semantic) }}</div>
             </div>
           </div>
         </div>
@@ -76,7 +77,7 @@
             <div class="stat-container">
               <div><strong>Message:</strong> {{ commit.message }}</div>
               <div><strong>Date:</strong> {{ commit.date }}</div>
-              <div><strong>Semantic Score:</strong> {{ commit.semantic_score }}</div>
+              <div><strong>Semantic Score:</strong> {{ round(commit.semantic_score) }}</div>
             </div>
           </div>
         </div>
@@ -89,7 +90,7 @@
             <div class="stat-container">
               <div><strong>Content:</strong> {{ comment.content }}</div>
               <div><strong>Date:</strong> {{ comment.date }}</div>
-              <div><strong>Semantic Score:</strong> {{ comment.semantic_score }}</div>
+              <div><strong>Semantic Score:</strong> {{ round(comment.semantic_score) }}</div>
             </div>
           </div>
         </div>
@@ -97,22 +98,25 @@
     </div>
   </main>
 
-  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; font-size: 90%; margin-top: 20px;">Back</button>
+  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; font-size: 90%; margin-top: 20px; text-align: center; padding: 0px;">Back</button>
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { state } from '../repoPackage.js';
-import { useRouter } from 'vue-router'; // Import useRouter
+import { useRouter, useRoute } from 'vue-router';
 import Dropdown from 'primevue/dropdown';
+import { getGradientColor } from '../colorUtils.js';
 
 export default {
   components: {
     Dropdown,
   },
-  setup() {
-    const router = useRouter(); // Initialize useRouter
-    const selectedUser = ref(null);
+  setup(props, { emit }) {
+    const router = useRouter(); 
+    const route = useRoute(); 
+    const selectedUserQuery = route.query.selectedUser;
+    const localSelectedUser = ref(selectedUserQuery ? { label: selectedUserQuery, value: selectedUserQuery } : null);
     const averageSemanticScore = ref(0);
     const userDetails = ref(null);
     const totalPullRequests = ref(0);
@@ -122,7 +126,7 @@ export default {
     const averagePrBodySemanticScore = ref(0);
     const averageCommitSemanticScore = ref(0);
     const averageCommentSemanticScore = ref(0);
-    const showDetails = ref(false);
+    // const showDetails = ref(false);
 
     const goBack = () => {
       router.go(-1); // Go back to the previous page
@@ -146,7 +150,7 @@ export default {
     });
 
     const fetchUserData = () => {
-      if (selectedUser.value && state.githubResponse && state.githubResponse.Repo.pull_requests) {
+      if (localSelectedUser.value && state.githubResponse && state.githubResponse.Repo.pull_requests) {
         let totalScore = 0;
         let prTitleScore = 0;
         let prBodyScore = 0;
@@ -161,7 +165,7 @@ export default {
         const comments = [];
 
         state.githubResponse.Repo.pull_requests.forEach(pr => {
-          if (pr.user === selectedUser.value.value) {
+          if (pr.user === localSelectedUser.value.value) {
             totalScore += pr.pr_title_semantic + pr.pr_body_semantic + pr.average_semantic;
             prTitleScore += pr.pr_title_semantic;
             prBodyScore += pr.pr_body_semantic;
@@ -178,7 +182,7 @@ export default {
           }
 
           pr.commits.forEach(commit => {
-            if (commit.user === selectedUser.value.value) {
+            if (commit.user === localSelectedUser.value.value) {
               totalScore += commit.semantic_score;
               commitScore += commit.semantic_score;
               count++;
@@ -193,7 +197,7 @@ export default {
           });
 
           pr.comments.forEach(comment => {
-            if (comment.user === selectedUser.value.value) {
+            if (comment.user === localSelectedUser.value.value) {
               totalScore += comment.semantic_score;
               commentScore += comment.semantic_score;
               count++;
@@ -220,19 +224,42 @@ export default {
       }
     };
 
-    const toggleDetails = () => {
-      showDetails.value = !showDetails.value;
+    // const toggleDetails = () => {
+    //   showDetails.value = !showDetails.value;
+    // };
+
+    const updateUserInURL = (user) => {
+      router.replace({ path: '/userpage', query: { selectedUser: user.value } });
     };
 
+    watch(localSelectedUser, (newUser) => {
+      emit('update:selectedUser', newUser);
+      fetchUserData();
+      if (newUser) {
+        updateUserInURL(newUser);
+      }
+    });
+
     onMounted(() => {
-      if (users.value.length > 0) {
-        selectedUser.value = users.value[0];
+      const storedData = localStorage.getItem('data');
+      if (storedData) {
+        state.githubResponse = JSON.parse(storedData);
+      }
+      if (localSelectedUser.value) {
         fetchUserData();
       }
     });
 
+    const round = (value) => Math.round(value);
+
+    const roundedAverageSemanticScore = computed(() => round(averageSemanticScore.value));
+    const roundedAveragePrTitleSemanticScore = computed(() => round(averagePrTitleSemanticScore.value));
+    const roundedAveragePrBodySemanticScore = computed(() => round(averagePrBodySemanticScore.value));
+    const roundedAverageCommitSemanticScore = computed(() => round(averageCommitSemanticScore.value));
+    const roundedAverageCommentSemanticScore = computed(() => round(averageCommentSemanticScore.value));
+
     return {
-      selectedUser,
+      localSelectedUser,
       averageSemanticScore,
       users,
       userDetails,
@@ -244,10 +271,25 @@ export default {
       averageCommitSemanticScore,
       averageCommentSemanticScore,
       fetchUserData,
-      goBack, // Return goBack method
-      toggleDetails,
-      showDetails,
+      goBack,
+      // toggleDetails,
+      // showDetails,
+      roundedAverageSemanticScore,
+      roundedAveragePrTitleSemanticScore,
+      roundedAveragePrBodySemanticScore,
+      roundedAverageCommitSemanticScore,
+      roundedAverageCommentSemanticScore,
+      round,
     };
+  },
+  computed: {
+    scoreColor() {
+      return {
+        border: `5px solid ${getGradientColor(this.roundedAverageSemanticScore, 10)}`,
+        padding: '10px',
+        paddingTop: '8px',
+      }
+    }
   },
 };
 </script>
@@ -259,7 +301,7 @@ export default {
   padding: 10px;
   margin: 10px;
   display: inline-block;
-  width: 200px;
+  width: 150px;
   text-align: center;
   font-size: 120%;
   background-color: #f9f9f9;

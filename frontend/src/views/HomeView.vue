@@ -4,30 +4,7 @@ import { fetchData } from '../fetchData.js';
 
 export default {
   setup() {
-    const repoInfo = ref(null);
-    // const repoInfo = ref([ // Uses this by default, but is updated with fetched data from backend in onMounted.
-    //     {
-    //         "name": "repo1",
-    //         "last_accessed": "2022-01-01",
-    //         "id": "1"
-    //     },
-    //     {
-    //         "name": "repo2",
-    //         "last_accessed": "2022-01-02",
-    //         "id": "2"
-    //     },
-    //     {
-    //         "name": "repo3",
-    //         "last_accessed": "2022-01-03",
-    //         "id": "3"
-    //     },
-    //     {
-    //         "name": "repo4",
-    //         "last_accessed": "2022-01-04",
-    //         "id": "4"
-    //     },
-    // ]);
-
+    const repoInfo = ref(null); // initializes repoInfo to be filled with data from backend
     const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
     const sorts = [ // different possible sort options
       { name: 'Date Oldest to Newest' },
@@ -85,6 +62,7 @@ export default {
       inputUrl: '', // Added inputUrl to data to bind with v-model
     };
   },
+
   methods: {
     handleClick() {
       this.busy = true
@@ -98,7 +76,6 @@ export default {
     },
 
     async handleGithubURLSubmit(inputUrl) {
-      console.log('entered function');
       this.invalidInput = false;
 
       if (!(await this.checkInput(inputUrl))) {
@@ -116,12 +93,10 @@ export default {
       };
 
       try {
-        console.log('entered try');
         this.busy = true; // Start the spinner
         const response = await fetchData('http://127.0.0.1:8000/all/', postOptions);
         if (response) {
           this.repoInfo = response;
-          console.log('reload');
         }
         this.inputUrl = '';
       } catch (error) {
@@ -145,9 +120,7 @@ export default {
         const response = await fetchData('http://127.0.0.1:8000/delete/', postOptions);
         if (response) {
           this.repoInfo = response;
-          console.log('reload');
         }
-        console.log('delete reload');
       } catch (error) {
         console.error('Error:', error);
       }
@@ -226,11 +199,6 @@ export default {
 <style scoped>
 header {
   line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
 }
 
 .lds-spinner,

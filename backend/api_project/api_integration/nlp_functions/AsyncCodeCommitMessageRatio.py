@@ -3,7 +3,7 @@ This file contains the functions associated with computing the code/commit messa
 """
 
 # Necessary imports for AsyncCodeCommitMessageRatio.py
-import aiohttp
+import aiohttp, asyncio
 from django.conf import settings
 
 async def get_pr_files(repo_owner, repo_name, pull_number):
@@ -60,10 +60,11 @@ async def get_commit(repo_owner, repo_name, commit_sha):
     # Asynchronous API call to commit object endpoint 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
+            
             response.raise_for_status()
             return await response.json()
         
-async def compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_sha):
+async def compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_sha, commitJSON):
     """
     Computes the code/commit ratio metric which is part of the general 
     semantic score. This function is only part of the general semantic score
@@ -83,27 +84,34 @@ async def compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_s
     float: A float representing the code/commit ratio. If no code has been changed,
     the metric value is set to 0. In the case of an error, the metric value is set to -1.
     """
-
+    await asyncio.sleep(0.1)
     try:
-        # Get files associated with pull request
-        files = await get_pr_files(repo_owner, repo_name, pull_number)
-        # Get commit object
-        commit_data = await get_commit(repo_owner, repo_name, commit_sha)
-
-        # Retrieve commit message
-        commit_message = commit_data['commit']['message']
-        # Init changed_code_char_count
         changed_code_char_count = 0
+        # Get files associated with pull request
+        #files = await get_pr_files(repo_owner, repo_name, pull_number)
+        # print(commitJSON["files"])
+        # print(type(commitJSON["files"]))
+        if "files" in commitJSON:
+            # print(commitJSON["files"]["patch"])
+            files = commitJSON["files"]["patch"]
+            # Get commit object
+            # commit_data = await get_commit(repo_owner, repo_name, commit_sha)
 
-        # Loop over all files associated with pull request
-        for file in files:
-            patch = file.get("patch", "")
-            if patch:
-                patch_lines = patch.split('\n')
-                for line in patch_lines:
-                    # If line of code starts with + or -, treat as adjusted line of code
-                    if line.startswith('+') or line.startswith('-'):
-                        changed_code_char_count += len(line)
+            # Retrieve commit message
+            commit_message = commitJSON['commit']['message']
+            # Init changed_code_char_count
+
+            # Loop over all files associated with pull request
+            print(files)
+            print(type(files))
+            for file in files:
+                patch = file.get("patch", "")
+                if patch:
+                    patch_lines = patch.split('\n')
+                    for line in patch_lines:
+                        # If line of code starts with + or -, treat as adjusted line of code
+                        if line.startswith('+') or line.startswith('-'):
+                            changed_code_char_count += len(line)
 
         # Compute code/commit message ratio        
         ratio = len(commit_message) / changed_code_char_count if changed_code_char_count != 0 else 0
