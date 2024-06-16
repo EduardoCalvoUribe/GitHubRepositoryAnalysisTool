@@ -62,10 +62,10 @@ async def calculateWeightedCommitSemanticScore(commitJSON, ld_weight, fre_weight
     commit_SHA = parsed_commit_url[-1]
     
     # Asynchronously compute code/commit message ratio. Await result
-    awaited_bounded_ratio = await AsyncCodeCommitMessageRatio.compute_code_commit_ratio(owner,repo,pr_num,commit_SHA,commitJSON)
-    bounded_ratio = sigmoid(awaited_bounded_ratio)
+#    awaited_bounded_ratio = await AsyncCodeCommitMessageRatio.compute_code_commit_ratio(owner,repo,pr_num,commit_SHA,commitJSON)
+#    bounded_ratio = sigmoid(awaited_bounded_ratio)
     # Multiply metric with its respective weight
-    weighted_bounded_ratio = cmcl_weight * bounded_ratio
+#    weighted_bounded_ratio = cmcl_weight * bounded_ratio
 
     # Get Flesch reading ease value for commit message
     flesch_reading_ease = FleschReadingEase.calculateFleschReadingEase(commit_message)
@@ -80,7 +80,7 @@ async def calculateWeightedCommitSemanticScore(commitJSON, ld_weight, fre_weight
     # Sum up all weights
     total_weight = ld_weight + fre_weight + cmcl_weight
 
-    return (weighted_bounded_ratio+weighted_flesch_reading_ease+weighted_lexical_density)/total_weight if total_weight != 0 else -1
+    return (weighted_flesch_reading_ease+weighted_lexical_density)/total_weight if total_weight != 0 else -1
 
 
 # Function which calculates the weighted semantic score for comments.

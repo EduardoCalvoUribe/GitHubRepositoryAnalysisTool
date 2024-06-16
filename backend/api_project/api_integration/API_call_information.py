@@ -154,12 +154,15 @@ async def commit_task(commit, data_list, pr_num,i):
     print(type(data_list[1][-1]))
     # commit_semantic_score = general_semantic_score.calculateWeightedCommitSemanticScore(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
     commit_semantic_score = await general_semantic_score.calculateWeightedCommitSemanticScore(commit, 0.33, 0.33, 0.34, commit['commit']['url'],pr_num)
+    user_login = ""
+    if commit['author'] != None:
+        user_login = commit['author']['login']
     defaults = {
         "url": commit['commit']['url'],
         "pull_request": data_list[1][i],
         "name": commit['commit']['message'],
         "title": commit['commit']['message'],
-        "user": commit['author']['login'],
+        "user": user_login,#commit['author']['login'],
         "date": datetime.strptime(commit['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d'),
         "semantic_score": commit_semantic_score,
         "updated_at": timezone.now(),
@@ -167,7 +170,7 @@ async def commit_task(commit, data_list, pr_num,i):
 
     data_list[2].append(models.Commit(**defaults))
                     
-    data_list[4].append([models.User(login=commit['author']['login']), "commits", commit['commit']['url']]) 
+    data_list[4].append([models.User(login=user_login), "commits", commit['commit']['url']]) 
     return data_list
  
 
