@@ -14,7 +14,7 @@
       <Dropdown v-model="selectedUser" :options="users" optionLabel="label" placeholder="Select a user" style="width: 250px; margin-right: 10px;" />
       <div class="stat-box" style="margin-right: 10px;">
         <strong>Avg. Semantic Score</strong>
-        <div>{{ averageSemanticScore }}</div>
+        <div>{{ roundedAverageSemanticScore }}</div>
       </div>
     </div>
 
@@ -37,19 +37,19 @@
       </div>
       <div class="stat-box">
         <strong>Avg. PR Title Semantic Score</strong>
-        <div>{{ averagePrTitleSemanticScore }}</div>
+        <div>{{ roundedAveragePrTitleSemanticScore }}</div>
       </div>
       <div class="stat-box">
         <strong>Avg. PR Body Semantic Score</strong>
-        <div>{{ averagePrBodySemanticScore }}</div>
+        <div>{{ roundedAveragePrBodySemanticScore }}</div>
       </div>
       <div class="stat-box">
         <strong>Avg. Commit Semantic Score</strong>
-        <div>{{ averageCommitSemanticScore }}</div>
+        <div>{{ roundedAverageCommitSemanticScore }}</div>
       </div>
       <div class="stat-box">
         <strong>Avg. Comment Semantic Score</strong>
-        <div>{{ averageCommentSemanticScore }}</div>
+        <div>{{ roundedAverageCommentSemanticScore }}</div>
       </div>
     </div>
 
@@ -61,9 +61,9 @@
             <div class="stat-container">
               <div><strong>Title:</strong> {{ pr.title }}</div>
               <div><strong>Date:</strong> {{ pr.date }}</div>
-              <div><strong>Semantic Score (Title):</strong> {{ pr.pr_title_semantic }}</div>
-              <div><strong>Semantic Score (Body):</strong> {{ pr.pr_body_semantic }}</div>
-              <div><strong>Average Semantic Score (Commits):</strong> {{ pr.average_semantic }}</div>
+              <div><strong>Semantic Score (Title):</strong> {{ round(pr.pr_title_semantic) }}</div>
+              <div><strong>Semantic Score (Body):</strong> {{ round(pr.pr_body_semantic) }}</div>
+              <div><strong>Average Semantic Score (Commits):</strong> {{ round(pr.average_semantic) }}</div>
             </div>
           </div>
         </div>
@@ -76,7 +76,7 @@
             <div class="stat-container">
               <div><strong>Message:</strong> {{ commit.message }}</div>
               <div><strong>Date:</strong> {{ commit.date }}</div>
-              <div><strong>Semantic Score:</strong> {{ commit.semantic_score }}</div>
+              <div><strong>Semantic Score:</strong> {{ round(commit.semantic_score) }}</div>
             </div>
           </div>
         </div>
@@ -89,7 +89,7 @@
             <div class="stat-container">
               <div><strong>Content:</strong> {{ comment.content }}</div>
               <div><strong>Date:</strong> {{ comment.date }}</div>
-              <div><strong>Semantic Score:</strong> {{ comment.semantic_score }}</div>
+              <div><strong>Semantic Score:</strong> {{ round(comment.semantic_score) }}</div>
             </div>
           </div>
         </div>
@@ -101,7 +101,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { state } from '../repoPackage.js';
 import { useRouter } from 'vue-router'; // Import useRouter
 import Dropdown from 'primevue/dropdown';
@@ -224,12 +224,24 @@ export default {
       showDetails.value = !showDetails.value;
     };
 
+    watch(selectedUser, () => {
+      fetchUserData();
+    });
+
     onMounted(() => {
       if (users.value.length > 0) {
         selectedUser.value = users.value[0];
         fetchUserData();
       }
     });
+
+    const round = (value) => Math.round(value);
+
+    const roundedAverageSemanticScore = computed(() => round(averageSemanticScore.value));
+    const roundedAveragePrTitleSemanticScore = computed(() => round(averagePrTitleSemanticScore.value));
+    const roundedAveragePrBodySemanticScore = computed(() => round(averagePrBodySemanticScore.value));
+    const roundedAverageCommitSemanticScore = computed(() => round(averageCommitSemanticScore.value));
+    const roundedAverageCommentSemanticScore = computed(() => round(averageCommentSemanticScore.value));
 
     return {
       selectedUser,
@@ -247,6 +259,12 @@ export default {
       goBack, // Return goBack method
       toggleDetails,
       showDetails,
+      roundedAverageSemanticScore,
+      roundedAveragePrTitleSemanticScore,
+      roundedAveragePrBodySemanticScore,
+      roundedAverageCommitSemanticScore,
+      roundedAverageCommentSemanticScore,
+      round,
     };
   },
 };
