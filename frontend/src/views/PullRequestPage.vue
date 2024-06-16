@@ -2,11 +2,12 @@
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { state } from '../repoPackage.js';
+import { getGradientColor } from '../colorUtils.js';
 
 export default {
   setup() {
     const route = useRoute();
-    const router = useRouter(); // Initialize useRouter
+    const router = useRouter();
     const pullpackage = ref(null);
     const goBack = () => {
       router.go(-1); // Go back to the previous page
@@ -43,26 +44,14 @@ export default {
   },
 
   computed: {
-    buttonColor() {
+    scoreColor() {
       return {
-        backgroundColor: this.getGradientColor(state.githubResponse.Repo.average_semantic)
+        border: `5px solid ${getGradientColor(state.githubResponse.Repo.average_semantic, 10)}`,
+        padding: '10px',
+        paddingTop: '8px',
       }
     }
   },
-
-  methods: {
-    getGradientColor(score) {
-      if (state.githubResponse.Repo.average_semantic) { 
-        if (score <= 30) {
-          return `rgb(${204}, ${50}, ${50})`;
-        } else if (30 < score <= 60) {
-          return `rgb(${231}, ${180}, ${22})`;
-        } else { 
-          return `rgb(${45}, ${201}, ${55})`;
-        }
-      } else return `rgb(${255}, ${255}, ${255})`;
-    }
-  }
 }
 </script>
 
@@ -91,7 +80,7 @@ export default {
     </div>
 
     <div class="info-section">
-      <div :style="buttonColor" class="stat-container">
+      <div :style="scoreColor" class="stat-container">
         Average Semantic Score: {{ pullpackage.average_semantic ? pullpackage.average_semantic.toFixed(2) : 'N/A' }}/100
       </div>
     </div>

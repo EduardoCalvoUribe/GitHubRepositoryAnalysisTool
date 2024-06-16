@@ -12,7 +12,7 @@
   <main>
     <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center;">
       <Dropdown v-model="localSelectedUser" :options="users" optionLabel="label" placeholder="Select a user" style="width: 250px; margin-right: 10px;" />
-      <div class="stat-box" style="margin-right: 10px;">
+      <div class="stat-box" :style="scoreColor">
         <strong>Avg. Semantic Score</strong>
         <div>{{ roundedAverageSemanticScore }}</div>
       </div>
@@ -105,6 +105,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { state } from '../repoPackage.js';
 import { useRouter, useRoute } from 'vue-router';
 import Dropdown from 'primevue/dropdown';
+import { getGradientColor } from '../colorUtils.js';
 
 export default {
   components: {
@@ -268,6 +269,15 @@ export default {
       roundedAverageCommentSemanticScore,
       round,
     };
+  },
+  computed: {
+    scoreColor() {
+      return {
+        border: `5px solid ${getGradientColor(this.roundedAverageSemanticScore, 10)}`,
+        padding: '10px',
+        paddingTop: '8px',
+      }
+    }
   },
 };
 </script>

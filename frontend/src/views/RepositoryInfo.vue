@@ -8,6 +8,7 @@ import { state } from '../repoPackage.js';
 import Chart from '../components/Chart.vue';
 import Dropdown from 'primevue/dropdown';
 import CheckBoxList from '../components/CheckBoxList.vue';
+import { getGradientColor } from '../colorUtils.js';
 
 export default {
   components: {
@@ -472,26 +473,16 @@ export default {
   },
 
   computed: {
-    buttonColor() {
+    scoreColor() {
       return {
-        backgroundColor: this.getGradientColor(state.githubResponse.Repo.average_semantic)
+        border: `5px solid ${getGradientColor(state.githubResponse.Repo.average_semantic, 10)}`,
+        padding: '10px',
+        paddingTop: '8px',
       }
     }
   },
 
   methods: {
-    getGradientColor(score) {
-      if (state.githubResponse.Repo.average_semantic) { 
-        if (score <= 30) {
-          return `rgb(${204}, ${50}, ${50})`;
-        } else if (30 < score <= 60) {
-          return `rgb(${231}, ${180}, ${22})`;
-        } else { 
-          return `rgb(${45}, ${201}, ${55})`;
-        }
-      } else return `rgb(${255}, ${255}, ${255})`;
-    },
-
     goToUserPage(user) {
       this.$router.push({ path: '/userpage', query: { selectedUser: user } });
     }
@@ -538,7 +529,7 @@ export default {
     </div>
 
     <div class="info-section">
-      <div :style="buttonColor" class="stat-container">
+      <div :style="scoreColor" class="stat-container">
         Average Semantic Score: {{ state.githubResponse.Repo.average_semantic ?
           state.githubResponse.Repo.average_semantic.toFixed(2) : 'N/A' }}/100
       </div>
