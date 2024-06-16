@@ -23,6 +23,7 @@ export default {
     const selectedUsers = ref([]);
     const selectedSort = ref({ name: 'Date Newest to Oldest' });
     const selectedStat = ref('pullrequests');
+    const selectedRange = ref(null);
     const sorts = ref([
       { name: 'Date Oldest to Newest' },
       { name: 'Date Newest to Oldest' },
@@ -41,30 +42,33 @@ export default {
       const oldurl = route.path;
       let newUrl = ""
       console.log(date, oldurl.includes("current"))
-      if ((oldurl.includes("current") && (date == "" || date == null)) || (!oldurl.includes("current") && date == null)) { // reset url and date
+      if ((oldurl.includes("current") && (date == "homepage" || date == null)) || (!oldurl.includes("current") && date == null)) { // reset url and date
         newUrl = (oldurl.split("/")).slice(0, -1).join("/") + "/current"
         selectedRange.value = null;
-      } else if (date == "") { // get date from url
+        console.log("lol")
+      } else if (date == "homepage") { // get date from url
         const parts = oldurl.split("/");
-        const date = decodeURIComponent(parts[parts.length - 1]);
+        let date = decodeURIComponent(parts[parts.length - 1]);
         const dates = date.split(" - ");
         selectedRange.value = [new Date(dates[0]), new Date(dates[1])];
         console.log([new Date(dates[0]), new Date(dates[1])])
         newUrl = (oldurl.split("/")).slice(0, -1).join("/") + "/" + encodeURIComponent(date);
+        date = dates
       } else { // get date from date picker
         const dates = date
         selectedRange.value = date
         console.log(selectedRange.value[0], selectedRange.value[1], "dates")
         const start_date = selectedRange.value[0].toISOString()
         const end_date = selectedRange.value[1].toISOString()
+        date = [start_date, end_date]
         newUrl = (oldurl.split("/")).slice(0, -1).join("/") + "/" + encodeURIComponent(start_date + " - " + end_date);
       }
       router.push(newUrl);
 
-
-      const data = {
+      console.log(date, "date")
+      const data_send = {
         'url': decodeURIComponent(route.params.url),
-        'date': date
+        'date': selectedRange.value,
       };
       
       const postOptions = {
@@ -72,14 +76,14 @@ export default {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(data_send),
       };
+      console.log(data_send, "data_send")
       try {
         const response = await fetchData('http://127.0.0.1:8000/package', postOptions);
         state.githubResponse = response;
         console.log(state.githubResponse);
       } catch (error) {
-        console.error('Error:', error);
         console.error('Error:', error);
       }
     };
@@ -378,13 +382,22 @@ export default {
         }
       }
 
-      chartData.value = {
-        labels,
-        datasets: [{
-          data,
-          backgroundColor: '#42A5F5'
-        }]
-      };
+      // Determine the title and isBar flag based on the selected stat
+      let title;
+      let isBarChart;
+      if (selectedStat.value === 'commits') {
+        title = 'Number of Commits';
+        isBarChart = true;
+      } else if (selectedStat.value === 'semantic') {
+        title = 'Average Semantic Score for Commit Messages';
+        isBarChart = false;
+      } else {
+        title = 'Number of Pull Requests';
+        isBarChart = true;
+      }
+
+      // Call updateChart with the processed data
+      updateChart({ value: { labels, data } }, title, isBarChart);
 
       isZoomedIn.value = true;
       zoomedYear.value = year;
@@ -428,7 +441,7 @@ export default {
     });
 
     onMounted(async () => {
-      await getPackage("");
+      await getPackage("homepage");
     });
 
 
@@ -452,6 +465,7 @@ export default {
       isZoomedIn,
       isBar,
       goBack,
+      selectedRange,
     }
   },
 
@@ -462,7 +476,7 @@ export default {
         { name: 'Pull Requests' },
         { name: 'Contributors' },
       ],
-      selectedRange: null,
+      // selectedRange: null,
       // isBar: ref(true),
     }
   },
