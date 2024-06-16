@@ -62,6 +62,7 @@ router.beforeEach((to, from, next) => {
     // Token expired, handle expiration:
     localStorage.removeItem("authToken");
     localStorage.removeItem("expirationTime");
+    localStorage.removeItem("data");
     next("/login"); // Or redirect to a refresh token endpoint based on your logic
   }
 });
@@ -75,9 +76,8 @@ const checkExpiration = () => {
   const expirationTime = localStorage.getItem("expirationTime");
   if (expirationTime < Date.now()) {
     localStorage.removeItem("authToken");
-    if (!localStorage.getItem("data")) {
-      localStorage.removeItem("data"); // make sure all data is removed
-    }
+    localStorage.getItem("data");
+    localStorage.removeItem("data"); // make sure all data is removed
     window.location.href = "http://localhost:5173/login";
   }
 };

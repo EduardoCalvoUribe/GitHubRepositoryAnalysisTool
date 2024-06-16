@@ -11,7 +11,8 @@
 
   <main>
     <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center;">
-      <Dropdown v-model="localSelectedUser" :options="users" optionLabel="label" placeholder="Select a user" style="width: 250px; margin-right: 10px;" />
+      <Dropdown v-model="localSelectedUser" :options="users" optionLabel="label" placeholder="Select a user"
+        style="width: 250px; margin-right: 10px;" />
       <div class="stat-box" :style="scoreColor">
         <strong>Avg. Semantic Score</strong>
         <div>{{ roundedAverageSemanticScore }}</div>
@@ -23,7 +24,7 @@
     </div> -->
 
     <!-- v-if="showDetails" -->
-    <div class="details-section"> 
+    <div class="details-section">
       <div class="stat-box">
         <strong>Total Pull Requests</strong>
         <div>{{ totalPullRequests }}</div>
@@ -75,7 +76,7 @@
         <div class="scrollable-section">
           <div v-for="commit in userDetails.commits" :key="commit.id" class="info-section">
             <div class="stat-container">
-              <div><strong>Message:</strong> {{ commit.message }}</div>
+              <div><strong>Title:</strong> {{ commit.title }}</div>
               <div><strong>Date:</strong> {{ commit.date }}</div>
               <div><strong>Semantic Score:</strong> {{ round(commit.semantic_score) }}</div>
             </div>
@@ -88,7 +89,8 @@
         <div class="scrollable-section">
           <div v-for="comment in userDetails.comments" :key="comment.id" class="info-section">
             <div class="stat-container">
-              <div><strong>Content:</strong> {{ comment.content }}</div>
+
+              <div><strong>Body:</strong> {{ comment.body }}</div>
               <div><strong>Date:</strong> {{ comment.date }}</div>
               <div><strong>Semantic Score:</strong> {{ round(comment.semantic_score) }}</div>
             </div>
@@ -98,7 +100,8 @@
     </div>
   </main>
 
-  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; font-size: 90%; margin-top: 20px; text-align: center; padding: 0px;">Back</button>
+  <button @click="goBack" class="button-6"
+    style="width: 50px; height: 50px; font-size: 90%; margin-top: 20px; text-align: center; padding: 0px;">Back</button>
 </template>
 
 <script>
@@ -113,8 +116,8 @@ export default {
     Dropdown,
   },
   setup(props, { emit }) {
-    const router = useRouter(); 
-    const route = useRoute(); 
+    const router = useRouter();
+    const route = useRoute();
     const selectedUserQuery = route.query.selectedUser;
     const localSelectedUser = ref(selectedUserQuery ? { label: selectedUserQuery, value: selectedUserQuery } : null);
     const averageSemanticScore = ref(0);
@@ -187,9 +190,10 @@ export default {
               commitScore += commit.semantic_score;
               count++;
               commitCount++;
+              console.log(commit.name, "name");
               commits.push({
                 id: commit.id,
-                message: commit.message,
+                title: commit.title,
                 date: commit.date,
                 semantic_score: commit.semantic_score,
               });
@@ -204,7 +208,7 @@ export default {
               commentCount++;
               comments.push({
                 id: comment.id,
-                content: comment.content,
+                body: comment.body,
                 date: comment.date,
                 semantic_score: comment.semantic_score,
               });
@@ -248,6 +252,10 @@ export default {
       if (localSelectedUser.value) {
         fetchUserData();
       }
+      if (state.githubResponse) {
+        localStorage.setItem('data', JSON.stringify(state.githubResponse));
+      }
+
     });
 
     const round = (value) => Math.round(value);
