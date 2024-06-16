@@ -60,10 +60,11 @@ async def get_commit(repo_owner, repo_name, commit_sha):
     # Asynchronous API call to commit object endpoint 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
+            
             response.raise_for_status()
             return await response.json()
         
-async def compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_sha):
+async def compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_sha, commitJSON):
     """
     Computes the code/commit ratio metric which is part of the general 
     semantic score. This function is only part of the general semantic score
@@ -87,11 +88,12 @@ async def compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_s
     try:
         # Get files associated with pull request
         files = await get_pr_files(repo_owner, repo_name, pull_number)
+        files = commitJSON["files"]["patch"]
         # Get commit object
-        commit_data = await get_commit(repo_owner, repo_name, commit_sha)
+        # commit_data = await get_commit(repo_owner, repo_name, commit_sha)
 
         # Retrieve commit message
-        commit_message = commit_data['commit']['message']
+        commit_message = commitJSON['commit']['message']
         # Init changed_code_char_count
         changed_code_char_count = 0
 
