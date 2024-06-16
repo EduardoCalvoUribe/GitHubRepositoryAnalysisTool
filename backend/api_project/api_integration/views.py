@@ -1,9 +1,9 @@
-from django.http import HttpResponse, JsonResponse, HttpRequest
+from django.http import JsonResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import redirect
 from django.contrib.auth import logout, authenticate
 from django.conf import settings
-import requests, json, re, aiohttp, asyncio
+import requests, json, re
 from .models import Repository, PullRequest, Commit, User, Comment
 from . import functions, API_call_information, general_semantic_score
 from rest_framework.authtoken.models import Token
@@ -14,7 +14,6 @@ from .nlp_functions.AsyncCodeCommitMessageRatio import compute_code_commit_ratio
 
 def github_user_info(request):
     json_response = functions.get_api_reponse('https://api.github.com/user').json()
-    # User.save_user_to_db(json_response)
     return JsonResponse(json_response)
    
 @csrf_exempt 
@@ -35,16 +34,15 @@ def process_vue_POST_request(request):
 def delete_entry_db(request):
     try:
         print("Delete entry")
-        # extract id from POST request
+        # Extract id from POST request
         id = process_vue_POST_request(request)
-        # delete repodata corresponding to id from database
+        # Delete repodata corresponding to id from database
         repository = Repository.objects.get(id=id)
         delete_repository_references(request, repository)
         repository.delete()
         return homepage_datapackage(request)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
 
 def delete_repository_references(request, repository):
     try:
@@ -178,22 +176,19 @@ def selected_data(pr,data, total_comment_count, total_commit_count, begin_date, 
     data["Repo"]["average_semantic"] = calculate_average_semantic_repo(data["Repo"])
     return data, total_comment_count, total_commit_count
 
-
 def date_range(data):
-    # try:
-        begin_date_str = data[0]
-        end_date_str = data[1]
-        date_format = "%Y-%m-%dT%H:%M:%S.%fZ" # Assuming format with optional space
+    begin_date_str = data[0]
+    end_date_str = data[1]
+    date_format = "%Y-%m-%dT%H:%M:%S.%fZ" # Assuming format with optional space
 
-        # Parse the datetime string
-        begin_date_obj = datetime.strptime(begin_date_str, date_format)
-        begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
+    # Parse the datetime string
+    begin_date_obj = datetime.strptime(begin_date_str, date_format)
+    begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
 
-        end_date_obj = datetime.strptime(end_date_str, date_format)
-        end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
-        return begin_date_obj, end_date_obj
+    end_date_obj = datetime.strptime(end_date_str, date_format)
+    end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
+    return begin_date_obj, end_date_obj
         
-
 def select_commits(pr, pr_data, total_commit_count, begin_date, end_date, ranged):
     commit_ids = [comment["commit_id"] for comment in pr_data["comments"]]
     for commit in pr.commits.all():
@@ -291,8 +286,6 @@ def calculate_average_semantic_repo(repo_data):
     # Divison by 0 handled
     return total_semantic / len(repo_data["pull_requests"]) if len(repo_data["pull_requests"]) > 0 else 0  # Prevent division by zero
         
-    
-
 @csrf_exempt
 def login_view(request):
     print("received login request")
@@ -313,14 +306,6 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('/login/')  # Redirect to login page after logout
-def testAsyncCodeCommit(request):
-    repo_owner = "IntersectMBO"
-    repo_name = "plutus"
-    pull_number = 4733  # Replace with actual pull request number
-    commit_sha = "62ca6b263be829817b841f26c6ed25e323720b04"  # Replace with actual commit SHA
-
-    ratio = asyncio.run(compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_sha))
-    return JsonResponse(str(ratio), safe=False)
 
 # Helper function which calculates the semantic score for the PR title and body
 # It simply encapsulates the same function which is used for the comment semantic score.
