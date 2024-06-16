@@ -632,6 +632,37 @@ def parse_link_header(link_header):
     # Return parsed links dictionary
     return links
 
+def calculate_semantic_score_user(user):
+    """
+    Calculate the average semantic score for a given repository.
+
+    Args:
+        user: A user object
+
+    Returns:
+        float: The average semantic score of the user. If there are no comments or commits,
+               the function returns 0 to avoid division by zero.
+    """
+    total_semantic = 0
+    user_comments_urls = user.comments  # user.comments is a list of comment URLs
+    user_commits_urls = user.commits  # user.commits is a list of commit URLs
+
+    # Fetch all comments based on URLs
+    comments = Comment.objects.filter(url__in=user_comments_urls)
+    commits = Commit.objects.filter(url__in=user_commits_urls)
+    
+    # Sum the semantic scores from comments
+    for comment in comments:
+        total_semantic += comment.semantic_score
+
+    # Sum the semantic scores from commits
+    for commit in commits:
+        total_semantic += commit.semantic_score
+    
+    total_urls = len(user_comments_urls) + len(user_commits_urls)
+    
+    return total_semantic / total_urls if total_urls > 0 else 0  # Prevent division by zero
+
 def calculate_semantic_score_repo(repo):
     """
     Calculate the average semantic score for a given repository.
