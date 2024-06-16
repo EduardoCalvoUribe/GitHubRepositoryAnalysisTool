@@ -1,8 +1,8 @@
 <script>
 import { ref, onMounted, computed, watch } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css'
-import { fetchData } from '../fetchData.js'
+import '@vuepic/vue-datepicker/dist/main.css';
+import { fetchData } from '../fetchData.js';
 import { useRoute, useRouter } from 'vue-router';
 import { state } from '../repoPackage.js';
 import Chart from '../components/Chart.vue';
@@ -33,44 +33,55 @@ export default {
     const zoomedMonth = ref(null);
     const isBar = ref(true);
 
+    const chartModes = {
+      pullrequests: { title: 'Number of Pull Requests', isBar: true },
+      commits: { title: 'Number of Commits', isBar: true },
+      semantic: { title: 'Average Semantic Score for Commit Messages', isBar: false },
+    };
+
     const goBack = () => {
       router.go(-1); // Go back to the previous page
     };
 
-
     const getPackage = async (date) => {
       const oldurl = route.path;
-      let newUrl = ""
-      console.log(date, oldurl.includes("current"))
-      if ((oldurl.includes("current") && (date == "homepage" || date == null)) || (!oldurl.includes("current") && date == null)) { // reset url and date
-        newUrl = (oldurl.split("/")).slice(0, -1).join("/") + "/current"
+      let newUrl = "";
+      console.log(date, oldurl.includes("current"));
+      if (
+        (oldurl.includes("current") && (date == "homepage" || date == null)) ||
+        (!oldurl.includes("current") && date == null)
+      ) {
+        // reset url and date
+        newUrl = oldurl.split("/").slice(0, -1).join("/") + "/current";
         selectedRange.value = null;
-        console.log("lol")
-      } else if (date == "homepage") { // get date from url
+        console.log("lol");
+      } else if (date == "homepage") {
+        // get date from url
         const parts = oldurl.split("/");
         let date = decodeURIComponent(parts[parts.length - 1]);
         const dates = date.split(" - ");
         selectedRange.value = [new Date(dates[0]), new Date(dates[1])];
-        console.log([new Date(dates[0]), new Date(dates[1])])
-        newUrl = (oldurl.split("/")).slice(0, -1).join("/") + "/" + encodeURIComponent(date);
-        date = dates
-      } else { // get date from date picker
-        const dates = date
-        selectedRange.value = date
-        console.log(selectedRange.value[0], selectedRange.value[1], "dates")
-        const start_date = selectedRange.value[0].toISOString()
-        const end_date = selectedRange.value[1].toISOString()
-        date = [start_date, end_date]
-        newUrl = (oldurl.split("/")).slice(0, -1).join("/") + "/" + encodeURIComponent(start_date + " - " + end_date);
+        console.log([new Date(dates[0]), new Date(dates[1])]);
+        newUrl = oldurl.split("/").slice(0, -1).join("/") + "/" + encodeURIComponent(date);
+        date = dates;
+      } else {
+        // get date from date picker
+        const dates = date;
+        selectedRange.value = date;
+        console.log(selectedRange.value[0], selectedRange.value[1], "dates");
+        const start_date = selectedRange.value[0].toISOString();
+        const end_date = selectedRange.value[1].toISOString();
+        date = [start_date, end_date];
+        newUrl = oldurl.split("/").slice(0, -1).join("/") + "/" + encodeURIComponent(start_date + " - " + end_date);
       }
       router.push(newUrl);
 
-      console.log(date, "date")
+      console.log(date, "date");
       const data_send = {
-        'url': decodeURIComponent(route.params.url),
-        'date': selectedRange.value,
+        url: decodeURIComponent(route.params.url),
+        date: selectedRange.value,
       };
-      
+
       const postOptions = {
         method: 'POST',
         headers: {
@@ -78,7 +89,7 @@ export default {
         },
         body: JSON.stringify(data_send),
       };
-      console.log(data_send, "data_send")
+      console.log(data_send, "data_send");
       try {
         const response = await fetchData('http://127.0.0.1:8000/package', postOptions);
         state.githubResponse = response;
@@ -99,12 +110,11 @@ export default {
     const filterCommits = (pullRequests, users) => {
       return users.length > 0
         ? pullRequests.flatMap(pr => {
-            console.log('PR Commits:', pr.commits);
-            return pr.commits || [];
-          }).filter(commit => commit && users.includes(commit.user))
+          console.log('PR Commits:', pr.commits);
+          return pr.commits || [];
+        }).filter(commit => commit && users.includes(commit.user))
         : pullRequests.flatMap(pr => pr.commits || []);
     };
-
 
     // Sort list by date
     const sortListsDate = (list, choice) => {
@@ -162,11 +172,9 @@ export default {
     const userList = computed(() => {
       if (!state.githubResponse || !state.githubResponse.Repo.pull_requests) {
         return [];
-        return [];
       }
       const users = new Set();
       state.githubResponse.Repo.pull_requests.forEach(pr => {
-        users.add(pr.user);
         users.add(pr.user);
       });
       return Array.from(users);
@@ -216,7 +224,7 @@ export default {
           minDate = date < minDate ? date : minDate; // Update if PR date is earlier
           maxDate = date > maxDate ? date : maxDate; // Update if PR date is later
           const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0'); // (YYYY-MM), per month key
-          
+
           // Increment the pull request count for the month or initialize to 1 if no data
           counts[monthKey] = counts[monthKey] ? counts[monthKey] + 1 : 1;
         });
@@ -247,9 +255,9 @@ export default {
           minDate = date < minDate ? date : minDate; // Update minDate if the commit date is earlier
           maxDate = date > maxDate ? date : maxDate; // Update maxDate if the commit date is later
           const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0'); // (YYYY-MM), per month key
-          
+
           // Increment the commit count for the month (or initialize to 1 if no data)
-          counts[monthKey] = counts[monthKey] ? counts[monthKey] + 1 : 1; 
+          counts[monthKey] = counts[monthKey] ? counts[monthKey] + 1 : 1;
         });
       }
 
@@ -278,7 +286,7 @@ export default {
           minDate = date < minDate ? date : minDate; // Update minDate if the commit date is earlier
           maxDate = date > maxDate ? date : maxDate; // Update maxDate if the commit date is later
           const monthKey = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0'); // (YYYY-MM), per month key
-          
+
           // Computes the sum and count of semantic scores for each month
           if (!counts[monthKey]) {
             counts[monthKey] = { sum: 0, count: 0 };
@@ -304,12 +312,13 @@ export default {
       if (isZoomedIn.value && zoomedYear.value && zoomedMonth.value) {
         handleBarClick({ label: `${zoomedYear.value}-${zoomedMonth.value.toString().padStart(2, '0')}` });
       } else {
+        const mode = chartModes[selectedStat.value];
         if (selectedStat.value === 'commits') {
-          updateChart(commitsRange, 'Number of Commits', true);
+          updateChart(commitsRange, mode.title, mode.isBar);
         } else if (selectedStat.value === 'semantic') {
-          updateChart(semanticRange, 'Average Semantic Score for Commit Messages', false);
+          updateChart(semanticRange, mode.title, mode.isBar);
         } else {
-          updateChart(pullRequestsRange, 'Number of Pull Requests', true);
+          updateChart(pullRequestsRange, mode.title, mode.isBar);
         }
       }
     };
@@ -383,30 +392,19 @@ export default {
       }
 
       // Determine the title and isBar flag based on the selected stat
-      let title;
-      let isBarChart;
-      if (selectedStat.value === 'commits') {
-        title = 'Number of Commits';
-        isBarChart = true;
-      } else if (selectedStat.value === 'semantic') {
-        title = 'Average Semantic Score for Commit Messages';
-        isBarChart = false;
-      } else {
-        title = 'Number of Pull Requests';
-        isBarChart = true;
-      }
+      const mode = chartModes[selectedStat.value];
 
       // Call updateChart with the processed data
-      updateChart({ value: { labels, data } }, title, isBarChart);
+      updateChart({ value: { labels, data } }, mode.title, mode.isBar);
 
       isZoomedIn.value = true;
       zoomedYear.value = year;
       zoomedMonth.value = month;
     };
 
-
     // Reset chart view to monthly data
     const resetChartView = () => {
+      const mode = chartModes[selectedStat.value];
       let data;
       if (selectedStat.value === 'commits') {
         data = commitsRange.value;
@@ -415,13 +413,7 @@ export default {
       } else {
         data = pullRequestsRange.value;
       }
-      chartData.value = {
-        labels: data.labels,
-        datasets: [{
-          data: data.data,
-          backgroundColor: '#42A5F5'
-        }]
-      };
+      updateChart({ value: { labels: data.labels, data: data.data } }, mode.title, mode.isBar);
 
       isZoomedIn.value = false;
       zoomedYear.value = null;
@@ -443,7 +435,6 @@ export default {
     onMounted(async () => {
       await getPackage("homepage");
     });
-
 
     return {
       getPackage,
@@ -476,8 +467,6 @@ export default {
         { name: 'Pull Requests' },
         { name: 'Contributors' },
       ],
-      // selectedRange: null,
-      // isBar: ref(true),
     }
   },
 
