@@ -8,7 +8,7 @@ export default {
   setup() {
     const route = useRoute();
     const pullpackage = ref(null);
-    if (!state.githubResponse) {
+    if (state.githubResponse) {
       localStorage.setItem('data', JSON.stringify(state.githubResponse));
     }
     const storedData = localStorage.getItem('data');

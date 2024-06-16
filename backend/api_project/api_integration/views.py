@@ -314,7 +314,7 @@ def send_post_request_to_repo_frontend_info(request):
         # Create a mock request object
         mock_request = HttpRequest()
         mock_request.method = 'POST'
-        mock_request._body = json.dumps(payload).encode('utf-8')
+        #mock_request._body = json.dumps(payload).encode('utf-8')
         
         # Call the repo_frontend_info function with the mock request object
         response = repo_frontend_info(mock_request)

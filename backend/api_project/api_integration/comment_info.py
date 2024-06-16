@@ -167,7 +167,7 @@ async def printCommentCountJSON(request):
 
     
 # Function which makes API calls to retrieve all comments for some pull request.
-async def get_pull_request_comments(owner, repo, pull_number, headers):
+async def get_pull_request_comments(owner, repo, pull_number, session):
     # List of Github API endpoints which are accessed for retrieving all comments associated with a pull request.
     # Note that a distinction exists between review comments and issue comments, both are textual comments which are part of
     # the conversation associated with a pull request, but they are accessed by different endpoints. 
@@ -190,7 +190,7 @@ async def get_pull_request_comments(owner, repo, pull_number, headers):
         # While loop which retrieves all comments for a PR WITH token pagination (relevant for large repos). 
         while comment_url:
             # Make API request to specified url
-            async with session.get(comment_url, headers=headers) as response:
+            async with session.get(comment_url) as response:
                 # Because of recursion, check if API request actually gets a correct response
                 if response.status == 200:
                     # Convert response to JSON
@@ -218,7 +218,7 @@ async def get_pull_request_comments(owner, repo, pull_number, headers):
     # Start aiohttp ClientSession
     async with aiohttp.ClientSession() as session:
         # Get the message associated with PR
-        async with session.get(pr_details_url, headers=headers) as pr_response:
+        async with session.get(pr_details_url) as pr_response:
             # Check if API request actually gets a correct response
             if pr_response.status == 200:
                 # If successful, add PR message to list of all comments.

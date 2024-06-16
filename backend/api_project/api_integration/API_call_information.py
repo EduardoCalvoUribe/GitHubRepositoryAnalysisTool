@@ -409,11 +409,11 @@ async def process_pull_request(session, pull_request):
     pull_number = pull_request['number']
     commits_task = asyncio.create_task(fetch_commits(session, pull_request))
     # comments_task = asyncio.create_task(fetch_comments(session, pull_request)) #using old fetch_comments function
-    comments_task = asyncio.create_task(comment_info.get_pull_request_comments(owner,repo,pull_number,session.headers))
+    #comments_task = asyncio.create_task(comment_info.get_pull_request_comments(owner,repo,pull_number,session))
+    comments_task = asyncio.create_task(fetch_comments(session, pull_request))
     
     all_commits = await commits_task
     all_comments = await comments_task
-
 
     # # Fetch the commits of a pull request asynchronously
     # all_commits = await fetch_commits(session, pull_request)
@@ -490,7 +490,7 @@ async def fetch_comments(session, pull_request):
     tasks = []
 
     # Recursive definition which retrieves all comments for a given URL    
-    async def retrieve_comments(comment_url, type, session):
+    async def retrieve_comments(comment_url, comment_type, session):
         """
         Recursively retrieves nested comments within a pull request.
 
@@ -499,6 +499,7 @@ async def fetch_comments(session, pull_request):
         type (str): The type of the comment (review, comment, or issue).
         session (aiohttp.ClientSession): The asynchronous session with the authentication headers included.
         """
+        await asyncio.sleep(0.1)
         # Get all pagination urls to be able to get all comments
         comment_page_urls = await get_all_page_urls(session, comment_url)
         # Create tasks to process each comment page concurrently
@@ -509,17 +510,40 @@ async def fetch_comments(session, pull_request):
         # Iterate over each response and add comments to the list
         for page in comment_pages:
             for comment in page:
-                comment['comment_type'] = type
+                print(comment_type)
+                comment['comment_type'] = str(comment_type)
+                print("NEW PRINT")
                 all_comments.append(comment)
-                if type == 'review':
-                    pr_nested_comment_url = pr_comments_reviews_url + f"/{comment['id']}/comments"
-                    task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, 'comment', session))
-                    tasks.append(task)
+                #if type == 'review':
+                    #pr_nested_comment_url = pr_comments_reviews_url + f"/{comment['id']}/comments"
+                    #task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, 'comment', session))
+                    #tasks.append(task)
 
     # Retrieve comments from the reviews URL
     # This ensures that all review comments are added to all_comments.
-    await retrieve_comments(pr_comments_reviews_url, 'review', session),
-    await asyncio.gather(*tasks)  # Await nested comment tasks
+#    await retrieve_comments(pr_comments_reviews_url, 'review', session),
+#    await asyncio.gather(*tasks)  # Await nested comment tasks
+
+    # API endpoint for PR message
+    #pr_details_url = f'https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}'
+    pr_details_url = pull_request['url']
+    pr_task = asyncio.create_task(retrieve_comments(pr_details_url, 'pull request', session))
+    tasks.append(pr_task)
+
+    #print("HELLLOOOOOOO")
+    # API endpoint for review comments
+    pr_review_comments_url = pr_details_url + '/comments'
+    #print(pr_review_comments_url)
+    review_task = asyncio.create_task(retrieve_comments(pr_review_comments_url, 'review comment', session))
+    tasks.append(review_task)
+
+    # API endpoint for issue comments
+    #pr_issue_comments_url = f'https://api.github.com/repos/{owner}/{repo}/issues/{pull_number}/comments'
+    pr_issue_comments_url = pr_details_url.replace("pulls", "issues") + "/comments"
+    issue_task = asyncio.create_task(retrieve_comments(pr_issue_comments_url, 'issue comment', session))
+    tasks.append(issue_task)
+
+    await asyncio.gather(*tasks)
 
     # Return list containing all comments
     return all_comments
