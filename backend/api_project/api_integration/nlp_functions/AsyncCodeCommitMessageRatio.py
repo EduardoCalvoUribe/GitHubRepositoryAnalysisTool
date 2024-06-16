@@ -87,7 +87,7 @@ async def compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_s
     await asyncio.sleep(0.1)
     try:
         # Get files associated with pull request
-        files = await get_pr_files(repo_owner, repo_name, pull_number)
+        #files = await get_pr_files(repo_owner, repo_name, pull_number)
         files = commitJSON["files"]["patch"]
         # Get commit object
         # commit_data = await get_commit(repo_owner, repo_name, commit_sha)
