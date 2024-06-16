@@ -430,6 +430,15 @@ export default {
       }]
     });
 
+    const scoreColor = computed(() => {
+      const score = state.githubResponse ? state.githubResponse.Repo.average_semantic : 0;
+      return {
+        border: `5px solid ${getGradientColor(score, 10)}`,
+        padding: '10px',
+        paddingTop: '8px',
+      };
+    });
+
     watch([selectedUsers, selectedStat], () => {
       updateChartData();
     });
@@ -459,6 +468,7 @@ export default {
       isBar,
       goBack,
       selectedRange,
+      scoreColor
     }
   },
 
@@ -469,16 +479,6 @@ export default {
         { name: 'Pull Requests' },
         { name: 'Contributors' },
       ],
-    }
-  },
-
-  computed: {
-    scoreColor() {
-      return {
-        border: `5px solid ${getGradientColor(state.githubResponse.Repo.average_semantic, 10)}`,
-        padding: '10px',
-        paddingTop: '8px',
-      }
     }
   },
 

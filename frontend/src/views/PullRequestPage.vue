@@ -1,5 +1,5 @@
 <script>
-import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { state } from '../repoPackage.js';
 import { getGradientColor } from '../colorUtils.js';
