@@ -18,11 +18,12 @@
       </div>
     </div>
 
-    <div style="margin-top: 10px; display: flex; justify-content: center;">
+    <!-- <div style="margin-top: 10px; display: flex; justify-content: center;">
       <button @click="toggleDetails" class="button-6" style="width: 200px;">Further Analytics</button>
-    </div>
+    </div> -->
 
-    <div v-if="showDetails" class="details-section">
+    <!-- v-if="showDetails" -->
+    <div class="details-section"> 
       <div class="stat-box">
         <strong>Total Pull Requests</strong>
         <div>{{ totalPullRequests }}</div>
@@ -125,7 +126,7 @@ export default {
     const averagePrBodySemanticScore = ref(0);
     const averageCommitSemanticScore = ref(0);
     const averageCommentSemanticScore = ref(0);
-    const showDetails = ref(false);
+    // const showDetails = ref(false);
 
     const goBack = () => {
       router.go(-1); // Go back to the previous page
@@ -223,9 +224,9 @@ export default {
       }
     };
 
-    const toggleDetails = () => {
-      showDetails.value = !showDetails.value;
-    };
+    // const toggleDetails = () => {
+    //   showDetails.value = !showDetails.value;
+    // };
 
     const updateUserInURL = (user) => {
       router.replace({ path: '/userpage', query: { selectedUser: user.value } });
@@ -271,8 +272,8 @@ export default {
       averageCommentSemanticScore,
       fetchUserData,
       goBack,
-      toggleDetails,
-      showDetails,
+      // toggleDetails,
+      // showDetails,
       roundedAverageSemanticScore,
       roundedAveragePrTitleSemanticScore,
       roundedAveragePrBodySemanticScore,
@@ -300,7 +301,7 @@ export default {
   padding: 10px;
   margin: 10px;
   display: inline-block;
-  width: 200px;
+  width: 150px;
   text-align: center;
   font-size: 120%;
   background-color: #f9f9f9;
