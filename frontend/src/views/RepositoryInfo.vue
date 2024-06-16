@@ -27,6 +27,8 @@ export default {
     const sorts = ref([
       { name: 'Date Oldest to Newest' },
       { name: 'Date Newest to Oldest' },
+      { name: 'Semantic Score Ascending' },
+      { name: 'Semantic Score Descending' },
     ]);
     const isZoomedIn = ref(false);
     const zoomedYear = ref(null);
@@ -480,14 +482,15 @@ export default {
 
   methods: {
     getGradientColor(score) {
-      const startColor = { r: 255, g: 0, b: 0 }; // Red
-      const endColor = { r: 0, g: 255, b: 0 }; // Green
-
-      const r = Math.round(startColor.r + (endColor.r - startColor.r) * score);
-      const g = Math.round(startColor.g + (endColor.g - startColor.g) * score);
-      const b = Math.round(startColor.b + (endColor.b - startColor.b) * score);
-
-      return `rgb(${r}, ${g}, ${b})`;
+      if (state.githubResponse.Repo.average_semantic) { 
+        if (score <= 30) {
+          return `rgb(${204}, ${50}, ${50})`;
+        } else if (30 < score <= 60) {
+          return `rgb(${231}, ${180}, ${22})`;
+        } else { 
+          return `rgb(${45}, ${201}, ${55})`;
+        }
+      } else return `rgb(${255}, ${255}, ${255})`;
     }
   }
 }
@@ -534,7 +537,7 @@ export default {
     <div class="info-section">
       <div :style="buttonColor" class="stat-container">
         Average Semantic Score: {{ state.githubResponse.Repo.average_semantic ?
-          state.githubResponse.Repo.average_semantic.toFixed(2) : 'N/A' }}
+          state.githubResponse.Repo.average_semantic.toFixed(2) : 'N/A' }}/100
       </div>
     </div>
   </div>

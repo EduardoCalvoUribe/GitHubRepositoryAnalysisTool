@@ -1,5 +1,5 @@
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { state } from '../repoPackage.js';
 
@@ -35,11 +35,34 @@ export default {
       }
       localStorage.setItem('data', JSON.stringify(state.githubResponse));
     });
+
     return {
       pullpackage,
       goBack, // Return goBack method
     };
   },
+
+  computed: {
+    buttonColor() {
+      return {
+        backgroundColor: this.getGradientColor(state.githubResponse.Repo.average_semantic)
+      }
+    }
+  },
+
+  methods: {
+    getGradientColor(score) {
+      if (state.githubResponse.Repo.average_semantic) { 
+        if (score <= 30) {
+          return `rgb(${204}, ${50}, ${50})`;
+        } else if (30 < score <= 60) {
+          return `rgb(${231}, ${180}, ${22})`;
+        } else { 
+          return `rgb(${45}, ${201}, ${55})`;
+        }
+      } else return `rgb(${255}, ${255}, ${255})`;
+    }
+  }
 }
 </script>
 
@@ -68,8 +91,8 @@ export default {
     </div>
 
     <div class="info-section">
-      <div class="stat-container">
-        Average Semantic Score: {{ pullpackage.average_semantic ? pullpackage.average_semantic.toFixed(2) : 'N/A' }}
+      <div :style="buttonColor" class="stat-container">
+        Average Semantic Score: {{ pullpackage.average_semantic ? pullpackage.average_semantic.toFixed(2) : 'N/A' }}/100
       </div>
     </div>
   </div>
