@@ -391,7 +391,7 @@ def repo_frontend_info(request):
             if not ranged:
                 data, total_comment_count, total_commit_count = selected_data(pr,data, total_comment_count, total_commit_count,begin_date=None,end_date=None, ranged=False)
             else:
-                if (pr.closed_at > begin_date) & (pr.date < end_date) & (pr.date > begin_date):
+                if (pr.closed_at >= begin_date) & (pr.date <= end_date) & (pr.date >= begin_date):
                     data, total_comment_count,total_commit_count = selected_data(pr,data, total_comment_count, total_commit_count, begin_date, end_date, ranged=True)
         return JsonResponse(data)
     except Repository.DoesNotExist:
@@ -488,7 +488,7 @@ def select_commits(pr, pr_data, total_commit_count, begin_date, end_date, ranged
     for commit in pr.commits.all():
         # Extract the commit_id from the commit URL
         commit_id = parse_Github_url_variables(commit.url)[-1]
-        if not ranged or ((commit_id in commit_ids) or ((commit.date < end_date) & (commit.date > begin_date))):
+        if not ranged or ((commit_id in commit_ids) or ((commit.date <= end_date) & (commit.date >= begin_date))):
             commit_data = {
                 "name": commit.name,
                 "url": commit.url,
@@ -506,7 +506,7 @@ def select_commits(pr, pr_data, total_commit_count, begin_date, end_date, ranged
 
 def select_comments(pr, pr_data, total_comment_count, begin_date, end_date, ranged):
     for comment in pr.comments.all():
-                    if not ranged or ((comment.date < end_date) & (comment.date > begin_date)):
+                    if not ranged or ((comment.date <= end_date) & (comment.date >= begin_date)):
                         comment_data = {
                             "url": comment.url,
                             "date": comment.date,
