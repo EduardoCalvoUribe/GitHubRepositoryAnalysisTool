@@ -3,7 +3,7 @@ This file contains the functions associated with computing the code/commit messa
 """
 
 # Necessary imports for AsyncCodeCommitMessageRatio.py
-import aiohttp
+import aiohttp, asyncio
 from django.conf import settings
 
 async def get_pr_files(repo_owner, repo_name, pull_number):
@@ -83,7 +83,7 @@ async def compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_s
     float: A float representing the code/commit ratio. If no code has been changed,
     the metric value is set to 0. In the case of an error, the metric value is set to -1.
     """
-
+    await asyncio.sleep(0.1)
     try:
         # Get files associated with pull request
         files = await get_pr_files(repo_owner, repo_name, pull_number)

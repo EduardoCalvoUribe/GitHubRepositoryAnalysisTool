@@ -507,17 +507,23 @@ async def fetch_comments(session, pull_request):
         # Wait until all tasks are complete
         comment_pages = await asyncio.gather(*comment_tasks)
 
-        # Iterate over each response and add comments to the list
-        for page in comment_pages:
-            for comment in page:
-                print(comment_type)
+        if comment_type == "pull request":
+            for comment in comment_pages:    
                 comment['comment_type'] = str(comment_type)
-                print("NEW PRINT")
                 all_comments.append(comment)
-                #if type == 'review':
-                    #pr_nested_comment_url = pr_comments_reviews_url + f"/{comment['id']}/comments"
-                    #task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, 'comment', session))
-                    #tasks.append(task)
+        else:
+            # Iterate over each response and add comments to the list
+            for page in comment_pages:
+                for comment in page:
+                    print(str(comment) + str(comment_type) + str(type(comment)))
+                    #print(comment_type)
+                    comment['comment_type'] = str(comment_type)
+                    #print("NEW PRINT")
+                    all_comments.append(comment)
+                    #if type == 'review':
+                        #pr_nested_comment_url = pr_comments_reviews_url + f"/{comment['id']}/comments"
+                        #task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, 'comment', session))
+                        #tasks.append(task)
 
     # Retrieve comments from the reviews URL
     # This ensures that all review comments are added to all_comments.
@@ -527,7 +533,8 @@ async def fetch_comments(session, pull_request):
     # API endpoint for PR message
     #pr_details_url = f'https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}'
     pr_details_url = pull_request['url']
-    pr_task = asyncio.create_task(retrieve_comments(pr_details_url, 'pull request', session))
+    #pr_task = asyncio.create_task(retrieve_comments(pr_details_url, 'pull request', session))
+    pr_task = asyncio.create_task(fetch_comment_page(session, pr_details_url))
     tasks.append(pr_task)
 
     #print("HELLLOOOOOOO")
@@ -560,7 +567,6 @@ async def fetch_comment_page(session, url):
     dict: JSON response containing comments.
     """
     # Make a GET request to the provided URL to fetch comments
-    # try:
     async with session.get(url) as response:
             # Ensure that the response is succesful
             response.raise_for_status()
@@ -568,8 +574,6 @@ async def fetch_comment_page(session, url):
             comments = await response.json()
             # Return all comments on a single page
             return comments
-    # except aiohttp.ClientError as e:
-    #     return []
 
 
 async def get_all_page_urls(session, pr_url):
