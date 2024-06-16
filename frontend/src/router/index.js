@@ -75,7 +75,7 @@ const checkExpiration = () => {
   }
 
   const expirationTime = localStorage.getItem("expirationTime");
-  if (!storedData || expirationTime < Date.now()) {
+  if (expirationTime < Date.now()) {
     localStorage.removeItem("authToken");
     localStorage.removeItem("data"); // make sure all data is removed
     window.location.href = "http://localhost:5173/login";
