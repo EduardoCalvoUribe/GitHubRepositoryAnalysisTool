@@ -51,6 +51,7 @@ router.beforeEach((to, from, next) => {
 
   if (!isLoggedIn) {
     if (to.path !== "/login") {
+      localStorage.removeItem("data");
       next("/login"); // Redirect to login page if not logged in
     } else {
       next();
@@ -74,9 +75,8 @@ const checkExpiration = () => {
   }
 
   const expirationTime = localStorage.getItem("expirationTime");
-  if (expirationTime < Date.now()) {
+  if (!storedData || expirationTime < Date.now()) {
     localStorage.removeItem("authToken");
-    localStorage.getItem("data");
     localStorage.removeItem("data"); // make sure all data is removed
     window.location.href = "http://localhost:5173/login";
   }
