@@ -12,7 +12,8 @@ export default {
       router.go(-1); // Go back to the previous page
     };
 
-    if (!state.githubResponse) {
+    if (state.githubResponse) {
+      console.log("No data")
       localStorage.setItem('data', JSON.stringify(state.githubResponse));
     }
     const storedData = localStorage.getItem('data');
@@ -21,7 +22,6 @@ export default {
       if (storedData) {
         state.githubResponse = JSON.parse(storedData);
       }
-      console.log(state.githubResponse.Repo.pull_requests.length, "length")
       if (state.githubResponse) {
         for (let i = 0; i < state.githubResponse.Repo.pull_requests.length; i++) {
           console.log(i, "i")
