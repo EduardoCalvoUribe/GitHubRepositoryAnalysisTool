@@ -1,22 +1,14 @@
 from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
-import requests
+from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.utils import timezone
-from datetime import datetime, timedelta
-from collections import Counter
-from . import functions, models, views, general_semantic_score, comment_info
-from .models import Commit, Comment, User, Repository, PullRequest
-import aiohttp
-import asyncio
-import time
-import re
-import pytz
+from datetime import datetime
+from . import models, views, general_semantic_score
+from .models import Commit, Comment, PullRequest
+import aiohttp, asyncio, re
 from urllib.parse import urlparse, parse_qs
-from django.views.decorators.csrf import csrf_exempt
 from asgiref.sync import sync_to_async
 
-# This function should return visual on everything and call functions to get all information
 @csrf_exempt
 async def get_github_information(response):
     """
@@ -33,7 +25,6 @@ async def get_github_information(response):
     JsonResponse: A JsonResponse including all information of a specific GitHub repository,
                   formatted as HTML for display purposes.
     """
-    start_time = time.time() # Variable to check the runtime of the function
     repo_url = views.process_vue_POST_request(response)
     parsed_variables = views.parse_Github_url_variables(repo_url)
     owner = parsed_variables[1]
@@ -45,58 +36,34 @@ async def get_github_information(response):
     headers = {'Authorization': f'token {personal_access_token}'}
 
     async with aiohttp.ClientSession(headers=headers) as session:
-        # try: 
-            data_list = [[] for i in range(5)] # for all data types
+        data_list = [[] for i in range(5)] # for all data types
 
-            defaults = {
-                    "url": repo_url,
-                    "name": repo,
-                    "owner": owner,
-                        "updated_at": timezone.now()
-            }
-            data_list[0].append(models.Repository(**defaults))                       
-            data_list[4].append([models.User(login=owner), "repositories", repo_url])
+        defaults = {
+                "url": repo_url,
+                "name": repo,
+                "owner": owner,
+                    "updated_at": timezone.now()
+        }
+        data_list[0].append(models.Repository(**defaults))                       
+        data_list[4].append([models.User(login=owner), "repositories", repo_url])
 
-            # Results is a list of each page of a repo, each page has multiple pull requests and each pull request have multiple commits and comments
-            results = await handle_fetch_requests(session, owner, repo)
-            # Text to display that everything went correctly
-            text_to_display = 'It Worked!'
+        # Results is a list of each page of a repo, each page has multiple pull requests and each pull request have multiple commits and comments
+        results = await handle_fetch_requests(session, owner, repo)
+        # Text to display that everything went correctly
+        text_to_display = 'It Worked!'
 
-            # Code used to check how many API calls are used, how many you have left and when it resets
-            response = requests.get('https://api.github.com/rate_limit', headers=headers)
-            if response.status_code == 200:
-                limit_data = response.json()
-                remaining_requests = limit_data['rate']['remaining']
-                max_requests = limit_data['rate']['limit']
-                reset_timestamp = limit_data['rate']['reset']
-                reset_time_utc = datetime.utcfromtimestamp(reset_timestamp)
-                reset_time_gmt2 = reset_time_utc + timedelta(hours=2)
+        pull_request_tasks = []
+        for page in results:
+            for i,pr in enumerate (page):
+                print(i)
+                pull_request_tasks.append(asyncio.create_task(pull_request_task(pr, data_list,i)))
                 
-                print(f"Remaining API calls: {remaining_requests}")
-                print(f"Maximum API calls: {max_requests}")
-                print(f"Reset time (GMT+2): {reset_time_gmt2.strftime('%Y-%m-%d %H:%M:%S')} GMT+2")
-            else:
-                print("Failed to fetch rate limit information")
-            # This for loop is only for creating displayable text on a website (not important for loop and can be deleted in end)
-            pull_request_tasks = []
-            for page in results:
-                for i,pr in enumerate (page):
-                    print(i)
-                    pull_request_tasks.append(asyncio.create_task(pull_request_task(pr, data_list,i)))
-                    
-            await asyncio.gather(*pull_request_tasks) 
-            print(time.time() - start_time, "before bulk create")     
-            await bulk_create_objects(data_list)
-            end_time = time.time() # Variable to check the total runtime of the function
-            duration = end_time - start_time # Total runtime of the function
-            print(duration) # Printing the duration to compare different functions' speed  
+        await asyncio.gather(*pull_request_tasks)     
+        await bulk_create_objects(data_list) 
 
-            # Return JsonResponse to frontend (return can eventually be deleted/reformed)
-            response = await sync_to_async(views.homepage_datapackage)(response)
-            return response
-        # except Exception as e:
-        #     print(e)
-        #     return JsonResponse('Error', safe=False)
+        # Return JsonResponse to frontend (return can eventually be deleted/reformed)
+        response = await sync_to_async(views.homepage_datapackage)(response)
+        return response
 
 async def pull_request_task(pr, data_list, i):
     """
@@ -109,7 +76,6 @@ async def pull_request_task(pr, data_list, i):
     Returns:
         None
     """
-
     pr_closed_at = timezone.now()
     if pr[0]['state'] == 'closed':
         pr_closed_at = datetime.strptime(pr[0]['closed_at'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d')
@@ -151,8 +117,6 @@ async def commit_task(commit, data_list, pr_num,i):
     Returns:
         list: The updated data list.
     """
-    print(type(data_list[1][-1]))
-    # commit_semantic_score = general_semantic_score.calculateWeightedCommitSemanticScore(commit, 0.33, 0.33, 0.34, commit['commit']['url'])
     commit_semantic_score = await general_semantic_score.calculateWeightedCommitSemanticScore(commit, 0.33, 0.33, 0.34, commit['commit']['url'],pr_num)
     user_login = ""
     if commit['author'] != None:
@@ -237,12 +201,6 @@ async def bulk_create_objects(data_list):
     tasks.append(asyncio.create_task(create_and_update_user_data(data_list[4], repo_db)))
     await asyncio.gather(*tasks)
 
-    # await sync_to_async(create_pull_requests)(data_list, repo_db)
-    # await sync_to_async(create_comments)(data_list, repo_db)
-    # await sync_to_async(create_commits)(data_list, repo_db)
-    # await create_and_update_user_data(data_list[4], repo_db)
-
-
 def create_pull_requests(data_list, repo_db):
     """
     Create or update pull requests in the database.
@@ -257,7 +215,6 @@ def create_pull_requests(data_list, repo_db):
     pull_set = set()
     for pull in data_list[1]:
         models.PullRequest.objects.update_or_create(url=pull.url, defaults={'repo': repo_db, 'updated_at': pull.updated_at, 'closed_at': pull.closed_at, 'date': pull.date, 'title': pull.title, 'body': pull.body, 'user': pull.user, 'number': pull.number})
-        #update_model_data(repo_db, "pull_requests_list", pull.url) # add pull request to list of pull requests in repo
         pull_set.add(pull.url)
     update_model_data(repo_db, "pull_requests_list", list(pull_set)) # add pull request to list of pull requests in repo
 
@@ -275,7 +232,6 @@ def create_comments(data_list, repo_db):
     commit_set = set()
     for commit in data_list[2]:
         models.Commit.objects.update_or_create(url=commit.url, defaults={'pull_request': PullRequest.objects.get(url=commit.pull_request.url), 'name': commit.name, 'title': commit.title, 'user': commit.user, 'date': commit.date, 'semantic_score': commit.semantic_score, 'updated_at': commit.updated_at})
-        #update_model_data(repo_db, "commits_list", commit.url) # add commit to list of commits in repo
         commit_set.add(commit.url)
     update_model_data(repo_db, "commits_list", list(commit_set)) # add commit to list of commits in repo
 
@@ -284,9 +240,7 @@ def create_commits(data_list, repo_db):
     for comment in data_list[3]:
         # Handle empty comment
         body = comment.body if comment.body is not None else ''
-
         models.Comment.objects.update_or_create(url=comment.url, defaults={'pull_request': PullRequest.objects.get(url=comment.pull_request.url), 'date': comment.date, 'updated_at': comment.updated_at, 'body': body, 'user': comment.user, 'semantic_score': comment.semantic_score, 'comment_type': comment.comment_type, 'commit_id': comment.commit_id})
-        #update_model_data(repo_db, "comments_list", comment.url) # add comment to list of comments in repo
         comment_set.add(comment.url)
     update_model_data(repo_db, "comments_list", list(comment_set)) # add comment to list of comments in repo
 
@@ -330,7 +284,6 @@ def update_model_data(model, related_data_field, related_data_url):
     Returns:
         None
     """
-    # model.__class__.objects.filter(pk=model.pk).update(**{related_data_field: F(related_data_field=F(related_data_field) + [related_data_url])})
     current = getattr(model, related_data_field)
     current.extend(related_data_url)
     setattr(model, related_data_field, current)  # Use set union for unique values
@@ -383,7 +336,6 @@ async def process_page(session, pr_url):
         pull_requests = await response.json()
         # Initialize a list of tasks to store pull request processing tasks
         tasks = []
-
         # Iterate over the filtered pull requests to create a task for processing each pull request
         for pull_request in pull_requests:
             # Create a task to process each pull request asynchronously
@@ -411,18 +363,10 @@ async def process_pull_request(session, pull_request):
     repo = pull_request['base']['repo']['name']
     pull_number = pull_request['number']
     commits_task = asyncio.create_task(fetch_commits(session, pull_request))
-    # comments_task = asyncio.create_task(fetch_comments(session, pull_request)) #using old fetch_comments function
-    #comments_task = asyncio.create_task(comment_info.get_pull_request_comments(owner,repo,pull_number,session))
     comments_task = asyncio.create_task(fetch_comments(session, pull_request))
     
     all_commits = await commits_task
     all_comments = await comments_task
-
-    # # Fetch the commits of a pull request asynchronously
-    # all_commits = await fetch_commits(session, pull_request)
-
-    # # Fetch the comments of a pull request asynchronously
-    # all_comments = await fetch_comments(session, pull_request)
 
     # Return commits and comments
     return pull_request, all_commits, all_comments 
@@ -518,37 +462,20 @@ async def fetch_comments(session, pull_request):
             # Iterate over each response and add comments to the list
             for page in comment_pages:
                 for comment in page:
-                    print(str(comment) + str(comment_type) + str(type(comment)))
-                    #print(comment_type)
                     comment['comment_type'] = str(comment_type)
-                    #print("NEW PRINT")
                     all_comments.append(comment)
-                    #if type == 'review':
-                        #pr_nested_comment_url = pr_comments_reviews_url + f"/{comment['id']}/comments"
-                        #task = asyncio.create_task(retrieve_comments(pr_nested_comment_url, 'comment', session))
-                        #tasks.append(task)
-
-    # Retrieve comments from the reviews URL
-    # This ensures that all review comments are added to all_comments.
-#    await retrieve_comments(pr_comments_reviews_url, 'review', session),
-#    await asyncio.gather(*tasks)  # Await nested comment tasks
 
     # API endpoint for PR message
-    #pr_details_url = f'https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}'
     pr_details_url = pull_request['url']
-    #pr_task = asyncio.create_task(retrieve_comments(pr_details_url, 'pull request', session))
     pr_task = asyncio.create_task(fetch_comment_page(session, pr_details_url))
     tasks.append(pr_task)
 
-    #print("HELLLOOOOOOO")
     # API endpoint for review comments
     pr_review_comments_url = pr_details_url + '/comments'
-    #print(pr_review_comments_url)
     review_task = asyncio.create_task(retrieve_comments(pr_review_comments_url, 'review comment', session))
     tasks.append(review_task)
 
     # API endpoint for issue comments
-    #pr_issue_comments_url = f'https://api.github.com/repos/{owner}/{repo}/issues/{pull_number}/comments'
     pr_issue_comments_url = pr_details_url.replace("pulls", "issues") + "/comments"
     issue_task = asyncio.create_task(retrieve_comments(pr_issue_comments_url, 'issue comment', session))
     tasks.append(issue_task)
@@ -686,16 +613,7 @@ def calculate_semantic_score_repo(repo):
     # Fetch all comments based on URLs
     comments = Comment.objects.filter(url__in=user_comments_urls)
     
-    # await sync_to_async(list)(
-    #     Comment.objects.filter(url__in=user_comments_urls)
-    # )
-    
     commits = Commit.objects.filter(url__in=user_commits_urls)
-    
-    # Fetch all commits based on URLs
-    # commits = await sync_to_async(list)(
-    #     Commit.objects.filter(url__in=user_commits_urls)
-    # )
     
     # Sum the semantic scores from comments
     for comment in comments:
