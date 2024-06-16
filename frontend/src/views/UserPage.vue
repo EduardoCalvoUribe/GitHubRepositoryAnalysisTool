@@ -233,6 +233,10 @@ export default {
     });
 
     onMounted(() => {
+      const storedData = localStorage.getItem('data');
+      if (storedData) {
+        state.githubResponse = JSON.parse(storedData);
+      }
       if (localSelectedUser.value) {
         fetchUserData();
       }
@@ -281,6 +285,7 @@ export default {
   },
 };
 </script>
+
 
 
 <style scoped>
