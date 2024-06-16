@@ -544,7 +544,7 @@ export default {
       </div>
       <button class="button-6" v-if="isZoomedIn" @click="resetChartView"
         style="position: absolute; bottom: 10px; right: 10px; margin-top: 20px; width: 40px; height: 40px; justify-content: center; vertical-align: center; font-size: larger;">
-      </button>
+      <</button>
     </div>
 
     <Chart style="flex: 1; max-width: 1000px" @bar-click="handleBarClick" :chartData="chartData"
