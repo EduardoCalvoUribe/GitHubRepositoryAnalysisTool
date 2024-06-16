@@ -1,11 +1,7 @@
 """
 This file contains the functions which are responsible for computing the general semantic score
 """
-
-# Necessary imports for general_semantic_score.py
 import numpy as np
-
-# File imports within project directory
 from . import views
 from .nlp_functions import FleschReadingEase, LexicalDensity, AsyncCodeCommitMessageRatio
 
