@@ -62,7 +62,7 @@ async def calculateWeightedCommitSemanticScore(commitJSON, ld_weight, fre_weight
     commit_SHA = parsed_commit_url[-1]
     
     # Asynchronously compute code/commit message ratio. Await result
-    awaited_bounded_ratio = await AsyncCodeCommitMessageRatio.compute_code_commit_ratio(owner,repo,pr_num,commit_SHA)
+    awaited_bounded_ratio = await AsyncCodeCommitMessageRatio.compute_code_commit_ratio(owner,repo,pr_num,commit_SHA,commit)
     bounded_ratio = sigmoid(awaited_bounded_ratio)
     # Multiply metric with its respective weight
     weighted_bounded_ratio = cmcl_weight * bounded_ratio

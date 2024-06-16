@@ -225,7 +225,7 @@ async def get_pull_request_comments(owner, repo, pull_number, session):
                 pr_details = await pr_response.json()
                 pr_details['comment_type'] = 'pull request'
                 all_comments.append(pr_details)
-
+ 
 
     
         # Retrieve general review comments
