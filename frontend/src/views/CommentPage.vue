@@ -16,7 +16,6 @@ export default {
 
     onMounted(async () => {
       if (state.githubResponse) {
-        console.log('in if');
         for (let i = 0; i < state.githubResponse.Repo.pull_requests.commits.length - 1; i++) {
           if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
             pullpackage.value = state.githubResponse.Repo.pull_requests[i];
@@ -50,7 +49,8 @@ export default {
     </div>
   </header>
 
-  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; font-size: 90%; margin-top: 20px;">Back</button>
+  <button @click="goBack" class="button-6"
+    style="width: 50px; height: 50px; font-size: 90%; margin-top: 20px;">Back</button>
 </template>
 
 <style>

@@ -28,8 +28,8 @@ export default {
     const username = ref('');
     const email = ref('');
     const password = ref(''); // Add password ref
-    const rules = { 
-      username: { required }, 
+    const rules = {
+      username: { required },
       password: { required } // Add password to validation rules
     };
     const v$ = useVuelidate(rules, { username, email, password });
@@ -48,22 +48,20 @@ export default {
             password: password.value, // Include password in form data
           }),
         })
-        .then(response => response.json())
-        .then(data => {
-          console.log(data.error);
-          if (data.error != false) {
-            console.log('Success:', data);
-            localStorage.setItem("authToken", data.token); // Store token in local storage
-            const expirationTime = Date.now() + (1 * 60 * 60 * 1000); // Set expiration time to 1 hour
-            localStorage.setItem("expirationTime", expirationTime); // Store expiration time in local storage
-            router.push('/');
-        } else {
-          console.log('Invalid credentials');
-        }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
+          .then(response => response.json())
+          .then(data => {
+            if (data.error != false) {
+              localStorage.setItem("authToken", data.token); // Store token in local storage
+              const expirationTime = Date.now() + (1 * 60 * 60 * 1000); // Set expiration time to 1 hour
+              localStorage.setItem("expirationTime", expirationTime); // Store expiration time in local storage
+              router.push('/');
+            } else {
+              console.log('Invalid credentials');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
       }
     };
 

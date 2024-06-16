@@ -44,7 +44,6 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  
   const authToken = localStorage.getItem("authToken");
   const isLoggedIn = !!authToken;
 
@@ -52,23 +51,17 @@ router.beforeEach((to, from, next) => {
 
   if (!isLoggedIn) {
     if (to.path !== "/login") {
-      console.log("Not logged in, redirecting to login page");
       next("/login"); // Redirect to login page if not logged in
     } else {
-      console.log("Not logged in, allowing navigation to login page");
       next();
     }
   } else if (isLoggedIn && expiresAt > Date.now()) {
-    console.log("Valid token, allowing navigation");
     // Token is valid, allow navigation
     next();
   } else {
-    console.log("Token expired, redirecting to login page");
     // Token expired, handle expiration:
     localStorage.removeItem("authToken");
     localStorage.removeItem("expirationTime");
-
-    // Optional: Redirect to login or refresh token endpoint
     next("/login"); // Or redirect to a refresh token endpoint based on your logic
   }
 });
@@ -82,6 +75,9 @@ const checkExpiration = () => {
   const expirationTime = localStorage.getItem("expirationTime");
   if (expirationTime < Date.now()) {
     localStorage.removeItem("authToken");
+    if (!localStorage.getItem("data")) {
+      localStorage.removeItem("data"); // make sure all data is removed
+    }
     window.location.href = "http://localhost:5173/login";
   }
 };

@@ -1,13 +1,7 @@
 <template>
   <div>
-    <Bar v-if="isBar"
-      :data="chartData"
-      :options="chartOptions"
-    />
-    <Line v-else
-      :data="chartData"
-      :options="chartOptions"
-    />
+    <Bar v-if="isBar" :data="chartData" :options="chartOptions" />
+    <Line v-else :data="chartData" :options="chartOptions" />
   </div>
 </template>
 
@@ -28,7 +22,7 @@ export default {
     },
     chartOptions: {
       type: Object,
-      default: () => {}
+      default: () => { }
     },
     isBar: {
       type: Boolean,
@@ -45,7 +39,6 @@ export default {
         const firstElement = elements[0];
         const label = chartData.value.labels[firstElement.index];
         const value = chartData.value.datasets[firstElement.datasetIndex].data[firstElement.index];
-        console.log(`Clicked label: ${label}, value: ${value}`);
         emit('bar-click', { label })
       }
     };
