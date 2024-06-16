@@ -13,13 +13,29 @@ from collections import OrderedDict
 from .nlp_functions.AsyncCodeCommitMessageRatio import compute_code_commit_ratio
 
 def github_user_info(request):
+    """
+    Retrieve and return authenticated GitHub user information.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response containing the user information from the GitHub API.
+    """
     json_response = functions.get_api_reponse('https://api.github.com/user').json()
     return JsonResponse(json_response)
    
 @csrf_exempt 
-# This function accepts an incoming HTTP request, which is assumed to be a POST request. 
-# The function returns a user-requested Github API URL in String form which is extracted from the HTTP request
 def process_vue_POST_request(request):
+    """
+    Process an incoming POST request from the Vue.js frontend.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        str: The URL extracted from the POST request.
+    """
     # If the user request is an HTTP POST request
     if request.method == "POST":
         # Use built-in json Python package to parse JSON string and convert into a Python dictionary
@@ -32,6 +48,15 @@ def process_vue_POST_request(request):
 
 @csrf_exempt
 def delete_entry_db(request):
+    """
+    Delete a repository entry from the database.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response indicating success or failure of the deletion.
+    """
     try:
         print("Delete entry")
         # Extract id from POST request
@@ -45,6 +70,16 @@ def delete_entry_db(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 def delete_repository_references(request, repository):
+    """
+    Delete references associated with a repository.
+
+    Args:
+        request: The HTTP request object.
+        repository: The repository object to delete references for.
+
+    Returns:
+        bool: True if deletion was successful, False otherwise.
+    """
     try:
         for pull in repository.pull_requests_list:
             PullRequest.objects.filter(url=pull).delete()
@@ -58,8 +93,16 @@ def delete_repository_references(request, repository):
     except Exception as e:
         return False
 
-# Function to delete all items from database
 def delete_all_records(request):
+    """
+    Delete all records from the database.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        tuple: A tuple containing a boolean indicating success and a message string.
+    """
     try:
         User.objects.all().delete()
         Repository.objects.all().delete()
@@ -72,6 +115,15 @@ def delete_all_records(request):
 
 @csrf_exempt
 def send_post_request_to_repo_frontend_info(request):
+    """
+    Send a POST request to the repo_frontend_info function.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        JsonResponse: The response from the repo_frontend_info function.
+    """
     try:
         # Create a mock request object
         mock_request = HttpRequest()
@@ -87,9 +139,17 @@ def send_post_request_to_repo_frontend_info(request):
         # If an exception occurs, return an error response
         return JsonResponse({"error": str(e)}, status=500)
 
-# Function to send a package of all repo information to the frontend
 @csrf_exempt
 def repo_frontend_info(request):
+    """
+    Send a package of repository information to the frontend.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response containing repository information.
+    """
     if request.method == 'POST':
         # Get the request body as a string
         request_body = request.body.decode('utf-8')
@@ -147,7 +207,23 @@ def repo_frontend_info(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
+
 def selected_data(pr,data, total_comment_count, total_commit_count, begin_date, end_date, ranged):
+    """
+    Select and prepare pull request data for response to frontend.
+
+    Args:
+        pr: The pull request object.
+        data: The existing data dictionary to update.
+        total_comment_count: The current total comment count.
+        total_commit_count: The current total commit count.
+        begin_date: The beginning date of the range filter.
+        end_date: The ending date of the range filter.
+        ranged: Boolean indicating if date range filtering is applied.
+
+    Returns:
+        tuple: Updated data dictionary, total comment count, and total commit count.
+    """
     pr_data = {
                     "url": pr.url,
                     "updated_at": pr.updated_at,
@@ -177,6 +253,15 @@ def selected_data(pr,data, total_comment_count, total_commit_count, begin_date, 
     return data, total_comment_count, total_commit_count
 
 def date_range(data):
+    """
+    Parse the date range from strings to datetime objects.
+
+    Args:
+        data: A list containing the start and end date strings.
+
+    Returns:
+        tuple: A tuple containing the start and end datetime objects.
+    """
     begin_date_str = data[0]
     end_date_str = data[1]
     date_format = "%Y-%m-%dT%H:%M:%S.%fZ" # Assuming format with optional space
@@ -190,6 +275,20 @@ def date_range(data):
     return begin_date_obj, end_date_obj
         
 def select_commits(pr, pr_data, total_commit_count, begin_date, end_date, ranged):
+    """
+    Select and prepare commit data for a pull request data.
+
+    Args:
+        pr: The pull request object.
+        pr_data: The pull request data dictionary to update.
+        total_commit_count: The current total commit count.
+        begin_date: The beginning date of the range filter.
+        end_date: The ending date of the range filter.
+        ranged: Boolean indicating if date range filtering is applied.
+
+    Returns:
+        tuple: Updated pull request data dictionary and total commit count.
+    """
     commit_ids = [comment["commit_id"] for comment in pr_data["comments"]]
     for commit in pr.commits.all():
         # Extract the commit_id from the commit URL
@@ -211,6 +310,20 @@ def select_commits(pr, pr_data, total_commit_count, begin_date, end_date, ranged
     return pr_data, total_commit_count
 
 def select_comments(pr, pr_data, total_comment_count, begin_date, end_date, ranged):
+    """
+    Select and prepare comment data for a pull request data.
+
+    Args:
+        pr: The pull request object.
+        pr_data: The pull request data dictionary to update.
+        total_comment_count: The current total comment count.
+        begin_date: The beginning date of the range filter.
+        end_date: The ending date of the range filter.
+        ranged: Boolean indicating if date range filtering is applied.
+
+    Returns:
+        tuple: Updated pull request data dictionary and total comment count.
+    """
     for comment in pr.comments.all():
                     if not ranged or ((comment.date < end_date) & (comment.date > begin_date)):
                         comment_data = {
@@ -229,12 +342,19 @@ def select_comments(pr, pr_data, total_comment_count, begin_date, end_date, rang
     pr_data["number_comments"] = len(pr_data["comments"])
     return pr_data, total_comment_count
 
-#Create a data package that is used by the frontend to show on the frontend
 def homepage_datapackage(request):
-    # try:
-        #We import all the repositories from the database
+    """
+    Create a data package for the homepage of frontend showing all repositories.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response containing the data package of all repos.
+    """
+    #We import all the repositories from the database
     repos = Repository.objects.all()
-        # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
+    # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
     unique_repos = list(OrderedDict((repo.id, {
             "name": repo.name,
             "id": repo.id,
@@ -243,25 +363,40 @@ def homepage_datapackage(request):
             "average_semantic": API_call_information.calculate_semantic_score_repo(repo)
         }) for repo in repos).values())
 
-        # The Repos is a list that has name & updated_at as values
+    # The Repos is a list that has name & updated_at as values
     data = {"Repos" : unique_repos}
     return JsonResponse(data)
     
-# Helper function that parses Github URLs into a list of variables
-# Assuming that Github URLs always follow the same pattern, i.e. https://gihtub.com/[username]/[repo_name]/etc...
-# Returns a list of variables if the provided URL was a Github URL
 def parse_Github_url_variables(url):
-  # Indicate empty URL if url is empty
-  if not url:
-    return ['empty URL']
+    """
+    Parse GitHub URL into a list of variables.
 
-  # Filter out www, http and https from URL
-  filtered_url = re.sub(r'https?://(www\.)?', '', url)
-  parsed_url = filtered_url.split('/')
+    Args:
+        url: The GitHub URL to parse.
 
-  return parsed_url
+    Returns:
+        list: A list of variables extracted from the URL.
+    """
+    # Indicate empty URL if url is empty
+    if not url:
+        return ['empty URL']
+
+    # Filter out www, http and https from URL
+    filtered_url = re.sub(r'https?://(www\.)?', '', url)
+    parsed_url = filtered_url.split('/')
+
+    return parsed_url
   
 def calculate_average_semantic_pull(pr_data):
+    """
+    Calculate the average semantic score for a pull request.
+
+    Args:
+        pr_data: The pull request data dictionary.
+
+    Returns:
+        float: The average semantic score of the pull request.
+    """
     total_semantic = 0
     comment_count = 0
     for commit in pr_data["commits"]:
@@ -279,6 +414,15 @@ def calculate_average_semantic_pull(pr_data):
     return total_semantic / total_count if total_count > 0 else 0 
 
 def calculate_average_semantic_repo(repo_data):
+    """
+    Calculate the average semantic score for a repository.
+
+    Args:
+        repo_data: The repository data dictionary.
+
+    Returns:
+        float: The average semantic score of the repository.
+    """
     total_semantic = 0
     for pr in repo_data["pull_requests"]:
         total_semantic += pr['average_semantic']
@@ -288,6 +432,15 @@ def calculate_average_semantic_repo(repo_data):
         
 @csrf_exempt
 def login_view(request):
+    """
+    Handle user login.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        JsonResponse: A JSON response containing the authentication token or an error message.
+    """
     print("received login request")
     data = json.loads(request.body)
     username =  data.get("username")
@@ -304,11 +457,26 @@ def login_view(request):
 
 @csrf_exempt
 def logout_view(request):
+    """
+    Handle user logout.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponseRedirect: A redirect to the login page.
+    """
     logout(request)
     return redirect('/login/')  # Redirect to login page after logout
 
-# Helper function which calculates the semantic score for the PR title and body
-# It simply encapsulates the same function which is used for the comment semantic score.
-# Possibly move this to general_semantic_score.py if metric weights will be passed from frontend
 def calculate_pr_semantic(message):
+    """
+    Calculate the semantic score for a pull request title or body.
+
+    Args:
+        message: The message to calculate the semantic score for.
+
+    Returns:
+        float: The calculated semantic score.
+    """
     return general_semantic_score.calculateWeightedCommentSemanticScore(message,0.5,0.5)
