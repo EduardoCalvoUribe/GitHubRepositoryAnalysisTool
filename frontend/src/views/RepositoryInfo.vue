@@ -54,7 +54,6 @@ export default {
         // reset url and date
         newUrl = oldurl.split("/").slice(0, -1).join("/") + "/current";
         selectedRange.value = null;
-        console.log("lol");
       } else if (date == "homepage") {
         // get date from url
         const parts = oldurl.split("/");
@@ -488,6 +487,9 @@ export default {
       const b = Math.round(startColor.b + (endColor.b - startColor.b) * score);
 
       return `rgb(${r}, ${g}, ${b})`;
+    },
+    goToUserPage(user) {
+      this.$router.push({ path: '/userpage', query: { selectedUser: user } });
     }
   }
 }
@@ -601,11 +603,10 @@ export default {
         style=" display: flex; justify-content: center;">
         <div style="display: flex; flex-direction: column; align-items: flex-start;">
           <h1 style="justify-content: center; display: inline-block; width: 250px;" for="users">Contributors</h1>
-          <div id="users" class="row" v-for="user in userList"></div>
           <div id="users" class="row" v-for="user in userList">
-            <router-link :to="{ path: '/userpage' }"><button class="button-6">
-                <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
-            </button></router-link>
+            <button style="margin-top: 7px;" class="button-6" @click="goToUserPage(user)">
+              <span><h2 style="margin-left: 0.3rem;">{{ user }}</h2></span>
+            </button>
           </div>
         </div>
       </div>

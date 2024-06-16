@@ -11,7 +11,7 @@
 
   <main>
     <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center;">
-      <Dropdown v-model="selectedUser" :options="users" optionLabel="label" placeholder="Select a user" style="width: 250px; margin-right: 10px;" />
+      <Dropdown v-model="localSelectedUser" :options="users" optionLabel="label" placeholder="Select a user" style="width: 250px; margin-right: 10px;" />
       <div class="stat-box" style="margin-right: 10px;">
         <strong>Avg. Semantic Score</strong>
         <div>{{ roundedAverageSemanticScore }}</div>
@@ -97,22 +97,24 @@
     </div>
   </main>
 
-  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; font-size: 90%; margin-top: 20px;">Back</button>
+  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; font-size: 90%; margin-top: 20px; text-align: center; padding: 0px;">Back</button>
 </template>
 
 <script>
 import { ref, onMounted, computed, watch } from 'vue';
 import { state } from '../repoPackage.js';
-import { useRouter } from 'vue-router'; // Import useRouter
+import { useRouter, useRoute } from 'vue-router';
 import Dropdown from 'primevue/dropdown';
 
 export default {
   components: {
     Dropdown,
   },
-  setup() {
-    const router = useRouter(); // Initialize useRouter
-    const selectedUser = ref(null);
+  setup(props, { emit }) {
+    const router = useRouter(); 
+    const route = useRoute(); 
+    const selectedUserQuery = route.query.selectedUser;
+    const localSelectedUser = ref(selectedUserQuery ? { label: selectedUserQuery, value: selectedUserQuery } : null);
     const averageSemanticScore = ref(0);
     const userDetails = ref(null);
     const totalPullRequests = ref(0);
@@ -146,7 +148,7 @@ export default {
     });
 
     const fetchUserData = () => {
-      if (selectedUser.value && state.githubResponse && state.githubResponse.Repo.pull_requests) {
+      if (localSelectedUser.value && state.githubResponse && state.githubResponse.Repo.pull_requests) {
         let totalScore = 0;
         let prTitleScore = 0;
         let prBodyScore = 0;
@@ -161,7 +163,7 @@ export default {
         const comments = [];
 
         state.githubResponse.Repo.pull_requests.forEach(pr => {
-          if (pr.user === selectedUser.value.value) {
+          if (pr.user === localSelectedUser.value.value) {
             totalScore += pr.pr_title_semantic + pr.pr_body_semantic + pr.average_semantic;
             prTitleScore += pr.pr_title_semantic;
             prBodyScore += pr.pr_body_semantic;
@@ -178,7 +180,7 @@ export default {
           }
 
           pr.commits.forEach(commit => {
-            if (commit.user === selectedUser.value.value) {
+            if (commit.user === localSelectedUser.value.value) {
               totalScore += commit.semantic_score;
               commitScore += commit.semantic_score;
               count++;
@@ -193,7 +195,7 @@ export default {
           });
 
           pr.comments.forEach(comment => {
-            if (comment.user === selectedUser.value.value) {
+            if (comment.user === localSelectedUser.value.value) {
               totalScore += comment.semantic_score;
               commentScore += comment.semantic_score;
               count++;
@@ -224,13 +226,13 @@ export default {
       showDetails.value = !showDetails.value;
     };
 
-    watch(selectedUser, () => {
+    watch(localSelectedUser, () => {
+      emit('update:selectedUser', localSelectedUser.value);
       fetchUserData();
     });
 
     onMounted(() => {
-      if (users.value.length > 0) {
-        selectedUser.value = users.value[0];
+      if (localSelectedUser.value) {
         fetchUserData();
       }
     });
@@ -244,7 +246,7 @@ export default {
     const roundedAverageCommentSemanticScore = computed(() => round(averageCommentSemanticScore.value));
 
     return {
-      selectedUser,
+      localSelectedUser,
       averageSemanticScore,
       users,
       userDetails,
@@ -256,7 +258,7 @@ export default {
       averageCommitSemanticScore,
       averageCommentSemanticScore,
       fetchUserData,
-      goBack, // Return goBack method
+      goBack,
       toggleDetails,
       showDetails,
       roundedAverageSemanticScore,
@@ -269,6 +271,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .stat-box {
