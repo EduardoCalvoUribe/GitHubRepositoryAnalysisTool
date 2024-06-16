@@ -1,6 +1,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { computed } from 'vue';
 import { state } from '../repoPackage.js';
 import { getGradientColor } from '../colorUtils.js';
 
@@ -96,7 +97,8 @@ export default {
     </div>
   </div>
 
-  <button @click="goBack" class="button-6" style="width: 50px; height: 50px; justify-content: center; font-size: 90%; margin-top: 20px;">Back</button>
+  <button @click="goBack" class="button-6"
+    style="width: 50px; height: 50px; justify-content: center; font-size: 90%; margin-top: 20px;">Back</button>
 </template>
 
 <style scoped>
