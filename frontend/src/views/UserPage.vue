@@ -176,7 +176,9 @@ export default {
         const commits = [];
         const comments = [];
 
+        // Loop through each pull request and its commits and comments to calculate the user's total semantic score.
         state.githubResponse.Repo.pull_requests.forEach(pr => {
+          // Pull Requests
           if (pr.user === localSelectedUser.value.value) {
             totalScore += pr.pr_title_semantic + pr.pr_body_semantic + pr.average_semantic;
             prTitleScore += pr.pr_title_semantic;
@@ -192,7 +194,7 @@ export default {
               average_semantic: pr.average_semantic,
             });
           }
-
+          // Commits
           pr.commits.forEach(commit => {
             if (commit.user === localSelectedUser.value.value) {
               totalScore += commit.semantic_score;
@@ -208,7 +210,7 @@ export default {
               });
             }
           });
-
+          // Comments
           pr.comments.forEach(comment => {
             if (comment.user === localSelectedUser.value.value) {
               totalScore += comment.semantic_score;
@@ -225,6 +227,7 @@ export default {
           });
         });
 
+        // Calculate averages and update the reactive variables.
         averageSemanticScore.value = count ? (totalScore / count).toFixed(2) : 0;
         averagePrTitleSemanticScore.value = prCount ? (prTitleScore / prCount).toFixed(2) : 0;
         averagePrBodySemanticScore.value = prCount ? (prBodyScore / prCount).toFixed(2) : 0;
