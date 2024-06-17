@@ -245,15 +245,15 @@ export default {
     });
 
     onMounted(() => {
+      if (state.githubResponse) {
+        localStorage.setItem('data', JSON.stringify(state.githubResponse));
+      }
       const storedData = localStorage.getItem('data');
       if (storedData) {
         state.githubResponse = JSON.parse(storedData);
       }
       if (localSelectedUser.value) {
         fetchUserData();
-      }
-      if (state.githubResponse) {
-        localStorage.setItem('data', JSON.stringify(state.githubResponse));
       }
 
     });
