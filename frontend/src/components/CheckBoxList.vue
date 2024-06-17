@@ -6,11 +6,13 @@
           <input type="checkbox" :checked="areAllSelected" @change="selectAll">
           <span class="checkmark"></span>
       </label>
-      <label v-for="(username, index) in usernames" :key="index" class="container">
-          {{ username }}
-          <input type="checkbox" v-model="checkedUsers[index]">
-          <span class="checkmark"></span>
-      </label>
+      <div style="overflow-y: auto; max-height: 350px;">
+        <label v-for="(username, index) in usernames" :key="index" class="container">
+            {{ username }}
+            <input type="checkbox" v-model="checkedUsers[index]">
+            <span class="checkmark"></span>
+        </label>
+      </div>
   </div>
 </template>
 
