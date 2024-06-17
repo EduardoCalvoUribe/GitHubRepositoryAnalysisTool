@@ -430,10 +430,11 @@ def calculate_average_semantic_repo(repo_data):
         float: The average semantic score of the repository.
     """
     total_semantic = 0
+    # All sementic scores of pull requests are summed
     for pr in repo_data["pull_requests"]:
         total_semantic += pr['average_semantic']
 
-    # Divison by 0 handled
+    # Division of the sum of semanticscores by the amount of pull requests. Divison by 0 handled as well
     return total_semantic / len(repo_data["pull_requests"]) if len(repo_data["pull_requests"]) > 0 else 0  # Prevent division by zero
         
 @csrf_exempt
@@ -450,8 +451,8 @@ def login_view(request):
     data = json.loads(request.body)
     username =  data.get("username")
     password = data.get("password")
-    email = data.get("email")
-    user = authenticate(username=username, password=password)
+    # User authentication returns boolean
+    user = authenticate(username=username, password=password)   
     if user:
         token, created = Token.objects.get_or_create(user=user)
         response = JsonResponse({'token': token.key})
