@@ -1,8 +1,5 @@
 <template>
-  <header>
-    <!-- <RouterLink to="/">Home</RouterLink> -->
-  </header>
-
+  <!-- Header for the page -->
   <header>
     <div style="font-size: 180%; margin-top: 30px;">
       User page
@@ -10,6 +7,7 @@
   </header>
 
   <main>
+    <!-- User Dropdown and Semantic Score Display -->
     <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center;">
       <Dropdown v-model="localSelectedUser" :options="users" optionLabel="label" placeholder="Select a user"
         style="width: 250px; margin-right: 10px;" />
@@ -19,11 +17,7 @@
       </div>
     </div>
 
-    <!-- <div style="margin-top: 10px; display: flex; justify-content: center;">
-      <button @click="toggleDetails" class="button-6" style="width: 200px;">Further Analytics</button>
-    </div> -->
-
-    <!-- v-if="showDetails" -->
+    <!-- Extra Statistics -->
     <div class="details-section">
       <div class="stat-box">
         <strong>Total Pull Requests</strong>
@@ -56,6 +50,7 @@
     </div>
 
     <div v-if="userDetails">
+      <!-- Pull Requests -->
       <section style="margin-top: 20px;">
         <h3>Pull Requests</h3>
         <div class="scrollable-section">
@@ -71,6 +66,7 @@
         </div>
       </section>
 
+      <!-- Commits -->
       <section style="margin-top: 20px;">
         <h3>Commits</h3>
         <div class="scrollable-section">
@@ -84,6 +80,7 @@
         </div>
       </section>
 
+      <!-- Comments -->
       <section style="margin-top: 20px;">
         <h3>Comments</h3>
         <div class="scrollable-section">
@@ -100,6 +97,7 @@
     </div>
   </main>
 
+  <!-- Back Button -->
   <button @click="goBack" class="button-6"
     style="width: 50px; height: 50px; font-size: 90%; margin-top: 20px; text-align: center; padding: 0px;">Back</button>
 </template>
@@ -129,12 +127,19 @@ export default {
     const averagePrBodySemanticScore = ref(0);
     const averageCommitSemanticScore = ref(0);
     const averageCommentSemanticScore = ref(0);
-    // const showDetails = ref(false);
 
+    /**
+     * Navigates to the previous page in the browser history.
+     */
     const goBack = () => {
-      router.go(-1); // Go back to the previous page
+      router.go(-1);
     };
 
+    /**
+     * Computes the list of users involved in pull requests, commits, and comments from the GitHub response data.
+     * 
+     * @returns {Array} An array of user objects with label and value properties.
+     */
     const users = computed(() => {
       if (state.githubResponse && state.githubResponse.Repo.pull_requests) {
         const userSet = new Set();
@@ -152,6 +157,10 @@ export default {
       return [];
     });
 
+    /**
+     * Fetches the user data from the GitHub response data. Also calculates semantic score averages, total counts, and 
+     * updates userDetails with the user's pull requests, commits, and comments.
+     */
     const fetchUserData = () => {
       if (localSelectedUser.value && state.githubResponse && state.githubResponse.Repo.pull_requests) {
         let totalScore = 0;
@@ -228,14 +237,20 @@ export default {
       }
     };
 
-    // const toggleDetails = () => {
-    //   showDetails.value = !showDetails.value;
-    // };
-
+    /**
+     * Updates the selected user in the URL.
+     * 
+     * @param {Object} user The selected user.
+     */
     const updateUserInURL = (user) => {
       router.replace({ path: '/userpage', query: { selectedUser: user.value } });
     };
 
+    /**
+     * Watches the selected user and fetches the user data when the selected user changes.
+     * 
+     * @param {Object} user - The new selected user.
+     */
     watch(localSelectedUser, (newUser) => {
       emit('update:selectedUser', newUser);
       fetchUserData();
@@ -244,6 +259,9 @@ export default {
       }
     });
 
+    /**
+     * Initializes the component by setting local storage data and calling fetchUserData.
+     */
     onMounted(() => {
       if (state.githubResponse) {
         localStorage.setItem('data', JSON.stringify(state.githubResponse));
@@ -280,8 +298,6 @@ export default {
       averageCommentSemanticScore,
       fetchUserData,
       goBack,
-      // toggleDetails,
-      // showDetails,
       roundedAverageSemanticScore,
       roundedAveragePrTitleSemanticScore,
       roundedAveragePrBodySemanticScore,
@@ -291,6 +307,11 @@ export default {
     };
   },
   computed: {
+    /**
+     * Computes the CSS style for the score color based on the average semantic score.
+     * 
+     * @returns {Object} The CSS style object with border and padding properties.
+     */
     scoreColor() {
       return {
         border: `5px solid ${getGradientColor(this.roundedAverageSemanticScore, 10)}`,
