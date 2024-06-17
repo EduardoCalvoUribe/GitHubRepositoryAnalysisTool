@@ -30,16 +30,16 @@ const router = createRouter({
       name: "pullrequests",
       component: () => import("../views/PullRequestPage.vue"),
     },
-    {
-      path: "/commitpage/:url:id",
-      name: "commits",
-      component: () => import("../views/CommitPage.vue"),
-    },
-    {
-      path: "/commentpage",
-      name: "comments",
-      component: () => import("../views/CommentPage.vue"),
-    },
+    // {
+    //   path: "/commitpage/:url:id",
+    //   name: "commits",
+    //   component: () => import("../views/CommitPage.vue"),
+    // },
+    // {
+    //   path: "/commentpage",
+    //   name: "comments",
+    //   component: () => import("../views/CommentPage.vue"),
+    // },
   ],
 });
 
