@@ -201,7 +201,6 @@ export default {
               commitScore += commit.semantic_score;
               count++;
               commitCount++;
-              console.log(commit.name, "name");
               commits.push({
                 id: commit.id,
                 title: commit.title,
