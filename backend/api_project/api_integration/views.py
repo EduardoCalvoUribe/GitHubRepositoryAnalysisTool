@@ -58,6 +58,7 @@ def delete_entry_db(request):
         JsonResponse: A JSON response indicating success or failure of the deletion.
     """
     try:
+        print("Delete entry")
         # Extract id from POST request
         id = process_vue_POST_request(request)
         # Delete repodata corresponding to id from database
@@ -123,6 +124,8 @@ def send_post_request_to_repo_frontend_info(request):
     Returns:
         JsonResponse: The response from the repo_frontend_info function.
     """
+
+
     try:
         # Create a mock request object
         mock_request = HttpRequest()
@@ -160,6 +163,7 @@ def repo_frontend_info(request):
             dates = data['date']
             ranged = False
             if dates != "homepage" and dates != None:
+                print(dates)
                 ranged = True
                 begin_date, end_date = date_range(dates)
         except json.JSONDecodeError:
@@ -248,7 +252,6 @@ def selected_data(pr,data, total_comment_count, total_commit_count, begin_date, 
     data["Repo"]["total_commit_count"] = total_commit_count
     data["Repo"]["total_comment_count"] = total_comment_count
     data["Repo"]["average_semantic"] = calculate_average_semantic_repo(data["Repo"])
-    Repository.objects.filter(url=pr.repo.url).update(average_semantic_score=data["Repo"]["average_semantic"])
     return data, total_comment_count, total_commit_count
 
 def date_range(data):
@@ -357,16 +360,66 @@ def homepage_datapackage(request):
     f = open("repos.txt", "w")
     f.write(str(repos.values()))
     f.close()
-
+    
     # average_semantic = await API_call_information.calculate_semantic_score_repo(repo)
     # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
-    unique_repos = list(OrderedDict((repo.id, {        
+    
+    unique_repos = []
+    for repo in repos:  
+        headers = {'Content-Type':'application/json'}
+        json_data = {
+            'url' : repo.url,
+            'date' : None                      
+        }
+        
+        post_options = {
+            'method' : 'POST',
+            'url' : 'http://127.0.0.1:8000/package',
+            'headers': headers,
+            'json': json.dumps(json_data)
+        }      
+        
+        response = requests.post(**post_options)        
+        print(response)
+        unique_repos.append(OrderedDict((repo.id, {        
             "name": repo.name,
             "id": repo.id,
             "url": repo.url,
             "updated_at": repo.updated_at,
-            "average_semantic" : repo.average_semantic_score
-        }) for repo in repos).values())
+            # "average_semantic": calculate_average_semantic_repo(repo)
+            # "average_semantic":0
+            "average_semantic" : repo_frontend_info(response).get('average_semantic')
+        })).values())
+        
+
+    # unique_repos = list(OrderedDict((repo.id, {        
+    #         "name": repo.name,
+    #         "id": repo.id,
+    #         "url": repo.url,
+    #         "updated_at": repo.updated_at,
+    #         # "average_semantic": calculate_average_semantic_repo(repo)
+    #         # "average_semantic":0
+    #         "average_semantic" : 0 
+    #     }) for repo in repos).values())
+
+    # post_request = requests.post(repo.url,None)        
+    # # Call the repo_frontend_info function with the mock request object
+    # response = repo_frontend_info(post_request)
+
+    # repo_frontend_info({"url":repo.url,"date":None}).get('average_semantic')
+
+
+
+    # for repo_info in unique_repos:
+    #     url = repo_info['url']
+    #     # Make an internal request to the repo_frontend_info endpoint
+    #     endpoint = request.build_absolute_uri(reversed('/'))
+    #     response = requests.post(endpoint, json={"url": url, "date": "homepage"})
+    #     if response.status_code == 200:
+    #         repo_data = response.json()
+    #         repo_info['average_semantic'] = repo_data["Repo"]["average_semantic"]
+    #     else:
+    #         repo_info['average_semantic'] = "Error retrieving data"
 
     # The Repos is a list that has name & updated_at as values
     data = {"Repos" : unique_repos}
@@ -448,6 +501,7 @@ def login_view(request):
     Returns:
         JsonResponse: A JSON response containing the authentication token or an error message.
     """
+    print("received login request")
     data = json.loads(request.body)
     username =  data.get("username")
     password = data.get("password")
