@@ -122,10 +122,11 @@ export default {
 
     // Sort list by semantic score
     const sortListsScore = (list, choice) => {
+      console.log(list);
       if (choice.name === 'Semantic Score Ascending') {
-        return list.sort((a, b) => a.pr_title_semantic - b.pr_title_semantic);
+        return list.sort((a, b) => a.average_semantic - b.average_semantic);
       } else {
-        return list.sort((a, b) => b.pr_title_semantic - a.pr_title_semantic);
+        return list.sort((a, b) => b.average_semantic - a.average_semantic);
       }
     };
 
