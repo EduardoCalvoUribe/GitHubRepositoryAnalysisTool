@@ -58,7 +58,6 @@ def delete_entry_db(request):
         JsonResponse: A JSON response indicating success or failure of the deletion.
     """
     try:
-        print("Delete entry")
         # Extract id from POST request
         id = process_vue_POST_request(request)
         # Delete repodata corresponding to id from database
@@ -161,7 +160,6 @@ def repo_frontend_info(request):
             dates = data['date']
             ranged = False
             if dates != "homepage" and dates != None:
-                print(dates)
                 ranged = True
                 begin_date, end_date = date_range(dates)
         except json.JSONDecodeError:
@@ -250,6 +248,7 @@ def selected_data(pr,data, total_comment_count, total_commit_count, begin_date, 
     data["Repo"]["total_commit_count"] = total_commit_count
     data["Repo"]["total_comment_count"] = total_comment_count
     data["Repo"]["average_semantic"] = calculate_average_semantic_repo(data["Repo"])
+    Repository.objects.filter(url=pr.repo.url).update(average_semantic_score=data["Repo"]["average_semantic"])
     return data, total_comment_count, total_commit_count
 
 def date_range(data):
@@ -354,17 +353,24 @@ def homepage_datapackage(request):
     """
     #We import all the repositories from the database
     repos = Repository.objects.all()
+
+    f = open("repos.txt", "w")
+    f.write(str(repos.values()))
+    f.close()
+
+    # average_semantic = await API_call_information.calculate_semantic_score_repo(repo)
     # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
-    unique_repos = list(OrderedDict((repo.id, {
+    unique_repos = list(OrderedDict((repo.id, {        
             "name": repo.name,
             "id": repo.id,
             "url": repo.url,
             "updated_at": repo.updated_at,
-            "average_semantic": API_call_information.calculate_semantic_score_repo(repo)
+            "average_semantic" : repo.average_semantic_score
         }) for repo in repos).values())
 
     # The Repos is a list that has name & updated_at as values
     data = {"Repos" : unique_repos}
+    
     return JsonResponse(data)
     
 def parse_Github_url_variables(url):
@@ -441,7 +447,6 @@ def login_view(request):
     Returns:
         JsonResponse: A JSON response containing the authentication token or an error message.
     """
-    print("received login request")
     data = json.loads(request.body)
     username =  data.get("username")
     password = data.get("password")
