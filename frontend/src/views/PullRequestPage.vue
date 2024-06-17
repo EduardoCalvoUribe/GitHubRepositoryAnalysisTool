@@ -7,24 +7,60 @@ import { getGradientColor } from '../colorUtils.js';
 
 export default {
   setup() {
+    /**
+     * @constant {Route} route - The current route object.
+     */
     const route = useRoute();
+
+    /**
+     * @constant {Router} router - The router instance.
+     */
     const router = useRouter();
+
+    /**
+     * @constant {Ref} pullpackage - A reactive reference to hold the pull request details.
+     */
     const pullpackage = ref(null);
+
+    /**
+     * Navigates back to the previous page.
+     * @function goBack
+     */
     const goBack = () => {
-      router.go(-1); // Go back to the previous page
+      // Go back to the previous page
+      router.go(-1); 
     };
 
+    /**
+     * Stores the GitHub response data in localStorage if available.
+     */
     if (state.githubResponse) {
       localStorage.setItem('data', JSON.stringify(state.githubResponse));
     }
+
+    /**
+     * @constant {string} storedData - The GitHub response data retrieved from localStorage.
+     */
     const storedData = localStorage.getItem('data');
+
+    /**
+     * Fetches and processes the pull request data when the component is mounted.
+     * @async
+     * @function onMounted
+     */
     onMounted(async () => {
+      // Check if storedData has a value.
       if (storedData) {
+        // Parse data back to JSON format.
         state.githubResponse = JSON.parse(storedData);
       }
+      // Check if state.githubReponse has a value.
       if (state.githubResponse) {
+        // Loop through all pull requests.
         for (let i = 0; i < state.githubResponse.Repo.pull_requests.length; i++) {
+          // Check which pull request matches with given pull request URL.
           if (state.githubResponse.Repo.pull_requests[i].url == decodeURIComponent(route.params.url)) {
+            // Fill pullpackage with information about the pull request.
             pullpackage.value = state.githubResponse.Repo.pull_requests[i];
             break;
           }
@@ -33,7 +69,13 @@ export default {
       localStorage.setItem('data', JSON.stringify(state.githubResponse));
     });
 
+    /**
+     * Computes the style for the semantic score based on the score value.
+     * @constant {ComputedRef} scoreColor
+     * @returns {Object} The style object with the border color set based on the semantic score.
+     */
     const scoreColor = computed(() => {
+      // Checks if pullpackage has a value and sets score to pull requests average semantic or 0 otherwise.
       const score = pullpackage.value ? pullpackage.value.average_semantic : 0;
       return {
         border: `5px solid ${getGradientColor(score, 10)}`,
@@ -52,6 +94,7 @@ export default {
 </script>
 
 <template>
+  <!-- Header for the page that shows user, creation date and body of pull request -->
   <header>
     <div v-if="pullpackage" style="margin-top: 50px">
       <h1>Pull Request</h1>
@@ -62,6 +105,7 @@ export default {
     </div>
   </header>
 
+  <!-- Info boxes that show general information about pull request -->
   <div v-if="pullpackage" class="grid-container-2">
     <div class="info-section">
       <div class="stat-container">
@@ -82,6 +126,7 @@ export default {
     </div>
   </div>
 
+  <!-- Loop that shows all commits on the pull request -->
   <div v-if="pullpackage" class="grid-container" style="max-height: 300px; overflow-y: auto;">
     <div class="grid-item" style="border-radius: 10px;" v-for="commit in pullpackage.commits" :key="commit.id">
       {{ commit.title }}
@@ -91,7 +136,8 @@ export default {
       <div>Updated At: {{ commit.updated_at }}</div>
     </div>
   </div>
-
+  
+  <!-- Back button to go to previous page -->
   <button @click="goBack" class="button-6"
     style="width: 50px; height: 50px; justify-content: center; font-size: 90%; margin-top: 20px;">Back</button>
 </template>
