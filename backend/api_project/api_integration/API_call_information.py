@@ -75,7 +75,7 @@ async def pull_request_task(pr, data_list, i):
     """
     Process a pull request and update the database with the relevant information.
 
-    Args:
+    Parameters:
         pr (list): A list containing the pull request information.
         data_list (list): A list containing the data to be updated in the database.
 
@@ -122,7 +122,7 @@ async def commit_task(commit, data_list, pr_num,i):
     """
     Process a commit and add it to the data list.
 
-    Args:
+    Parameters:
         commit (dict): The commit information.
         data_list (list): The list containing data.
 
@@ -158,7 +158,7 @@ async def comment_task(comment, data_list,i):
     """
     Process a comment and add it to the data list.
 
-    Args:
+    Parameters:
         comment (dict): The comment to be processed.
         data_list (list): The list containing the data.
 
@@ -223,7 +223,7 @@ def create_pull_requests(data_list, repo_db):
     """
     Create or update pull requests in the database.
 
-    Args:
+    Parameters:
         data_list (list): A list containing pull request data.
         repo_db (str): The name of the repository in the database.
 
@@ -240,7 +240,7 @@ def create_comments(data_list, repo_db):
     """
     Create comments in the database based on the provided data list.
 
-    Args:
+    Parameters:
         data_list (list): A list containing the data for commits and comments.
         repo_db: The database object.
 
@@ -257,7 +257,7 @@ def create_commits(data_list, repo_db):
     """
     Create commits in the database based on the provided data list.
 
-    Args:
+    Parameters:
         data_list (list): A list containing the data for commits and comments.
         repo_db: The database object.
 
@@ -277,7 +277,7 @@ async def create_and_update_user_data(all_users, repo_db):
     """
     Creates or updates user data in the database.
 
-    Args:
+    Parameters:
         all_users (list): A list of user data.
         repo_db: The repository database.
 
@@ -304,7 +304,7 @@ def update_model_data(model, related_data_field, related_data_url):
     """
     Update the model data by appending a related data URL to a specified field.
 
-    Args:
+    Parameters:
         model: The model object to update.
         related_data_field: The name of the field in the model to update.
         related_data_url: The URL of the related data to append.
@@ -636,7 +636,7 @@ def calculate_semantic_score_repo(repo):
     """
     Calculate the average semantic score for a given repository.
 
-    Args:
+    Parameters:
         repo: A repository object
 
     Returns:
