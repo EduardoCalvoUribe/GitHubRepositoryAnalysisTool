@@ -726,6 +726,7 @@ export default {
     </div>
   </div>
 
+  <!-- The chart info per semantic score, commit or pull request and the button to reset the chart view. -->
   <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 100%;">
 
     <div style="margin-right: 10px; margin-top: 70px; min-width: 160px; position: relative">
