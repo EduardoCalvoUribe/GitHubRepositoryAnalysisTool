@@ -74,9 +74,9 @@ export default {
      */
     const zoomedMonth = ref(null);
 
-     /**
-     * @constant {Ref<Boolean>} isBar - Whether the chart is in bar mode.
-     */
+    /**
+    * @constant {Ref<Boolean>} isBar - Whether the chart is in bar mode.
+    */
     const isBar = ref(true);
 
     /**
@@ -140,11 +140,11 @@ export default {
       }
       router.push(newUrl);
 
-       /**
-       * @constant {Object} data_send - The data to be sent in the POST request.
-       * @property {String} data_send.url - The decoded URL from the route parameters.
-       * @property {Array|null} data_send.date - The selected date range.
-       */
+      /**
+      * @constant {Object} data_send - The data to be sent in the POST request.
+      * @property {String} data_send.url - The decoded URL from the route parameters.
+      * @property {Array|null} data_send.date - The selected date range.
+      */
       const data_send = {
         url: decodeURIComponent(route.params.url),
         date: selectedRange.value,
@@ -225,7 +225,6 @@ export default {
    * @returns {Array} The sorted list.
    */
     const sortListsScore = (list, choice) => {
-      console.log(list);
       if (choice.name === 'Semantic Score Ascending') {
         return list.sort((a, b) => a.average_semantic - b.average_semantic);
       } else {
@@ -233,12 +232,12 @@ export default {
       }
     };
 
-   /**
- * A computed property for sorted pull requests based on selected sort and users.
- * 
- * @computed
- * @returns {Array} The sorted and filtered list of pull requests.
- */
+    /**
+  * A computed property for sorted pull requests based on selected sort and users.
+  * 
+  * @computed
+  * @returns {Array} The sorted and filtered list of pull requests.
+  */
     const sortedPullRequests = computed(() => {
       if (!state.githubResponse) return [];
       let filteredList = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value);
@@ -654,7 +653,7 @@ export default {
       </div>
       <button class="button-6" v-if="isZoomedIn" @click="resetChartView"
         style="position: absolute; bottom: 10px; right: 10px; margin-top: 20px; width: 40px; height: 40px; justify-content: center; vertical-align: center; font-size: larger;">
-      <</button>
+        << /button>
     </div>
 
     <Chart style="flex: 1; max-width: 1000px" @bar-click="handleBarClick" :chartData="chartData"
