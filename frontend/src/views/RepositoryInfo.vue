@@ -19,33 +19,98 @@ export default {
   },
 
   setup() {
+    /**
+     * @constant {Route} route - The current route object.
+     */
     const route = useRoute();
+
+    /**
+     * @constant {Router} router - The router instance.
+     */
     const router = useRouter();
+
+    /**
+     * @constant {Ref<Array>} selectedUsers - The selected users.
+     */
     const selectedUsers = ref([]);
+
+    /**
+     * @constant {Ref<Object>} selectedSort - The selected sorting option: 'Date Newest to Oldest'.
+     */
     const selectedSort = ref({ name: 'Date Newest to Oldest' });
+
+    /**
+     * @constant {Ref<String>} selectedStat - The selected statistic of the selected pull request.
+     */
     const selectedStat = ref('pullrequests');
+
+    /**
+     * @constant {Ref<null|Array>} selectedRange - The selected date range.
+     */
     const selectedRange = ref(null);
+
+    /**
+     * @constant {Ref<Array>} sorts - The available sorting options.
+     */
     const sorts = ref([
       { name: 'Date Oldest to Newest' },
       { name: 'Date Newest to Oldest' },
       { name: 'Semantic Score Ascending' },
       { name: 'Semantic Score Descending' },
     ]);
+
+    /**
+     * @constant {Ref<Boolean>} isZoomedIn - Whether the chart is zoomed in.
+     */
     const isZoomedIn = ref(false);
+
+    /**
+     * @constant {Ref<null|Number>} zoomedYear - The zoomed-in year.
+     */
     const zoomedYear = ref(null);
+
+    /**
+     * @constant {Ref<null|Number>} zoomedMonth - The zoomed-in month.
+     */
     const zoomedMonth = ref(null);
+
+    /**
+    * @constant {Ref<Boolean>} isBar - Whether the chart is in bar mode.
+    */
     const isBar = ref(true);
 
+    /**
+     * @constant {Object} chartModes - The available chart modes.
+     * @property {Object} pullrequests - Configuration for the pull requests chart mode.
+     * @property {String} pullrequests.title - Title for the pull requests chart mode.
+     * @property {Boolean} pullrequests.isBar - Whether the pull requests chart is in bar mode.
+     * @property {Object} commits - Configuration for the commits chart mode.
+     * @property {String} commits.title - Title for the commits chart mode.
+     * @property {Boolean} commits.isBar - Whether the commits chart is in bar mode.
+     * @property {Object} semantic - Configuration for the semantic score chart mode.
+     * @property {String} semantic.title - Title for the semantic score chart mode.
+     * @property {Boolean} semantic.isBar - Whether the semantic score chart is in bar mode.
+     */
     const chartModes = {
       pullrequests: { title: 'Number of Pull Requests', isBar: true },
       commits: { title: 'Number of Commits', isBar: true },
       semantic: { title: 'Average Semantic Score for Commit Messages', isBar: false },
     };
 
+    /**
+     * Navigates back to the previous page.
+     * @function goBack
+     */
     const goBack = () => {
       router.go(-1); // Go back to the previous page
     };
 
+    /**
+    * Asynchronously updates the URL based on the provided date and updates the selectedRange.
+    * 
+    * @param {String|null} date - The date or date range to be used for updating the URL. 
+    *                             Can be 'homepage' for the home page or null to reset the date.
+    */
     const getPackage = async (date) => {
       const oldurl = route.path;
       let newUrl = "";
@@ -75,11 +140,23 @@ export default {
       }
       router.push(newUrl);
 
+      /**
+      * @constant {Object} data_send - The data to be sent in the POST request.
+      * @property {String} data_send.url - The decoded URL from the route parameters.
+      * @property {Array|null} data_send.date - The selected date range.
+      */
       const data_send = {
         url: decodeURIComponent(route.params.url),
         date: selectedRange.value,
       };
 
+      /**
+       * @constant {Object} postOptions - The options for the POST request.
+       * @property {String} postOptions.method - The HTTP method, set to 'POST'.
+       * @property {Object} postOptions.headers - The headers for the request.
+       * @property {String} postOptions.headers['Content-Type'] - The content type, set to 'application/json'.
+       * @property {String} postOptions.body - The stringified JSON body of the request.
+       */
       const postOptions = {
         method: 'POST',
         headers: {
@@ -95,14 +172,26 @@ export default {
       }
     };
 
-    // Filter pull requests by selected users
+    /**
+   * Filters pull requests based on the selected users.
+   * 
+   * @param {Array} pullRequests - The list of pull requests to filter.
+   * @param {Array} users - The list of selected users to filter by.
+   * @returns {Array} The filtered list of pull requests.
+   */
     const filterPullRequests = (pullRequests, users) => {
       return users.length > 0
         ? pullRequests.filter(pr => users.includes(pr.user))
         : pullRequests;
     };
 
-    // Filter commits by selected users
+    /**
+   * Filters commits by the selected users from the given pull requests.
+   * 
+   * @param {Array} pullRequests - The list of pull requests to filter commits from.
+   * @param {Array} users - The list of selected users to filter by.
+   * @returns {Array} The filtered list of commits.
+   */
     const filterCommits = (pullRequests, users) => {
       return users.length > 0
         ? pullRequests.flatMap(pr => {
@@ -111,7 +200,14 @@ export default {
         : pullRequests.flatMap(pr => pr.commits || []);
     };
 
-    // Sort list by date
+    /**
+   * Sorts a list by date.
+   * 
+   * @param {Array} list - The list to be sorted.
+   * @param {Object} choice - The sorting choice object.
+   * @param {String} choice.name - The name of the sorting option.
+   * @returns {Array} The sorted list.
+   */
     const sortListsDate = (list, choice) => {
       if (choice.name === 'Date Oldest to Newest') {
         return list.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -120,19 +216,32 @@ export default {
       }
     };
 
-    // Sort list by semantic score
+    /**
+   * Sorts a list by semantic score.
+   * 
+   * @param {Array} list - The list to be sorted.
+   * @param {Object} choice - The sorting choice object.
+   * @param {String} choice.name - The name of the sorting option.
+   * @returns {Array} The sorted list.
+   */
     const sortListsScore = (list, choice) => {
       if (choice.name === 'Semantic Score Ascending') {
-        return list.sort((a, b) => a.pr_title_semantic - b.pr_title_semantic);
+        return list.sort((a, b) => a.average_semantic - b.average_semantic);
       } else {
-        return list.sort((a, b) => b.pr_title_semantic - a.pr_title_semantic);
+        return list.sort((a, b) => b.average_semantic - a.average_semantic);
       }
     };
 
-    // Computed property for sorted pull requests
+    /**
+    * A computed property for sorted pull requests based on selected sort and users.
+    * 
+    * @computed
+    * @returns {Array} The sorted and filtered list of pull requests.
+    */
     const sortedPullRequests = computed(() => {
       if (!state.githubResponse) return [];
       let filteredList = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value);
+      //Check which sorting option is selected. 
       if (selectedSort.value.name.includes('Date')) {
         return sortListsDate(filteredList, selectedSort.value);
       } else {
@@ -140,12 +249,22 @@ export default {
       }
     });
 
-    // Count of pull requests
+    /**
+   * A computed property for the count of sorted pull requests.
+   * 
+   * @computed
+   * @returns {Number} The count of sorted pull requests.
+   */
     const pullRequestCount = computed(() => {
       return sortedPullRequests.value.length;
     });
 
-    // Format the updated date
+    /**
+   * A computed property to format the updated date of the repository.
+   * 
+   * @computed
+   * @returns {String} The formatted updated date of the repository, or 'Loading...' if not available.
+   */
     const formattedDate = computed(() => {
       if (!state.githubResponse || !state.githubResponse.Repo.updated_at) {
         return 'Loading...';
@@ -163,7 +282,12 @@ export default {
       return formatter.format(date);
     });
 
-    // List of users
+    /**
+   * A computed property that returns a list of unique users from the pull requests.
+   * 
+   * @computed
+   * @returns {Array} The list of unique users.
+   */
     const userList = computed(() => {
       if (!state.githubResponse || !state.githubResponse.Repo.pull_requests) {
         return [];
@@ -175,13 +299,34 @@ export default {
       return Array.from(users);
     });
 
-    // Handle selected users
+    /**
+   * Handles the selected users and updates the chart data.
+   * 
+   * @param {Array} selected - The list of selected users.
+   */
     const handleSelectedUsers = (selected) => {
       selectedUsers.value = selected;
       updateChartData();
     };
 
-    // Chart options
+    /**
+   * Chart options for the chart component.
+   * 
+   * @constant {Object} chartOptions - The configuration object for the chart.
+   * @property {Boolean} chartOptions.responsive - Indicates if the chart is responsive.
+   * @property {Boolean} chartOptions.maintainAspectRatio - Indicates if the aspect ratio should be maintained.
+   * @property {Object} chartOptions.scales - The scales configuration for the chart.
+   * @property {Object} chartOptions.scales.y - The y-axis configuration.
+   * @property {Boolean} chartOptions.scales.y.beginAtZero - Indicates if the y-axis should begin at zero.
+   * @property {Object} chartOptions.plugins - The plugins configuration for the chart.
+   * @property {Object} chartOptions.plugins.legend - The legend configuration.
+   * @property {Boolean} chartOptions.plugins.legend.display - Indicates if the legend should be displayed.
+   * @property {Object} chartOptions.plugins.title - The title configuration.
+   * @property {Boolean} chartOptions.plugins.title.display - Indicates if the title should be displayed.
+   * @property {String} chartOptions.plugins.title.text - The title text.
+   * @property {Object} chartOptions.plugins.title.font - The font configuration for the title.
+   * @property {Number} chartOptions.plugins.title.font.size - The font size for the title.
+   */
     const chartOptions = ref({
       responsive: true,
       maintainAspectRatio: false,
@@ -204,7 +349,12 @@ export default {
       }
     });
 
-    // Computes the pull request count per month for the chart
+    /**
+   * A computed property that calculates the count of pull requests per month for the chart.
+   * 
+   * @computed
+   * @returns {Object} The count of pull requests per month.
+   */
     const pullRequestsRange = computed(() => {
       let minDate = new Date(); // Set to a future date
       let maxDate = new Date(0); // Set to a past date
@@ -235,7 +385,14 @@ export default {
       return { labels, data };
     });
 
-    // Computes the commit count per month for the chart
+    /**
+   * A computed property that calculates the commit count per month for the chart.
+   * 
+   * @computed
+   * @returns {Object} An object containing month labels and commit counts.
+   * @returns {Array} returns.labels - The labels for each month.
+   * @returns {Array} returns.data - The count of commits for each month.
+   */
     const commitsRange = computed(() => {
       let minDate = new Date(); // Set to a future date
       let maxDate = new Date(0); // Set to a past date
@@ -266,7 +423,14 @@ export default {
       return { labels, data };
     });
 
-    // Computes the average semantic score per month for the chart
+    /**
+   * A computed property that calculates the average semantic score per month for the chart.
+   * 
+   * @computed
+   * @returns {Object} An object containing month labels and average semantic scores.
+   * @returns {Array} returns.labels - The labels for each month.
+   * @returns {Array} returns.data - The average semantic scores for each month.
+   */
     const semanticRange = computed(() => {
       let minDate = new Date(); // Set to a future date
       let maxDate = new Date(0); // Set to a past date
@@ -301,7 +465,9 @@ export default {
       return { labels, data };
     });
 
-    // Updates the chart data based on the selected stat and zoom level
+    /**
+   * Updates the chart data based on the selected stat and zoom level.
+   */
     const updateChartData = () => {
       if (isZoomedIn.value && zoomedYear.value && zoomedMonth.value) {
         handleBarClick({ label: `${zoomedYear.value}-${zoomedMonth.value.toString().padStart(2, '0')}` });
@@ -317,7 +483,13 @@ export default {
       }
     };
 
-    // Helper function for updateChartData
+    /**
+   * Updates the chart with new data based on a new range.
+   * 
+   * @param {Object} range - The computed property representing the data range.
+   * @param {String} title - The title to display on the chart.
+   * @param {Boolean} bar - Indicates if the chart should display as a bar chart.
+   */
     const updateChart = (range, title, bar) => {
       const data = range.value;
       chartOptions.value.plugins.title.text = title;
@@ -331,7 +503,12 @@ export default {
       };
     };
 
-    // Handles the clicking of the chart bars
+    /**
+   * Handles the clicking of the chart bars.
+   * 
+   * @param {Object} label - The label object containing the clicked label information.
+   * @param {String} label.label - The label text representing the clicked bar.
+   */
     const handleBarClick = (label) => {
       const [year, month] = label.label.split('-').map(Number); // Extract year and month from the label
 
@@ -395,7 +572,9 @@ export default {
       zoomedMonth.value = month;
     };
 
-    // Reset chart view to monthly data
+    /**
+    * Resets the chart to the monthly data. 
+    */
     const resetChartView = () => {
       const mode = chartModes[selectedStat.value];
       let data;
@@ -413,6 +592,9 @@ export default {
       zoomedMonth.value = null;
     };
 
+    /**
+   * Sets the labels of the chart to the labels from the pull request data. 
+   */
     const chartData = ref({
       labels: pullRequestsRange.value.labels,
       datasets: [{
@@ -421,6 +603,9 @@ export default {
       }]
     });
 
+    /**
+   * Sets color of the semantic score box in rgb values based on the semantic score.  
+   */
     const scoreColor = computed(() => {
       const score = state.githubResponse ? state.githubResponse.Repo.average_semantic : 0;
       return {
@@ -430,10 +615,16 @@ export default {
       };
     });
 
+    /**
+  * Calls updateChartData() everytime selectedUsers or selectedStat changes. 
+  */
     watch([selectedUsers, selectedStat], () => {
       updateChartData();
     });
 
+    /**
+  * Calls a pachage when the page loads. 
+  */
     onMounted(async () => {
       await getPackage("homepage");
     });
@@ -473,6 +664,11 @@ export default {
     }
   },
 
+  /**
+* Handles the routing using a specific pull request user. 
+* 
+* @param {user} user - The user that the page should be redirected to. 
+*/
   methods: {
     goToUserPage(user) {
       this.$router.push({ path: '/userpage', query: { selectedUser: user } });
@@ -482,6 +678,7 @@ export default {
 </script>
 
 <template>
+  <!-- Header for the page that shows the repository name and when it was last updated. -->
   <header>
     <div v-if="state.githubResponse" style="margin-top: 50px">
       <div style="font-size: 240%; margin-bottom: 20px;"> {{ state.githubResponse.Repo.name }} </div>
@@ -491,6 +688,7 @@ export default {
     </div>
   </header>
 
+  <!-- The date package and the button to reload the data based on the picked date range. -->
   <div style="margin-top: 4%; display: flex; justify-content: center;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <label style="justify-content: center; display: inline-block; width: 250px;" for="datePicker">Select date
@@ -527,6 +725,7 @@ export default {
     </div>
   </div>
 
+  <!-- The chart info per semantic score, commit or pull request and the button to reset the chart view. -->
   <div style="display: flex; justify-content: space-evenly; margin-top: 4%; height: 500px; max-width: 100%;">
 
     <div style="margin-right: 10px; margin-top: 70px; min-width: 160px; position: relative">
@@ -547,6 +746,7 @@ export default {
       <</button>
     </div>
 
+    <!-- Chart displaying the chart data and users. -->
     <Chart style="flex: 1; max-width: 1000px" @bar-click="handleBarClick" :chartData="chartData"
       :chartOptions="chartOptions" :isBar="isBar" />
 
@@ -555,6 +755,7 @@ export default {
     </div>
   </div>
 
+  <!-- Drop down menu with options for the user to select their sort option. -->
   <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start;">
       <div style="margin-bottom: 25px;">
@@ -602,6 +803,7 @@ export default {
     </div>
   </div>
 
+  <!-- Back button to go to previous page -->
   <button @click="goBack" class="button-6" style="width: 50px; height: 50px; font-size: 90%;">Back</button>
 </template>
 

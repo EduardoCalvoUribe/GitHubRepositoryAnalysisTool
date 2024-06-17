@@ -89,8 +89,6 @@ async def compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_s
         changed_code_char_count = 0
         # Get files associated with pull request
         #files = await get_pr_files(repo_owner, repo_name, pull_number)
-        # print(commitJSON["files"])
-        # print(type(commitJSON["files"]))
         if "files" in commitJSON:
             # print(commitJSON["files"]["patch"])
             files = commitJSON["files"]["patch"]
@@ -102,8 +100,6 @@ async def compute_code_commit_ratio(repo_owner, repo_name, pull_number, commit_s
             # Init changed_code_char_count
 
             # Loop over all files associated with pull request
-            print(files)
-            print(type(files))
             for file in files:
                 patch = file.get("patch", "")
                 if patch:

@@ -30,54 +30,68 @@ const router = createRouter({
       name: "pullrequests",
       component: () => import("../views/PullRequestPage.vue"),
     },
-    {
-      path: "/commitpage/:url:id",
-      name: "commits",
-      component: () => import("../views/CommitPage.vue"),
-    },
-    {
-      path: "/commentpage",
-      name: "comments",
-      component: () => import("../views/CommentPage.vue"),
-    },
+    // {
+    //   path: "/commitpage/:url:id",
+    //   name: "commits",
+    //   component: () => import("../views/CommitPage.vue"),
+    // },
+    // {
+    //   path: "/commentpage",
+    //   name: "comments",
+    //   component: () => import("../views/CommentPage.vue"),
+    // },
   ],
 });
 
+/**
+ * Navigation guard to handle authentication and token expiration.
+ * @param {Object} to - Target Route Object being navigated to.
+ * @param {Object} from - Current Route Object being navigated away from.
+ * @param {Function} next - Function to resolve the hook. Must be called to resolve the navigation.
+ */
 router.beforeEach((to, from, next) => {
+  // Set authToken with data from local storage.
   const authToken = localStorage.getItem("authToken");
   const isLoggedIn = !!authToken;
 
   const expiresAt = localStorage.getItem("expirationTime");
 
+  // Check if logged in.
   if (!isLoggedIn) {
     if (to.path !== "/login") {
-      next("/login"); // Redirect to login page if not logged in
+      localStorage.removeItem("data");
+      // Redirect to login page if not logged in.
+      next("/login"); 
     } else {
       next();
     }
   } else if (isLoggedIn && expiresAt > Date.now()) {
-    // Token is valid, allow navigation
+    // Token is valid, allow navigation.
     next();
   } else {
     // Token expired, handle expiration:
     localStorage.removeItem("authToken");
     localStorage.removeItem("expirationTime");
-    next("/login"); // Or redirect to a refresh token endpoint based on your logic
+    localStorage.removeItem("data");
+    next("/login"); 
   }
 });
 
+/**
+ * Checks for token expiration and removes token and data if expired.
+ */
 const checkExpiration = () => {
+  // Set storedData with authToken locally stored.
   const storedData = localStorage.getItem("authToken");
+  // Check if a token is stored locally.
   if (!storedData) {
-    return; // No token stored
+    return; 
   }
 
   const expirationTime = localStorage.getItem("expirationTime");
   if (expirationTime < Date.now()) {
     localStorage.removeItem("authToken");
-    if (!localStorage.getItem("data")) {
-      localStorage.removeItem("data"); // make sure all data is removed
-    }
+    localStorage.removeItem("data"); // make sure all data is removed
     window.location.href = "http://localhost:5173/login";
   }
 };

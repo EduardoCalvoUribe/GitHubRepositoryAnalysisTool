@@ -6,19 +6,25 @@
           <input type="checkbox" :checked="areAllSelected" @change="selectAll">
           <span class="checkmark"></span>
       </label>
-      <label v-for="(username, index) in usernames" :key="index" class="container">
-          {{ username }}
-          <input type="checkbox" v-model="checkedUsers[index]">
-          <span class="checkmark"></span>
-      </label>
+      <div style="overflow-y: auto; max-height: 350px;">
+        <label v-for="(username, index) in usernames" :key="index" class="container">
+            {{ username }}
+            <input type="checkbox" v-model="checkedUsers[index]">
+            <span class="checkmark"></span>
+        </label>
+      </div>
   </div>
 </template>
-
 
 <script>
 export default {
     name: 'CheckBox',
     props: {
+        /**
+         * Array of usernames to be displayed as checkbox options.
+         * @type {Array}
+         * @required
+         */
         usernames: {
             type: Array,
             required: true
@@ -27,26 +33,46 @@ export default {
     emits: ['update:selected'],
     data() {
         return {
+            /**
+             * Array of booleans representing the checked state of each user.
+             * @type {Array}
+             */
             checkedUsers: this.usernames.map(() => true) // Initialize all users as checked
         }
     },
     methods: {
-      selectAll(event) {
-          const isChecked = event.target.checked;
-          this.checkedUsers.fill(isChecked);
-      },
-      emitSelectedUsers() {
-          const selectedUsernames = this.usernames.filter((_, index) => this.checkedUsers[index]);
-          this.$emit('update:selected', selectedUsernames);
-      }
+        /**
+         * Selects or deselects all checkboxes based on the event target's checked state.
+         * 
+         * @param {Event} event - The change event triggered by the "Select All" checkbox.
+         */
+        selectAll(event) {
+            const isChecked = event.target.checked;
+            this.checkedUsers.fill(isChecked);
+        },
+        /**
+         * Emits the list of selected usernames.
+         */
+        emitSelectedUsers() {
+            const selectedUsernames = this.usernames.filter((_, index) => this.checkedUsers[index]);
+            this.$emit('update:selected', selectedUsernames);
+        }
     },
     watch: {
+        /**
+         * Watches for changes in the usernames prop and updates the checkedUsers array accordingly.
+         * 
+         * @param {Array} newVal - The new array of usernames.
+         */
         usernames: {
             immediate: true,
             handler(newVal) {
                 this.checkedUsers = newVal.map(() => true);
             }
         },
+        /**
+         * Watches for changes in the checkedUsers array and emits the selected users.
+         */
         checkedUsers: {
             deep: true,  // Necessary for watching array changes
             handler() {
@@ -55,8 +81,13 @@ export default {
         }
     },
     computed: {
+        /**
+         * Computed property to determine if all checkboxes are selected.
+         * 
+         * @returns {Boolean} True if all checkboxes are selected, false otherwise.
+         */
         areAllSelected() {
-          return this.checkedUsers.length && this.checkedUsers.every(Boolean);
+            return this.checkedUsers.length && this.checkedUsers.every(Boolean);
         }
     }
 }

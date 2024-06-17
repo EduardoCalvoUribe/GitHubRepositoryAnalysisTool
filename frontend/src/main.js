@@ -8,17 +8,17 @@ import "@vuepic/vue-datepicker/dist/main.css";
 import PrimeVue from "primevue/config";
 import "primevue/resources/themes/aura-light-green/theme.css";
 import Dropdown from "primevue/dropdown";
-import Vuelidate from "vuelidate";
-
-// import SelectButton from 'primevue/selectbutton';
-
+// Create app.
 const app = createApp(App);
 
+// Allow web app to use Vue router.
 app.use(router);
+// Allow web app to use Vue datepicker.
 app.component("VueDatePicker", VueDatePicker);
-
+// Allow web app to use PrimeVue.
 app.use(PrimeVue);
+// Allow web app to use dropdown menu.
 app.component("Dropdown", Dropdown);
-// app.component('SelectButton', SelectButton);
 
+// Mount app.
 app.mount("#app");

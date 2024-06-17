@@ -29,6 +29,7 @@ class Repository(models.Model): # repository, might have to change this into com
     comments_list = models.JSONField(blank=True, default=list) # list of comments in repository
     users_list = models.JSONField(blank=True, default=list) # list of users in repository 
     token = models.CharField(max_length=100, default = "") # save personal access token
+    average_semantic_score = models.FloatField(default=0.0) # average semantic score of the repository
 
     def __str__(self):
         return self.name
