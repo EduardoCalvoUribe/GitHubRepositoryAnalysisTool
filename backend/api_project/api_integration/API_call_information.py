@@ -44,7 +44,7 @@ async def get_github_information(response):
                 "url": repo_url,
                 "name": repo,
                 "owner": owner,
-                    "updated_at": timezone.now()
+                "updated_at": timezone.now()
         }
         # Add repo object to first element of data list
         data_list[0].append(models.Repository(**defaults)) 
