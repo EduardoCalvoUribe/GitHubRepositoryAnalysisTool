@@ -19,33 +19,98 @@ export default {
   },
 
   setup() {
+    /**
+     * @constant {Route} route - The current route object.
+     */
     const route = useRoute();
+
+    /**
+     * @constant {Router} router - The router instance.
+     */
     const router = useRouter();
+
+    /**
+     * @constant {Ref<Array>} selectedUsers - The selected users.
+     */
     const selectedUsers = ref([]);
+
+    /**
+     * @constant {Ref<Object>} selectedSort - The selected sorting option: 'Date Newest to Oldest'.
+     */
     const selectedSort = ref({ name: 'Date Newest to Oldest' });
+
+    /**
+     * @constant {Ref<String>} selectedStat - The selected statistic of the selected pull request.
+     */
     const selectedStat = ref('pullrequests');
+
+    /**
+     * @constant {Ref<null|Array>} selectedRange - The selected date range.
+     */
     const selectedRange = ref(null);
+
+    /**
+     * @constant {Ref<Array>} sorts - The available sorting options.
+     */
     const sorts = ref([
       { name: 'Date Oldest to Newest' },
       { name: 'Date Newest to Oldest' },
       { name: 'Semantic Score Ascending' },
       { name: 'Semantic Score Descending' },
     ]);
+
+    /**
+     * @constant {Ref<Boolean>} isZoomedIn - Whether the chart is zoomed in.
+     */
     const isZoomedIn = ref(false);
+
+    /**
+     * @constant {Ref<null|Number>} zoomedYear - The zoomed-in year.
+     */
     const zoomedYear = ref(null);
+
+    /**
+     * @constant {Ref<null|Number>} zoomedMonth - The zoomed-in month.
+     */
     const zoomedMonth = ref(null);
+
+     /**
+     * @constant {Ref<Boolean>} isBar - Whether the chart is in bar mode.
+     */
     const isBar = ref(true);
 
+    /**
+     * @constant {Object} chartModes - The available chart modes.
+     * @property {Object} pullrequests - Configuration for the pull requests chart mode.
+     * @property {String} pullrequests.title - Title for the pull requests chart mode.
+     * @property {Boolean} pullrequests.isBar - Whether the pull requests chart is in bar mode.
+     * @property {Object} commits - Configuration for the commits chart mode.
+     * @property {String} commits.title - Title for the commits chart mode.
+     * @property {Boolean} commits.isBar - Whether the commits chart is in bar mode.
+     * @property {Object} semantic - Configuration for the semantic score chart mode.
+     * @property {String} semantic.title - Title for the semantic score chart mode.
+     * @property {Boolean} semantic.isBar - Whether the semantic score chart is in bar mode.
+     */
     const chartModes = {
       pullrequests: { title: 'Number of Pull Requests', isBar: true },
       commits: { title: 'Number of Commits', isBar: true },
       semantic: { title: 'Average Semantic Score for Commit Messages', isBar: false },
     };
 
+    /**
+     * Navigates back to the previous page.
+     * @function goBack
+     */
     const goBack = () => {
       router.go(-1); // Go back to the previous page
     };
 
+    /**
+    * Asynchronously updates the URL based on the provided date and updates the selectedRange.
+    * 
+    * @param {String|null} date - The date or date range to be used for updating the URL. 
+    *                             Can be 'homepage' for the home page or null to reset the date.
+    */
     const getPackage = async (date) => {
       const oldurl = route.path;
       let newUrl = "";
@@ -75,11 +140,23 @@ export default {
       }
       router.push(newUrl);
 
+       /**
+       * @constant {Object} data_send - The data to be sent in the POST request.
+       * @property {String} data_send.url - The decoded URL from the route parameters.
+       * @property {Array|null} data_send.date - The selected date range.
+       */
       const data_send = {
         url: decodeURIComponent(route.params.url),
         date: selectedRange.value,
       };
 
+      /**
+       * @constant {Object} postOptions - The options for the POST request.
+       * @property {String} postOptions.method - The HTTP method, set to 'POST'.
+       * @property {Object} postOptions.headers - The headers for the request.
+       * @property {String} postOptions.headers['Content-Type'] - The content type, set to 'application/json'.
+       * @property {String} postOptions.body - The stringified JSON body of the request.
+       */
       const postOptions = {
         method: 'POST',
         headers: {
@@ -95,14 +172,26 @@ export default {
       }
     };
 
-    // Filter pull requests by selected users
+    /**
+   * Filters pull requests based on the selected users.
+   * 
+   * @param {Array} pullRequests - The list of pull requests to filter.
+   * @param {Array} users - The list of selected users to filter by.
+   * @returns {Array} The filtered list of pull requests.
+   */
     const filterPullRequests = (pullRequests, users) => {
       return users.length > 0
         ? pullRequests.filter(pr => users.includes(pr.user))
         : pullRequests;
     };
 
-    // Filter commits by selected users
+    /**
+   * Filters commits by the selected users from the given pull requests.
+   * 
+   * @param {Array} pullRequests - The list of pull requests to filter commits from.
+   * @param {Array} users - The list of selected users to filter by.
+   * @returns {Array} The filtered list of commits.
+   */
     const filterCommits = (pullRequests, users) => {
       return users.length > 0
         ? pullRequests.flatMap(pr => {
@@ -111,7 +200,14 @@ export default {
         : pullRequests.flatMap(pr => pr.commits || []);
     };
 
-    // Sort list by date
+    /**
+   * Sorts a list by date.
+   * 
+   * @param {Array} list - The list to be sorted.
+   * @param {Object} choice - The sorting choice object.
+   * @param {String} choice.name - The name of the sorting option.
+   * @returns {Array} The sorted list.
+   */
     const sortListsDate = (list, choice) => {
       if (choice.name === 'Date Oldest to Newest') {
         return list.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -120,7 +216,14 @@ export default {
       }
     };
 
-    // Sort list by semantic score
+    /**
+   * Sorts a list by semantic score.
+   * 
+   * @param {Array} list - The list to be sorted.
+   * @param {Object} choice - The sorting choice object.
+   * @param {String} choice.name - The name of the sorting option.
+   * @returns {Array} The sorted list.
+   */
     const sortListsScore = (list, choice) => {
       console.log(list);
       if (choice.name === 'Semantic Score Ascending') {
@@ -130,10 +233,16 @@ export default {
       }
     };
 
-    // Computed property for sorted pull requests
+   /**
+ * A computed property for sorted pull requests based on selected sort and users.
+ * 
+ * @computed
+ * @returns {Array} The sorted and filtered list of pull requests.
+ */
     const sortedPullRequests = computed(() => {
       if (!state.githubResponse) return [];
       let filteredList = filterPullRequests(state.githubResponse.Repo.pull_requests, selectedUsers.value);
+      //Check which sorting option is selected. 
       if (selectedSort.value.name.includes('Date')) {
         return sortListsDate(filteredList, selectedSort.value);
       } else {
