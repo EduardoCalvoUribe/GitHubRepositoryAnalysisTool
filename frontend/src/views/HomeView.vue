@@ -4,27 +4,53 @@ import { fetchData } from '../fetchData.js';
 
 export default {
   setup() {
-    const repoInfo = ref(null); // initializes repoInfo to be filled with data from backend
-    const selectedSort = ref({ name: 'Date Newest to Oldest' }); // sort option user selects from dropdown menu, default set to newest to oldest?
-    const sorts = [ // different possible sort options
+    /**
+     * @constant {Ref} repoInfo - A reactive reference holding repository information fetched from the backend.
+     */
+    const repoInfo = ref(null);
+    
+    /**
+     * @constant {Ref} selectedSort - A reactive reference holding the currently selected sort option.
+     * @default { name: 'Date Newest to Oldest' }
+     */
+    const selectedSort = ref({ name: 'Date Newest to Oldest' });
+
+    /**
+     * @constant {Array} sorts - An array of objects representing different sorting options.
+     */
+    const sorts = [
       { name: 'Date Oldest to Newest' },
       { name: 'Date Newest to Oldest' },
       { name: 'Semantic Score Ascending' },
       { name: 'Semantic Score Descending' },
     ];
 
+    /**
+     * Fetch repository data from the backend when the component is mounted.
+     * @async
+     * @function onMounted
+     */
     onMounted(async () => {
+      // Make request to backend for all repositories in the database.
       try {
         const info = await fetchData('http://127.0.0.1:8000/home');
         if (info) {
-          repoInfo.value = info;
+          repoInfo.value = info; // Fill repoInfo with response from backend.
         }
       } catch (error) {
         console.error('Error:', error);
       }
     });
 
+    /**
+     * Sorts a list of repositories by date.
+     * @function sortListsDate
+     * @param {Array} list - The list of repositories to sort.
+     * @param {Object} choice - The selected sort option.
+     * @returns {Array} The sorted list of repositories.
+     */
     const sortListsDate = (list, choice) => {
+      // Check if ascending or descending is selected.
       if (choice.name === 'Date Oldest to Newest') {
         return list.sort((a, b) => new Date(a.updated_at) - new Date(b.updated_at));
       } else {
@@ -32,7 +58,15 @@ export default {
       }
     };
 
+    /**
+     * Sorts a list of repositories by semantic score.
+     * @function sortListsScore
+     * @param {Array} list - The list of repositories to sort.
+     * @param {Object} choice - The selected sort option.
+     * @returns {Array} The sorted list of repositories.
+     */
     const sortListsScore = (list, choice) => {
+      // Check if ascending or descending is selected.
       if (choice.name == 'Semantic Score Ascending') {
         return list.sort((a, b) => (a.average_semantic) - (b.average_semantic));
       } else {
@@ -40,8 +74,15 @@ export default {
       }
     };
 
+    /**
+     * Computed property to get the sorted list of repositories based on the selected sort option.
+     * @constant {ComputedRef} sortedRepos
+     * @returns {Array} The sorted list of repositories.
+     */
     const sortedRepos = computed(() => {
+      // Check if repoInfo has value.
       if (!repoInfo.value) return [];
+      // Check which type of sort is selected
       else if (selectedSort.value.name.includes('Date')) {
         return sortListsDate(repoInfo.value.Repos, selectedSort.value);
       } else return sortListsScore(repoInfo.value.Repos, selectedSort.value);
@@ -57,33 +98,69 @@ export default {
 
   data() {
     return {
+      /**
+       * @property {boolean} invalidInput - A flag indicating whether the input URL is invalid.
+       * @default false
+       */
       invalidInput: false,
+
+      /**
+       * @property {boolean} busy - A flag indicating whether a process is currently running.
+       * @default false
+       */
       busy: false,
-      inputUrl: '', // Added inputUrl to data to bind with v-model
+
+      /**
+       * @property {string} inputUrl - The input URL entered by the user.
+       * @default ''
+       */
+      inputUrl: '',
     };
   },
 
   methods: {
+    /**
+     * Simulates a process that takes some time.
+     * @method handleClick
+     */
     handleClick() {
-      this.busy = true
-      // Do something that takes some time
-      setTimeout(() => { this.busy = false }, 2000) // Match this duration to the spinner's duration
+      // Set busy to true.
+      this.busy = true;
+      // Take some time.
+      setTimeout(() => { this.busy = false }, 2000);
     },
 
+    /**
+     * Validates the GitHub URL using a regular expression.
+     * @async
+     * @method checkInput
+     * @param {string} str - The input URL to validate.
+     * @returns {boolean} Whether the input URL is valid.
+     */
     async checkInput(str) {
+      // The specific regular expression checks if str is actual Github repository URL.
       const regex = /^(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+(?:\.git)?\/?$/;
       return regex.test(str);
     },
 
+    /**
+     * Handles the submission of the GitHub URL.
+     * @async
+     * @method handleGithubURLSubmit
+     * @param {string} inputUrl - The GitHub URL entered by the user.
+     */
     async handleGithubURLSubmit(inputUrl) {
+      // Set invalidInput to false.
       this.invalidInput = false;
 
+      // Validate the input URL
       if (!(await this.checkInput(inputUrl))) {
         this.invalidInput = true;
         return;
       }
-
+      // Define data to be sent to backend in POST request.
       const data = { url: inputUrl };
+      // Define way of sending data to backend.
       const postOptions = {
         method: 'POST',
         headers: {
@@ -93,21 +170,33 @@ export default {
       };
 
       try {
-        this.busy = true; // Start the spinner
+        // Start the spinner.
+        this.busy = true; 
+        // Receive response from backend.
         const response = await fetchData('http://127.0.0.1:8000/all/', postOptions);
         if (response) {
           this.repoInfo = response;
         }
+        // Set inputUrl back to empty string.
         this.inputUrl = '';
       } catch (error) {
         console.error('Error:', error);
       } finally {
-        this.busy = false; // Stop the spinner
+        // Stop the spinner.
+        this.busy = false; 
       }
     },
 
+    /**
+     * Handles the deletion of a repository.
+     * @async
+     * @method handleDeleteRequest
+     * @param {Object} repo - The repository to delete.
+     */
     async handleDeleteRequest(repo) {
+      // Define data to be sent to backend in POST request.
       const data = { url: repo };
+      // Define way of sending data to backend.
       const postOptions = {
         method: 'POST',
         headers: {
@@ -117,6 +206,7 @@ export default {
       };
 
       try {
+        // Receive response from backend.
         const response = await fetchData('http://127.0.0.1:8000/delete/', postOptions);
         if (response) {
           this.repoInfo = response;
@@ -130,6 +220,7 @@ export default {
 </script>
 
 <template>
+  <!-- Header for the page -->
   <header>
     <div style="font-size: 180%; margin-top: 30px;">
       Repository Analysis Tool
@@ -137,6 +228,7 @@ export default {
   </header>
 
   <main>
+    <!-- URL input and submit button -->
     <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
       <div style="display: flex; flex-direction: column; align-items: flex-start;">
         <label style="display: inline-block; width: 250px;" for="urlTextfield">Enter GitHub URL:</label>
@@ -164,10 +256,12 @@ export default {
       </div>
     </div>
 
+    <!-- Error message for invalid input -->
     <div v-if="invalidInput"
       style="color: red; margin-top: 2%; display: flex; justify-content: center; margin-bottom: 5%">Invalid input!
       Please enter a valid GitHub URL.</div>
 
+    <!-- Repository list with sorting dropdown menu -->
     <div style="margin-top: 4%; display: flex; justify-content: center; margin-bottom: 5%;">
       <div style="display: flex; flex-direction: column; align-items: flex-start;">
         <h2 style="justify-content: center; display: inline-block; width: 250px; margin-bottom: 3%" for="repos">Tracked
@@ -195,12 +289,17 @@ export default {
   </main>
 </template>
 
-
 <style scoped>
+/**
+ * Styling for the header.
+ */
 header {
   line-height: 1.5;
 }
 
+/**
+ * Styling for the loading spinner.
+ */
 .lds-spinner,
 .lds-spinner div,
 .lds-spinner div:after {

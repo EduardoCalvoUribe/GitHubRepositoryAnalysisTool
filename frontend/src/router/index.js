@@ -43,35 +43,49 @@ const router = createRouter({
   ],
 });
 
+/**
+ * Navigation guard to handle authentication and token expiration.
+ * @param {Object} to - Target Route Object being navigated to.
+ * @param {Object} from - Current Route Object being navigated away from.
+ * @param {Function} next - Function to resolve the hook. Must be called to resolve the navigation.
+ */
 router.beforeEach((to, from, next) => {
+  // Set authToken with data from local storage.
   const authToken = localStorage.getItem("authToken");
   const isLoggedIn = !!authToken;
 
   const expiresAt = localStorage.getItem("expirationTime");
 
+  // Check if logged in.
   if (!isLoggedIn) {
     if (to.path !== "/login") {
       localStorage.removeItem("data");
-      next("/login"); // Redirect to login page if not logged in
+      // Redirect to login page if not logged in.
+      next("/login"); 
     } else {
       next();
     }
   } else if (isLoggedIn && expiresAt > Date.now()) {
-    // Token is valid, allow navigation
+    // Token is valid, allow navigation.
     next();
   } else {
     // Token expired, handle expiration:
     localStorage.removeItem("authToken");
     localStorage.removeItem("expirationTime");
     localStorage.removeItem("data");
-    next("/login"); // Or redirect to a refresh token endpoint based on your logic
+    next("/login"); 
   }
 });
 
+/**
+ * Checks for token expiration and removes token and data if expired.
+ */
 const checkExpiration = () => {
+  // Set storedData with authToken locally stored.
   const storedData = localStorage.getItem("authToken");
+  // Check if a token is stored locally.
   if (!storedData) {
-    return; // No token stored
+    return; 
   }
 
   const expirationTime = localStorage.getItem("expirationTime");

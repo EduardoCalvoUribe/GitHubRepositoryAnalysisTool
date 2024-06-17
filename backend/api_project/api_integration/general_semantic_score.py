@@ -57,11 +57,19 @@ async def calculateWeightedCommitSemanticScore(commitJSON, ld_weight, fre_weight
     repo = parsed_commit_url[3]
     commit_SHA = parsed_commit_url[-1]
     
+
+    
+    """
+    NOTE: This is the code for computing the code/commit message ratio. To include it in the semantic score, 
+    please ensure that the variables within these multiline comment are uncommented. Furthermore, please ensure
+    that the steps as documented for total_weight and the return statement within this function are followed correctly. 
+
     # Asynchronously compute code/commit message ratio. Await result
-#    awaited_bounded_ratio = await AsyncCodeCommitMessageRatio.compute_code_commit_ratio(owner,repo,pr_num,commit_SHA,commitJSON)
-#    bounded_ratio = sigmoid(awaited_bounded_ratio)
+    awaited_bounded_ratio = await AsyncCodeCommitMessageRatio.compute_code_commit_ratio(owner,repo,pr_num,commit_SHA,commitJSON)
+    bounded_ratio = sigmoid(awaited_bounded_ratio)
     # Multiply metric with its respective weight
-#    weighted_bounded_ratio = cmcl_weight * bounded_ratio
+    weighted_bounded_ratio = cmcl_weight * bounded_ratio
+    """
 
     # Get Flesch reading ease value for commit message
     flesch_reading_ease = FleschReadingEase.calculateFleschReadingEase(commit_message)
@@ -74,8 +82,11 @@ async def calculateWeightedCommitSemanticScore(commitJSON, ld_weight, fre_weight
     weighted_lexical_density = ld_weight * lexical_density
 
     # Sum up all weights
-    total_weight = ld_weight + fre_weight + cmcl_weight
+    # NOTE: Add cmcl_weight if code/commit message ratio should be included in semantic score.
+    total_weight = ld_weight + fre_weight 
 
+    # NOTE: Add weighted_bounded_ratio to the return statement if commit message length/code length ratio should be 
+    # in semantic score. 
     return (weighted_flesch_reading_ease+weighted_lexical_density)/total_weight if total_weight != 0 else -1
 
 
