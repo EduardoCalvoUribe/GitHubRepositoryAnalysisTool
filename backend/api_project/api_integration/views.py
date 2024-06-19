@@ -164,12 +164,6 @@ def repo_frontend_info(request):
                 begin_date, end_date = date_range(dates)
         except json.JSONDecodeError:
             print("Error")
-    print("Point reached")
-    # url = "https://github.com/lucidrains/PaLM-rlhf-pytorch"
-    # ranged = False
-    # begin_date = datetime(2020, 3, 1, 0, 0, 0)
-    # end_date = datetime(2024, 6, 1, 0, 0, 0)
-    print(url)
     try:
     # Get the repository by URL (using get() for single object retrieval)
         repo = Repository.objects.get(url=url)
@@ -183,31 +177,28 @@ def repo_frontend_info(request):
         total_commit_count = 0
         total_comment_count = 0
 
-        # Prepare the response data with nested pull request details
+            # Prepare the response data with nested pull request details
         data = {
-            "Repo": {
-                "name": repo.name,
-                "url": repo.url,
-                "updated_at": repo.updated_at,
-                "pull_requests": [],
-                "number_pulls": 0,
-                "total_commit_count": 0,
-                "total_comment_count": 0,
-                "average_semantic": 0,
-                # engagement_score: 0,
+                "Repo": {
+                    "name": repo.name,
+                    "url": repo.url,
+                    "updated_at": repo.updated_at,
+                    "pull_requests": [],
+                    "number_pulls": 0,
+                    "total_commit_count": 0,
+                    "total_comment_count": 0,
+                    "average_semantic": 0,
+                    # engagement_score: 0,
+                }
             }
-        }
-        
         pull_requests = repo.pull_requests.all()
-        print("Getting data reached")
-        print(pull_requests)
-        print("But really")
         for pr in pull_requests:
-            if not ranged:
-                data, total_comment_count, total_commit_count = selected_data(pr,data, total_comment_count, total_commit_count,begin_date=None,end_date=None, ranged=False)
-            else:
-                if (pr.closed_at >= begin_date) & (pr.date <= end_date) & (pr.date >= begin_date):
-                    data, total_comment_count,total_commit_count = selected_data(pr,data, total_comment_count, total_commit_count, begin_date, end_date, ranged=True)
+                if not ranged:
+                    data, total_comment_count, total_commit_count = selected_data(pr,data, total_comment_count, total_commit_count,begin_date=None,end_date=None, ranged=False)
+                else:
+                    print(pr.date, begin_date, end_date, pr.date)
+                    if (pr.closed_at >= begin_date) & (pr.date <= end_date) & (pr.date >= begin_date):
+                        data, total_comment_count,total_commit_count = selected_data(pr,data, total_comment_count, total_commit_count, begin_date, end_date, ranged=True)
         return JsonResponse(data)
     except Repository.DoesNotExist:
         return JsonResponse({"error": "Repository not found"}, status=404)
@@ -276,10 +267,10 @@ def date_range(data):
 
     # Parse the datetime string
     begin_date_obj = datetime.strptime(begin_date_str, date_format)
-    begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
+    begin_date_obj = parse(begin_date_obj.strftime("%Y-%m-%d %H:%M:%S")).date()
 
     end_date_obj = datetime.strptime(end_date_str, date_format)
-    end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S"))
+    end_date_obj = parse(end_date_obj.strftime("%Y-%m-%d %H:%M:%S")).date()
     return begin_date_obj, end_date_obj
         
 def select_commits(pr, pr_data, total_commit_count, begin_date, end_date, ranged):

@@ -112,6 +112,7 @@ export default {
     *                             Can be 'homepage' for the home page or null to reset the date.
     */
     const getPackage = async (date) => {
+      console.log(date, "date")
       const oldurl = route.path;
       let newUrl = "";
       if (
@@ -743,7 +744,7 @@ export default {
       </div>
       <button class="button-6" v-if="isZoomedIn" @click="resetChartView"
         style="position: absolute; bottom: 10px; right: 10px; margin-top: 20px; width: 40px; height: 40px; justify-content: center; vertical-align: center; font-size: larger;">
-      <</button>
+        < </button>
     </div>
 
     <!-- Chart displaying the chart data and users. -->
