@@ -354,10 +354,6 @@ def homepage_datapackage(request):
     #We import all the repositories from the database
     repos = Repository.objects.all()
 
-    f = open("repos.txt", "w")
-    f.write(str(repos.values()))
-    f.close()
-
     # average_semantic = await API_call_information.calculate_semantic_score_repo(repo)
     # We get an ordered dictionary based on unique URLs as keys and name, updated_at as values
     unique_repos = list(OrderedDict((repo.id, {        
