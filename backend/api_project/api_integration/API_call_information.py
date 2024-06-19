@@ -30,6 +30,7 @@ async def get_github_information(response):
     parsed_variables = views.parse_Github_url_variables(repo_url)
     owner = parsed_variables[1]
     repo = parsed_variables[2]
+    print("Its starting")
     
     # NOTE: Personal access token with repo permission turned on IS REQUIRED!
     personal_access_token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
