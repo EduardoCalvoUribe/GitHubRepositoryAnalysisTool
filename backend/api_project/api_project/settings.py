@@ -12,12 +12,22 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 
+from dotenv import load_dotenv
+import os
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Adding personal access token
-GITHUB_PERSONAL_ACCESS_TOKEN = 'Put your GitHub personal access token here' 
+# Clearing env variable to avoid conflicts
+if 'GITHUB_PERSONAL_ACCESS_TOKEN' in os.environ:
+    del os.environ['GITHUB_PERSONAL_ACCESS_TOKEN']
 
+# .env should be in the same folder as manage.py
+dotenv_path = BASE_DIR / '.env'
+load_dotenv(dotenv_path=dotenv_path)
+
+# Reading the token from the .env file
+GITHUB_PERSONAL_ACCESS_TOKEN = os.environ.get('GITHUB_PERSONAL_ACCESS_TOKEN')
 
 #List of relevant GitHub API Endpoints
 # GITHUB_API_ENDPOINTS = ['https://api.github.com/user']
