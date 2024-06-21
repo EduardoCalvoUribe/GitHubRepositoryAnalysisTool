@@ -44,6 +44,8 @@ The Vue app requires Node.js and npm.
 
 ## Common issues
 
+### Login form
+
 This web app uses a login form to authenticate users. To utilize this feature, you need to create a superuser. This can be done by running the following command:
 
 ```
@@ -52,11 +54,22 @@ This web app uses a login form to authenticate users. To utilize this feature, y
   python manage.py createsuperuser
 ```
 
+### Graph Features
+
+There are a couple unintuitive features in the web app that are worth mentioning. Firstly, the bars (or points) that appear on the graph are clickable. By default, each bar represents a single month, and clicking on a bar will display daily data for that entire month. Secondly, the "Contributors" checkbox list on the right of the graph also filters the pull requests that are displayed at the bottom of the main Repository page.
+
+## Sample Screenshots
+
+![image](frontend/public/HOME.png)
+![image](frontend/public/REPO_1.png)
+![image](frontend/public/REPO_2.png)
+![image](frontend/public/PR.png)
+
 ## Authors and acknowledgment
 
 This project was created by the following students at Radboud University:
 
-Eloy Wijlhuizen, Marie Oldeman, Eduardo Calvo, Lasse Kuipers, Daniel Danilin, Thijs Berende, Teun de Waal, and Maurits van ‘t Hag
+Eloy Wijlhuizen, Marie Oldeman, Eduardo Calvo, Lasse Kuipers, Daniel Danilin, Thijs Berende, Teun de Waal, and Maurits van ‘t Hag.
 
 ## License
 
